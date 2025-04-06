@@ -1,0 +1,155 @@
+<div>
+<x-table.table-layout
+    pageTitle="Kategori Analizi"
+    :backgroundCard="false"
+    :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'wire' => true],
+        ['label' => 'Kategori Analizi']
+    ]"
+>
+    <!-- Hata mesajı gösterme alanı -->
+    @if($errorMessage)
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-red-700 font-medium">{{ $errorMessage }}</span>
+        </div>
+    </div>
+    @endif
+
+    <!-- Filtreler -->
+    <x-filament::section heading="Filtreler" class="mb-6">
+        <div wire:key="filters">
+            {{ $this->form }}
+        </div>
+    </x-filament::section>
+
+    <!-- Stats Overview Widget -->
+    <div class="mt-8 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Toplam Tutar -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-blue-600">
+                <h3 class="text-sm font-medium text-white">Toplam Tutar</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold text-blue-600">
+                    {{ number_format($totalAmount, 2, ',', '.') }} TL
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    Seçilen tarih aralığında
+                </p>
+            </div>
+        </div>
+
+        <!-- Ortalama Tutar -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-green-600">
+                <h3 class="text-sm font-medium text-white">Ortalama Tutar</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold text-green-600">
+                    {{ number_format($averageAmount, 2, ',', '.') }} TL
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    İşlem başına ortalama
+                </p>
+            </div>
+        </div>
+
+        <!-- Kategori Sayısı -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-purple-600">
+                <h3 class="text-sm font-medium text-white">Kategori Sayısı</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold text-purple-600">
+                    {{ count($categoryData) }}
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    Aktif kategori
+                </p>
+            </div>
+        </div>
+
+        <!-- İşlem Sayısı -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-orange-500">
+                <h3 class="text-sm font-medium text-white">Toplam İşlem</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold text-orange-500">
+                    {{ $categoryData->sum('transaction_count') }}
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    Tüm kategorilerde
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kategori Analizi -->
+    <x-filament::section 
+        heading="{{ $analysisType === 'income' ? 'Gelir' : 'Gider' }} Kategorileri" 
+        description="Kategorilerin detaylı analizi ve karşılaştırması"
+    >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @foreach($categoryData as $category)
+                <div class="bg-white rounded-lg border border-gray-200 hover:border-primary-500 transition-colors duration-200">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-base font-medium text-gray-900">{{ $category->name }}</h4>
+                            @if(isset($categoryGrowth[$category->id]))
+                                @if($categoryGrowth[$category->id]['trend'] === 'up')
+                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                        </svg>
+                                        {{ $categoryGrowth[$category->id]['percentage'] }}%
+                                    </span>
+                                @elseif($categoryGrowth[$category->id]['trend'] === 'down')
+                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/>
+                                        </svg>
+                                        {{ $categoryGrowth[$category->id]['percentage'] }}%
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                        </svg>
+                                        {{ $categoryGrowth[$category->id]['percentage'] }}%
+                                    </span>
+                                @endif
+                            @endif
+                        </div>
+
+                        <div class="flex items-center justify-between text-sm mb-2">
+                            <span class="text-gray-500">{{ number_format($category->total_amount, 2, ',', '.') }} TL</span>
+                            <span class="text-xs text-gray-400">{{ $category->transaction_count }} işlem</span>
+                        </div>
+
+                        <div class="relative">
+                            <div class="overflow-hidden h-1.5 flex rounded bg-gray-100">
+                                <div style="width: {{ ($category->total_amount / $totalAmount) * 100 }}%" 
+                                     class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {{ $analysisType === 'income' ? 'bg-green-500' : 'bg-red-500' }}">
+                                </div>
+                            </div>
+                            <div class="mt-1 flex justify-between items-center">
+                                <span class="text-xs {{ $analysisType === 'income' ? 'text-green-600' : 'text-red-600' }}">
+                                    %{{ number_format(($category->total_amount / $totalAmount) * 100, 1) }}
+                                </span>
+                                <span class="text-xs text-gray-400">
+                                    Ort. {{ number_format($category->average_amount, 0, ',', '.') }} TL
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </x-filament::section>
+</x-table.table-layout>
+</div> 

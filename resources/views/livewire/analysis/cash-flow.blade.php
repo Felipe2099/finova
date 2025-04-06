@@ -1,0 +1,568 @@
+<div>
+<x-table.table-layout
+    pageTitle="Nakit Akışı Analizi"
+    :backgroundCard="false"
+    :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'wire' => true],
+        ['label' => 'Nakit Akışı Analizi']
+    ]"
+>
+    <!-- Nakit Akışı Grafiği -->
+    <!-- Sayfa ilk yüklendiğinde otomatik yenileme için gizli buton -->
+    <button type="button" id="autoRefreshButton" wire:click="updateChart" class="hidden">Yenile</button>
+    
+    <!-- Hata mesajı gösterme alanı -->
+    @if($errorMessage)
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-red-700 font-medium">{{ $errorMessage }}</span>
+        </div>
+    </div>
+    @endif
+    
+    <x-filament::section heading="Nakit Akışı Grafiği" class="mb-6">
+        <!-- Grafik Kontrolleri -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200" wire:key="chart-controls">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <!-- Tarih Aralığı -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Tarih Aralığı:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="date" wire:model.live="chartStartDate" class="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 py-1 px-2">
+                        <span class="text-sm text-gray-500">-</span>
+                        <input type="date" wire:model.live="chartEndDate" class="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 py-1 px-2">
+                    </div>
+                </div>
+                
+                <!-- Gruplama Türü -->
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700">Periyot:</label>
+                    <select wire:model.live="chartPeriod" class="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 py-1 px-3">
+                        <option value="daily">Günlük</option>
+                        <option value="weekly">Haftalık</option>
+                        <option value="monthly">Aylık</option>
+                        <option value="quarterly">Çeyreklik</option>
+                        <option value="yearly">Yıllık</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="mb-8 flex items-center justify-between" wire:ignore.self>
+            <span id="current-chart-type" class="text-sm font-medium text-gray-700">Yükleniyor...</span>
+            
+            <div class="flex space-x-2" wire:ignore.self>
+                <button type="button" 
+                    x-data="{}"
+                    x-on:click="$wire.$set('chartType', 'line')"
+                    class="px-3 py-1 text-xs font-medium rounded-md transition-colors
+                    {{ $chartType === 'line' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Çizgi
+                </button>
+                <button type="button" 
+                    x-data="{}"
+                    x-on:click="$wire.$set('chartType', 'bar')"
+                    class="px-3 py-1 text-xs font-medium rounded-md transition-colors
+                    {{ $chartType === 'bar' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Çubuk
+                </button>
+                <button type="button" 
+                    x-data="{}"
+                    x-on:click="$wire.$set('chartType', 'stacked')"
+                    class="px-3 py-1 text-xs font-medium rounded-md transition-colors
+                    {{ $chartType === 'stacked' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Yığılmış
+                </button>
+            </div>
+        </div>
+        <div class="h-80" wire:ignore>
+            <canvas id="cash-flow-chart" class="h-full w-full"></canvas>
+        </div>
+
+        <!-- Tablo Görünümü -->
+        <div class="mt-6 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead class="text-xs uppercase bg-gray-100 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Dönem</th>
+                        <th scope="col" class="px-6 py-3 text-right">Gelir</th>
+                        <th scope="col" class="px-6 py-3 text-right">Gider</th>
+                        <th scope="col" class="px-6 py-3 text-right">Net Nakit Akışı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($cashFlowData as $period)
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <th scope="row" class="px-6 py-4 font-medium whitespace-nowrap">
+                            @php
+                                $periodText = $period->period;
+                                $monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                                
+                                // Haftalık format için (2025-W06)
+                                if (preg_match('/^(\d{4})-W(\d{1,2})$/', $period->period, $matches)) {
+                                    $year = $matches[1];
+                                    $week = $matches[2];
+                                    $dto = new DateTime();
+                                    $dto->setISODate($year, $week);
+                                    $weekStart = $dto->format('d.m.Y');
+                                    $dto->modify('+6 days');
+                                    $weekEnd = $dto->format('d.m.Y');
+                                    $periodText = "$weekStart - $weekEnd (Hafta $week)";
+                                }
+                                // Aylık format için (2025-01)
+                                elseif (preg_match('/^(\d{4})-(\d{1,2})$/', $period->period, $matches)) {
+                                    $year = $matches[1];
+                                    $month = (int)$matches[2];
+                                    if ($month >= 1 && $month <= 12) {
+                                        $monthName = $monthNames[$month-1];
+                                        $periodText = "$monthName $year";
+                                    }
+                                }
+                                // Çeyreklik format için (2025-Q1)
+                                elseif (preg_match('/^(\d{4})-Q(\d{1})$/', $period->period, $matches)) {
+                                    $year = $matches[1];
+                                    $quarter = (int)$matches[2];
+                                    $startMonth = ($quarter - 1) * 3 + 1;
+                                    $endMonth = $startMonth + 2;
+                                    
+                                    if ($startMonth >= 1 && $startMonth <= 12 && $endMonth >= 1 && $endMonth <= 12) {
+                                        $startMonthName = $monthNames[$startMonth-1];
+                                        $endMonthName = $monthNames[$endMonth-1];
+                                        $periodText = "$quarter. Çeyrek $year: $startMonthName - $endMonthName";
+                                    } else {
+                                        $periodText = "$quarter. Çeyrek $year";
+                                    }
+                                }
+                            @endphp
+                            {{ $periodText }}
+                        </th>
+                        <td class="px-6 py-4 text-right text-green-500">
+                            {{ number_format($period->inflow, 2, ',', '.') }} TL
+                        </td>
+                        <td class="px-6 py-4 text-right text-red-500">
+                            {{ number_format($period->outflow, 2, ',', '.') }} TL
+                        </td>
+                        <td class="px-6 py-4 text-right {{ $period->net >= 0 ? 'text-blue-500' : 'text-red-500' }} font-medium">
+                            {{ number_format($period->net, 2, ',', '.') }} TL
+                        </td>
+                    </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                Seçilen filtreler için veri bulunamadı.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+                @if($cashFlowData->isNotEmpty())
+                <tfoot>
+                    <tr class="font-semibold bg-gray-50 dark:bg-gray-700">
+                        <th scope="row" class="px-6 py-3">Toplam</th>
+                        <td class="px-6 py-3 text-right text-green-600">
+                            {{ number_format($cashFlowData->sum('inflow'), 2, ',', '.') }} TL
+                        </td>
+                        <td class="px-6 py-3 text-right text-red-600">
+                            {{ number_format($cashFlowData->sum('outflow'), 2, ',', '.') }} TL
+                        </td>
+                        <td class="px-6 py-3 text-right {{ $cashFlowData->sum('net') >= 0 ? 'text-blue-600' : 'text-red-600' }} font-bold">
+                            {{ number_format($cashFlowData->sum('net'), 2, ',', '.') }} TL
+                        </td>
+                    </tr>
+                </tfoot>
+                @endif
+            </table>
+        </div>
+    </x-filament::section>
+    
+    <!-- Stats Overview Widget -->
+    <div class="mt-8 mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
+        <!-- Net Nakit Akışı -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 {{ $netCashFlow >= 0 ? 'bg-green-600' : 'bg-red-600' }}">
+                <h3 class="text-sm font-medium text-white">Net Nakit Akışı</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold {{ $netCashFlow >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                    {{ number_format($netCashFlow, 2, ',', '.') }} TL
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    {{ $netCashFlow >= 0 ? 'Pozitif nakit akışı' : 'Negatif nakit akışı' }}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Toplam Gelir -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-blue-600">
+                <h3 class="text-sm font-medium text-white">Toplam Gelir</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold text-blue-600">
+                    {{ number_format($totalInflow, 2, ',', '.') }} TL
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    Seçilen tarih aralığında
+                </p>
+            </div>
+        </div>
+        
+        <!-- Toplam Gider -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-4 py-3 bg-orange-500">
+                <h3 class="text-sm font-medium text-white">Toplam Gider</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold text-orange-500">
+                    {{ number_format($totalOutflow, 2, ',', '.') }} TL
+                </p>
+                <p class="text-sm mt-1 text-gray-600">
+                    Seçilen tarih aralığında
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Nakit Akışı Sağlığı -->
+    @if(isset($cashFlowSummary['health']))
+    <div class="mb-8 bg-white rounded-lg shadow-sm overflow-hidden">
+        @php
+            $healthIcon = 'exclamation-circle';
+            $healthColor = 'bg-red-600';
+            $healthText = 'Kritik';
+            $healthTextColor = 'text-red-600';
+            
+            if ($cashFlowSummary['health'] == 'excellent') {
+                $healthIcon = 'check-circle';
+                $healthColor = 'bg-green-600';
+                $healthText = 'Mükemmel';
+                $healthTextColor = 'text-green-600';
+            } elseif ($cashFlowSummary['health'] == 'good') {
+                $healthIcon = 'check-circle';
+                $healthColor = 'bg-blue-600';
+                $healthText = 'İyi';
+                $healthTextColor = 'text-blue-600';
+            } elseif ($cashFlowSummary['health'] == 'adequate') {
+                $healthIcon = 'information-circle';
+                $healthColor = 'bg-yellow-600';
+                $healthText = 'Yeterli';
+                $healthTextColor = 'text-yellow-600';
+            } elseif ($cashFlowSummary['health'] == 'warning') {
+                $healthIcon = 'exclamation-triangle';
+                $healthColor = 'bg-orange-600';
+                $healthText = 'Dikkat Gerekiyor';
+                $healthTextColor = 'text-orange-600';
+            }
+        @endphp
+        
+        <!-- Başlık -->
+        <div class="px-4 py-3 {{ $healthColor }}">
+            <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    @if($healthIcon == 'check-circle')
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    @elseif($healthIcon == 'information-circle')
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    @elseif($healthIcon == 'exclamation-triangle')
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    @else
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    @endif
+                </svg>
+                <h3 class="text-sm font-medium text-white">Nakit Akışı Sağlığı</h3>
+            </div>
+        </div>
+        
+        <!-- İçerik -->
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xl font-bold {{ $healthTextColor }}">{{ $healthText }}</span>
+                
+                <!-- Sağlık Göstergesi -->
+                <div class="flex space-x-1">
+                    <div class="w-3 h-3 rounded-full {{ $cashFlowSummary['health'] == 'excellent' || $cashFlowSummary['health'] == 'good' || $cashFlowSummary['health'] == 'adequate' || $cashFlowSummary['health'] == 'warning' ? 'bg-green-500' : 'bg-gray-300' }}"></div>
+                    <div class="w-3 h-3 rounded-full {{ $cashFlowSummary['health'] == 'excellent' || $cashFlowSummary['health'] == 'good' || $cashFlowSummary['health'] == 'adequate' ? 'bg-green-500' : 'bg-gray-300' }}"></div>
+                    <div class="w-3 h-3 rounded-full {{ $cashFlowSummary['health'] == 'excellent' || $cashFlowSummary['health'] == 'good' ? 'bg-green-500' : 'bg-gray-300' }}"></div>
+                    <div class="w-3 h-3 rounded-full {{ $cashFlowSummary['health'] == 'excellent' ? 'bg-green-500' : 'bg-gray-300' }}"></div>
+                </div>
+            </div>
+            
+            <p class="text-gray-700 mb-4">{{ $cashFlowSummary['healthMessage'] }}</p>
+            
+            @if(count($cashFlowSummary['recommendations'] ?? []) > 0)
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Öneriler:</h4>
+                <ul class="list-disc pl-5 space-y-2 text-gray-600">
+                    @foreach($cashFlowSummary['recommendations'] as $recommendation)
+                    <li>{{ $recommendation }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
+</x-table.table-layout>
+</div>
+
+@push('scripts')
+    <!-- Hata ayıklama için -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript hatası:', e.message, 'Dosya:', e.filename, 'Satır:', e.lineno);
+        });
+    </script>
+    
+    <!-- Yükleme göstergesi fonksiyonu -->
+    <script>
+        function toggleChartLoadingIndicator(show) {
+            const indicator = document.getElementById('chart-loading-indicator');
+            if (indicator) {
+                if (show) {
+                    indicator.classList.remove('hidden');
+                    indicator.classList.add('flex');
+                } else {
+                    indicator.classList.add('hidden');
+                    indicator.classList.remove('flex');
+                }
+            }
+        }
+    </script>
+    
+    <!-- Sayfa yükleme ve grafik oluşturma -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sayfa yüklenince otomatik olarak grafik güncelleme butonu tıklanmasını tetikle
+            setTimeout(() => {
+                const autoRefreshButton = document.getElementById('autoRefreshButton');
+                if (autoRefreshButton) {
+                    console.log('Otomatik yenileme butonu tıklanıyor...');
+                    autoRefreshButton.click();
+                } else {
+                    console.error('Otomatik yenileme butonu bulunamadı!');
+                }
+            }, 500);
+            
+            // Grafik tipi seçimi için metin güncelleme
+            function updateChartTypeText(chartType) {
+                const chartTypeText = document.getElementById('current-chart-type');
+                if (chartTypeText) {
+                    let typeText = '';
+                    switch(chartType) {
+                        case 'line':
+                            typeText = 'Çizgi Grafik';
+                            break;
+                        case 'bar':
+                            typeText = 'Çubuk Grafik';
+                            break;
+                        case 'stacked':
+                            typeText = 'Yığılmış Grafik';
+                            break;
+                        default:
+                            typeText = 'Grafik';
+                    }
+                    chartTypeText.textContent = typeText;
+                }
+            }
+            
+            // Tarih ve periyot değişikliklerini otomatik olarak izle
+            const chartStartDateInput = document.querySelector('input[wire\\:model="chartStartDate"]');
+            const chartEndDateInput = document.querySelector('input[wire\\:model="chartEndDate"]');
+            const chartPeriodSelect = document.querySelector('select[wire\\:model="chartPeriod"]');
+            
+            if (chartStartDateInput) {
+                chartStartDateInput.addEventListener('change', function() {
+                    setTimeout(() => {
+                        const autoRefreshButton = document.getElementById('autoRefreshButton');
+                        if (autoRefreshButton) autoRefreshButton.click();
+                    }, 100);
+                });
+            }
+            
+            if (chartEndDateInput) {
+                chartEndDateInput.addEventListener('change', function() {
+                    setTimeout(() => {
+                        const autoRefreshButton = document.getElementById('autoRefreshButton');
+                        if (autoRefreshButton) autoRefreshButton.click();
+                    }, 100);
+                });
+            }
+            
+            if (chartPeriodSelect) {
+                chartPeriodSelect.addEventListener('change', function() {
+                    setTimeout(() => {
+                        const autoRefreshButton = document.getElementById('autoRefreshButton');
+                        if (autoRefreshButton) autoRefreshButton.click();
+                    }, 100);
+                });
+            }
+            
+            // Livewire olaylarını dinle
+            window.Livewire.on('cashFlowDataUpdated', (data) => {
+                console.log('Nakit akışı verileri güncellendi', data);
+                
+                // Veri yapısını kontrol et
+                if (data && data.chartType && data.chartData) {
+                    console.log('Grafik verileri:', data.chartData);
+                    updateChartTypeText(data.chartType);
+                    renderChart(data.chartType, data.chartData);
+                } else {
+                    console.error('Grafik verileri eksik veya hatalı:', data);
+                }
+            });
+            
+            // Grafik oluşturulduğunda yükleme göstergesini gizle
+            document.addEventListener('chartRendered', () => {
+                console.log('Grafik oluşturuldu eventi alındı');
+                toggleChartLoadingIndicator(false);
+            });
+        });
+        
+        // Grafik oluşturma fonksiyonu
+        function renderChart(chartType, chartData) {
+            toggleChartLoadingIndicator(true);
+            
+            // Veri kontrolü
+            if (!chartData || typeof chartData !== 'object') {
+                console.error('Geçersiz grafik verisi:', chartData);
+                toggleChartLoadingIndicator(false);
+                return;
+            }
+            
+            // Grafik oluşturmadan önce kısa bir bekleme süresi ekleyelim
+            // Bu, DOM'un güncellenmesi için zaman tanır
+            setTimeout(() => {
+                try {
+                    const ctx = document.getElementById('cash-flow-chart');
+                    if (!ctx) {
+                        console.error('Grafik canvas bulunamadı');
+                        toggleChartLoadingIndicator(false);
+                        return;
+                    }
+                    
+                    // Mevcut grafik varsa yok et
+                    if (window.cashFlowChart instanceof Chart) {
+                        window.cashFlowChart.destroy();
+                    }
+                    
+                    // Grafik verilerini hazırla
+                    const datasets = [];
+                    
+                    // Veri kontrolü
+                    const labels = chartData.labels || [];
+                    const inflowData = chartData.inflowData || [];
+                    const outflowData = chartData.outflowData || [];
+                    const netData = chartData.netData || [];
+                    
+                    console.log('Grafik veri yapısı:', {
+                        labels: labels.length,
+                        inflowData: inflowData.length,
+                        outflowData: outflowData.length,
+                        netData: netData.length
+                    });
+                    
+                    // Gelir veri seti
+                    datasets.push({
+                        label: 'Gelir',
+                        data: inflowData,
+                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    });
+                    
+                    // Gider veri seti
+                    datasets.push({
+                        label: 'Gider',
+                        data: outflowData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    });
+                    
+                    // Net nakit akışı veri seti
+                    datasets.push({
+                        label: 'Net Nakit Akışı',
+                        data: netData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        // Çizgi grafik için her zaman çizgi olarak göster
+                        type: chartType === 'stacked' ? 'line' : undefined
+                    });
+                    
+                    // Grafik konfigurasyonu
+                    const config = {
+                        type: chartType === 'stacked' ? 'bar' : chartType,
+                        data: {
+                            labels: labels,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(value);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    
+                    // Yığılmış grafik için özel ayarlar
+                    if (chartType === 'stacked') {
+                        config.options.scales.y.stacked = true;
+                        config.options.scales.x.stacked = true;
+                        
+                        // Yığılmış grafikte net nakit akışını çizgi olarak göster
+                        datasets[2].type = 'line';
+                        datasets[2].fill = false;
+                        datasets[2].order = 0; // Çizgiyi öne getir
+                    }
+                    
+                    // Grafik oluştur
+                    window.cashFlowChart = new Chart(ctx, config);
+                    
+                    // Grafik oluşturuldu eventi tetikle
+                    document.dispatchEvent(new CustomEvent('chartRendered'));
+                } catch (error) {
+                    console.error('Grafik oluşturulurken hata:', error);
+                    toggleChartLoadingIndicator(false);
+                }
+            }, 300);
+        }
+    </script>
+@endpush
