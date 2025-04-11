@@ -140,17 +140,20 @@ final class SavingsPlanner extends Component implements Tables\Contracts\HasTabl
                     ])
                     ->action(function (SavingsPlan $record, array $data): SavingsPlan {
                         return $this->planningService->updateSavingsPlan($record, $data);
-                    }),
+                    })
+                    ->visible(auth()->user()->can('savings.edit')),
                 DeleteAction::make()
                     ->label('Sil')
                     ->modalHeading('Tasarruf Planını Sil')
                     ->action(function (SavingsPlan $record): void {
                         $this->planningService->deleteSavingsPlan($record);
-                    }),
+                    })
+                    ->visible(auth()->user()->can('savings.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(auth()->user()->can('savings.delete')),
                 ]),
             ])
             ->headerActions([
@@ -188,7 +191,8 @@ final class SavingsPlanner extends Component implements Tables\Contracts\HasTabl
                     ->action(function (array $data): SavingsPlan {
                         return $this->planningService->createSavingsPlan($data);
                     })
-                    ->modalSubmitActionLabel('Kaydet'),
+                    ->modalSubmitActionLabel('Kaydet')
+                    ->visible(auth()->user()->can('savings.create')),
             ]);
     }
 

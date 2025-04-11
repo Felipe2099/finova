@@ -43,9 +43,16 @@ class TransactionManager extends Component implements HasForms, HasTable
 
     /** @var TransactionService İşlem servisi */
     private TransactionService $transactionService;
-
+    
     /** @var array Dinleyici olayları */
     protected $listeners = ['refreshTransactions' => '$refresh'];
+
+    /** Aktif Filtre */
+    public $activeFilter = 'income';
+
+    protected $queryString = [
+        'activeFilter' => ['except' => 'all', 'as' => 'filter'],
+    ];
 
     /**
      * Bileşen başlatılırken işlem servisini enjekte eder
@@ -84,553 +91,28 @@ class TransactionManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Form şemasını oluşturur
-     * 
-     * @return array Form bileşenleri
+     * Aktif filtreyi ayarlar.
+     *
+     * @param string $filter Seçilen filtre ('all', 'income', 'expense', 'transfer', 'payments')
+     * @return void
      */
-    private function getFormSchema(): array
+    public function setFilter(string $filter): void
     {
-        return [
-            // İşlem türü, kategori, müşteri ve ödeme detayları
-            ...$this->getTransactionDetailsSchema(),
-
-            // Para birimi, kur ve tutar
-            ...$this->getCurrencyAndAmountSchema(),
-
-            // Açıklama
-            Forms\Components\Textarea::make('description')
-                ->label('Açıklama')
-                ->rows(2),
-
-            // Abonelik bilgileri
-            $this->getSubscriptionSchema(),
-
-            // Vergilendirme
-            $this->getTaxationSchema(),
-
-            // Transfer işlemleri için özel form alanları
-            Forms\Components\Grid::make()
-                ->schema([
-                    Forms\Components\Select::make('source_account_id')
-                        ->label('Kaynak Hesap')
-                        ->options(function () {
-                            return Account::where('user_id', auth()->id())
-                                ->where('status', true)
-                                ->get()
-                                ->mapWithKeys(fn ($account) => [
-                                    $account->id => "{$account->name} ({$account->formatted_balance})"
-                                ]);
-                        })
-                        ->required()
-                        ->searchable()
-                        ->native(false)
-                        ->live(),
-                    
-                    Forms\Components\Select::make('destination_account_id')
-                        ->label('Hedef Hesap')
-                        ->options(function () {
-                            return Account::where('user_id', auth()->id())
-                                ->where('status', true)
-                                ->get()
-                                ->mapWithKeys(fn ($account) => [
-                                    $account->id => "{$account->name} ({$account->formatted_balance})"
-                                ]);
-                        })
-                        ->required()
-                        ->searchable()
-                        ->native(false),
-                ])
-                ->columns(2)
-                ->visible(fn (callable $get) => $get('type') === Transaction::TYPE_TRANSFER),
-        ];
+        $this->activeFilter = $filter;
     }
 
     /**
-     * Önbelleğe alınmış hesap seçeneklerini döndürür
-     * 
-     * @param string|null $type Hesap tipi
-     * @return array Hesap seçenekleri
+     * Livewire lifecycle hook that runs when the $activeFilter property is updated.
+     *
+     * Resets table pagination to ensure the user starts from the first page
+     * after changing the filter.
+     *
+     * @param string $value The new value of $activeFilter
+     * @return void
      */
-    private function getCachedAccountOptions(string $type = null): array
+    public function updatedActiveFilter(string $value): void
     {
-        $cacheKey = $type ? "user_{auth()->id()}_accounts_{$type}" : "user_{auth()->id()}_accounts";
-        return cache()->remember($cacheKey, now()->addHours(24), function () use ($type) {
-            $query = Account::query()
-                ->where('user_id', auth()->id())
-                ->where('status', true)
-                ->whereNull('deleted_at');
-            
-            if ($type) {
-                $query->where('type', $type);
-            }
-            
-            return $query->get()
-                ->mapWithKeys(function ($account) {
-                    $typeName = match($account->type) {
-                        'bank_account' => 'Banka',
-                        'credit_card' => 'Kredi Kartı',
-                        'crypto_wallet' => 'Kripto',
-                        'virtual_pos' => 'Sanal POS',
-                        'cash' => 'Nakit',
-                        default => $account->type,
-                    };
-                    return [$account->id => "{$account->name} ({$account->currency}) - {$typeName}"];
-                })->toArray();
-        });
-    }
-
-    /**
-     * Önbelleğe alınmış kategori seçeneklerini döndürür
-     * 
-     * @param string $type Kategori tipi
-     * @return array Kategori seçenekleri
-     */
-    private function getCachedCategoryOptions(string $type): array
-    {
-        $cacheKey = "user_{auth()->id()}_categories_{$type}";
-        return cache()->remember($cacheKey, now()->addHours(24), function () use ($type) {
-            return Category::query()
-                ->where('type', $type)
-                ->where('status', true)
-                ->pluck('name', 'id')
-                ->toArray();
-        });
-    }
-    
-    /**
-     * İşlem detayları form şemasını oluşturur
-     * 
-     * @return array Form bileşenleri
-     */
-    private function getTransactionDetailsSchema(): array
-    {
-        return [
-            Forms\Components\Grid::make(2)->schema([
-                Forms\Components\Select::make('type')
-                    ->label('İşlem')
-                    ->options([
-                        Transaction::TYPE_INCOME => 'Gelir',
-                        Transaction::TYPE_EXPENSE => 'Gider',
-                        Transaction::TYPE_TRANSFER => 'Transfer',
-                    ])
-                    ->native(false)
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function ($state, Forms\Set $set, callable $get) {
-                        $set('category_id', null);
-                        
-                        if ($get('payment_method') !== 'cash' && $get('payment_method') !== null) {
-                            $set('payment_method', 'cash');
-                        }
-                        
-                        $set('account_select', null);
-                        $set('source_account_id', null);
-                        $set('destination_account_id', null);
-
-                        if ($state === Transaction::TYPE_TRANSFER) {
-                            $set('show_transfer_fields', true);
-                        } else {
-                            $set('show_transfer_fields', false);
-                        }
-                    }),
-    
-                Forms\Components\Select::make('category_id')
-                    ->label('Kategori')
-                    ->options(function (callable $get) {
-                        if (!$get('type')) return [];
-                        return $this->getCachedCategoryOptions($get('type'));
-                    })
-                    ->searchable()
-                    ->required()
-                    ->native(false),
-    
-                Forms\Components\Select::make('customer_id')
-                    ->label('Müşteri')
-                    ->options(function () {
-                        return \App\Models\Customer::query()
-                            ->where('status', true)
-                            ->get()
-                            ->mapWithKeys(function ($customer) {
-                                return [$customer->id => $customer->company_name ?? $customer->name];
-                            });
-                    })
-                    ->searchable()
-                    ->placeholder('Müşteri seçiniz (opsiyonel)')
-                    ->native(false)
-                    ->visible(fn (callable $get) => $get('type') === Transaction::TYPE_INCOME)
-                    ->columnSpan(2),
-    
-                Forms\Components\Grid::make()
-                    ->schema([
-                        Forms\Components\Select::make('payment_method')
-                            ->label('Ödeme Yöntemi')
-                            ->options([
-                                'cash' => 'Nakit',
-                                'bank' => 'Banka Hesabı',
-                                'credit_card' => 'Kredi Kartı',
-                                'crypto' => 'Kripto Cüzdan',
-                                'virtual_pos' => 'Sanal POS',
-                            ])
-                            ->placeholder('Ödeme yöntemi seçin')
-                            ->default('cash')
-                            ->live()
-                            ->native(false)
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                $set('account_select', null);
-                                $set('source_account_id', null);
-                                $set('destination_account_id', null);
-                            }),
-
-                        Forms\Components\Select::make('account_select')
-                            ->label(fn (callable $get) => match($get('payment_method')) {
-                                'bank' => 'Banka Hesabı',
-                                'credit_card' => 'Kredi Kartı',
-                                'crypto' => 'Kripto Cüzdan',
-                                'virtual_pos' => 'Sanal POS',
-                                default => 'Hesap'
-                            })
-                            ->placeholder(fn (callable $get) => match($get('payment_method')) {
-                                'bank' => 'Banka Hesabı',
-                                'credit_card' => 'Kredi Kartı',
-                                'crypto' => 'Kripto Cüzdan',
-                                'virtual_pos' => 'Sanal POS',
-                                default => 'Hesap'
-                            } . ' seçin')
-                            ->options(function (callable $get) {
-                                if ($get('payment_method') === 'cash' || $get('payment_method') === null) {
-                                    return [];
-                                }
-
-                                $type = match($get('payment_method')) {
-                                    'bank' => Account::TYPE_BANK_ACCOUNT,
-                                    'credit_card' => Account::TYPE_CREDIT_CARD,
-                                    'crypto' => Account::TYPE_CRYPTO_WALLET,
-                                    'virtual_pos' => Account::TYPE_VIRTUAL_POS,
-                                    default => null
-                                };
-
-                                return $this->getCachedAccountOptions($type);
-                            })
-                            ->searchable()
-                            ->native(false)
-                            ->disabled(fn (callable $get) => 
-                                $get('payment_method') === 'cash' || 
-                                $get('payment_method') === null
-                            )
-                            ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set, callable $get) {
-                                if (!$state) {
-                                    $set('source_account_id', null);
-                                    $set('destination_account_id', null);
-                                    return;
-                                }
-
-                                $type = $get('type');
-                                $paymentMethod = $get('payment_method');
-
-                                if ($type === Transaction::TYPE_INCOME) {
-                                    $set('destination_account_id', (int)$state);
-                                    $set('source_account_id', null);
-                                } else if ($type === Transaction::TYPE_EXPENSE) {
-                                    if ($paymentMethod === 'virtual_pos') {
-                                        $set('source_account_id', null);
-                                        Notification::make()
-                                            ->title('Sanal POS ile ödeme yapılamaz')
-                                            ->warning()
-                                            ->send();
-                                        return;
-                                    }
-                                    $set('source_account_id', (int)$state);
-                                    $set('destination_account_id', null);
-                                }
-                            }),
-                    ])
-                    ->columns(2),
-            ]),
-        ];
-    }
-
-    /**
-     * Para birimi ve tutar form şemasını oluşturur
-     * 
-     * @return array Form bileşenleri
-     */
-    private function getCurrencyAndAmountSchema(): array
-    {
-        return [
-            Forms\Components\Grid::make(2)->schema([
-                Forms\Components\Select::make('currency')
-                    ->label('Para Birimi')
-                    ->options([
-                        'TRY' => 'Türk Lirası (₺)',
-                        'USD' => 'Amerikan Doları ($)',
-                        'EUR' => 'Euro (€)',
-                        'GBP' => 'İngiliz Sterlini (£)',
-                        'USDT' => 'Tether (USDT)',
-                    ])
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function ($state, Forms\Set $set, callable $get) {
-                        $accountId = $get('account_select');
-                        if (!$accountId) return;
-
-                        $account = Account::find($accountId);
-                        if (!$account) return;
-
-                        if ($account->type === Account::TYPE_CRYPTO_WALLET && $state !== 'USDT') {
-                            $set('currency', 'USDT');
-                            Notification::make()
-                                ->warning()
-                                ->title('Kripto cüzdanı için sadece USDT kullanılabilir')
-                                ->send();
-                            return;
-                        }
-
-                        if ($state === 'USDT' && $account->type !== Account::TYPE_CRYPTO_WALLET) {
-                            $set('account_select', null);
-                            Notification::make()
-                                ->warning()
-                                ->title('USDT sadece kripto cüzdanlar için kullanılabilir')
-                                ->send();
-                            return;
-                        }
-
-                        if ($state !== 'TRY') {
-                            $exchangeRate = $this->getExchangeRate($state);
-                            $set('exchange_rate', $exchangeRate);
-                            $set('try_equivalent', $get('amount') * $exchangeRate);
-                        }
-                    }),
-
-                Forms\Components\TextInput::make('exchange_rate')
-                    ->label('Kur')
-                    ->numeric()
-                    ->required(fn (callable $get) => $get('currency') !== 'TRY')
-                    ->default(1)
-                    ->disabled(fn (callable $get) => $get('currency') === 'TRY')
-                    ->dehydrated()
-                    ->live()
-                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                        if ($state && $get('amount')) {
-                            $set('try_equivalent', round($get('amount') * $state, 2));
-                        }
-                    })
-                    ->placeholder('Kur değeri')
-                    ->helperText('TL karşılığını hesaplamak için kur değeri'),
-            ]),
-
-            Forms\Components\Grid::make(2)->schema([
-                Forms\Components\TextInput::make('amount')
-                    ->label('Tutar (Brüt)')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0)
-                    ->live()
-                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                        $amount = $state;
-                        $exchangeRate = $get('exchange_rate') ?? 1;
-                        $tryAmount = $amount * $exchangeRate;
-                        $set('try_equivalent', round($tryAmount, 2));
-                        if ($get('is_taxable') && $get('tax_rate')) {
-                            $taxRate = $get('tax_rate') / 100;
-                            $netAmount = $amount / (1 + $taxRate);
-                            $set('tax_amount', round($amount - $netAmount, 2));
-                        }
-                        if ($get('is_taxable') && $get('has_withholding') && $get('withholding_rate')) {
-                            $withholdingRate = $get('withholding_rate') / 100;
-                            $set('withholding_amount', round($amount * $withholdingRate, 2));
-                        }
-                    })
-                    ->prefix(fn (callable $get) => match($get('currency')) {
-                        'TRY' => '₺',
-                        'USD' => '$',
-                        'EUR' => '€',
-                        'GBP' => '£',
-                        default => '₺',
-                    }),
-
-                Forms\Components\DatePicker::make('date')
-                    ->label('Tarih')
-                    ->required()
-                    ->default(now())
-                    ->displayFormat('d.m.Y')
-                    ->native(false),
-            ]),
-
-            Forms\Components\Grid::make(1)->schema([
-                Forms\Components\TextInput::make('try_equivalent')
-                    ->label('TL Karşılığı')
-                    ->disabled()
-                    ->numeric()
-                    ->prefix('₺'),
-            ])->visible(fn (callable $get) => $get('currency') !== 'TRY'),
-        ];
-    }
-
-    /**
-     * Abonelik bilgileri form şemasını oluşturur
-     * 
-     * @return Forms\Components\Section Abonelik bileşenleri
-     */
-    private function getSubscriptionSchema(): Forms\Components\Section
-    {
-        return Forms\Components\Section::make('Abonelik Bilgileri')
-            ->schema([
-                Forms\Components\Toggle::make('is_subscription')
-                    ->label('Abonelik mi?')
-                    ->helperText('Bu işlem düzenli tekrarlanan bir abonelik ödemesi ise işaretleyin.')
-                    ->default(false)
-                    ->live(),
-                
-                Forms\Components\Grid::make(2)
-                    ->schema([
-                        Forms\Components\Select::make('subscription_period')
-                            ->label('Abonelik Periyodu')
-                            ->options([
-                                'daily' => 'Günlük',
-                                'weekly' => 'Haftalık',
-                                'monthly' => 'Aylık',
-                                'quarterly' => '3 Aylık',
-                                'biannually' => '6 Aylık',
-                                'annually' => 'Yıllık',
-                            ])
-                            ->required(fn (callable $get) => $get('is_subscription'))
-                            ->native(false),
-                            
-                        Forms\Components\DatePicker::make('next_payment_date')
-                            ->label('Sonraki Ödeme Tarihi')
-                            ->displayFormat('d.m.Y')
-                            ->default(fn () => now()->addMonth())
-                            ->required(fn (callable $get) => $get('is_subscription'))
-                            ->native(false),
-                    ])
-                    ->visible(fn (callable $get) => $get('is_subscription')),
-            ])
-            ->collapsed()
-            ->collapsible();
-    }
-
-    /**
-     * Vergilendirme form şemasını oluşturur
-     * 
-     * @return Forms\Components\Section Vergilendirme bileşenleri
-     */
-    private function getTaxationSchema(): Forms\Components\Section
-    {
-        return Forms\Components\Section::make('Vergilendirme')
-            ->schema([
-                Forms\Components\Grid::make(1)->schema([
-                    Forms\Components\Select::make('is_taxable')
-                        ->label('Vergilendirme')
-                        ->options([
-                            true => 'Var',
-                            false => 'Yok',
-                        ])
-                        ->default(false)
-                        ->live()
-                        ->native(false)
-                        ->afterStateUpdated(function ($state, callable $set) {
-                            if (!$state) {
-                                $set('tax_rate', null);
-                                $set('tax_amount', null);
-                                $set('has_withholding', false);
-                                $set('withholding_rate', null);
-                                $set('withholding_amount', null);
-                            }
-                        }),
-                ]),
-
-                Forms\Components\Grid::make(2)
-                    ->schema([
-                        Forms\Components\Select::make('tax_rate')
-                            ->label('KDV Oranı')
-                            ->options([
-                                0 => '%0',
-                                1 => '%1',
-                                8 => '%8',
-                                10 => '%10',
-                                18 => '%18',
-                                20 => '%20',
-                            ])
-                            ->required(fn (callable $get) => $get('is_taxable'))
-                            ->native(false)
-                            ->live()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                if ($state === 0 || $state === null) {
-                                    $set('tax_amount', null);
-                                } else if ($get('amount')) {
-                                    $amount = $get('amount');
-                                    $taxRate = $state / 100;
-                                    $netAmount = $amount / (1 + $taxRate);
-                                    $set('tax_amount', round($amount - $netAmount, 2));
-                                }
-                            }),
-
-                        Forms\Components\TextInput::make('tax_amount')
-                            ->label('KDV Tutarı')
-                            ->disabled()
-                            ->numeric()
-                            ->prefix(fn (callable $get) => match($get('currency')) {
-                                'TRY' => '₺',
-                                'USD' => '$',
-                                'EUR' => '€',
-                                'GBP' => '£',
-                                default => '₺',
-                            }),
-                    ])->visible(fn (callable $get) => $get('is_taxable')),
-
-                Forms\Components\Grid::make(2)
-                    ->schema([
-                        Forms\Components\Select::make('has_withholding')
-                            ->label('Stopaj')
-                            ->options([
-                                true => 'Var',
-                                false => 'Yok',
-                            ])
-                            ->default(false)
-                            ->required(fn (callable $get) => $get('is_taxable'))
-                            ->native(false)
-                            ->live()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if (!$state) {
-                                    $set('withholding_rate', null);
-                                    $set('withholding_amount', null);
-                                }
-                            }),
-
-                        Forms\Components\TextInput::make('withholding_rate')
-                            ->label('Stopaj Oranı (%)')
-                            ->numeric()
-                            ->required(fn (callable $get) => $get('has_withholding'))
-                            ->live()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                if ($state === 0 || $state === null || !$get('has_withholding')) {
-                                    $set('withholding_amount', null);
-                                } else if ($get('amount')) {
-                                    $amount = $get('amount');
-                                    $withholdingRate = $state / 100;
-                                    $set('withholding_amount', round($amount * $withholdingRate, 2));
-                                }
-                            }),
-                    ])->visible(fn (callable $get) => $get('is_taxable')),
-
-                Forms\Components\Grid::make(1)
-                    ->schema([
-                        Forms\Components\TextInput::make('withholding_amount')
-                            ->label('Stopaj Tutarı')
-                            ->disabled()
-                            ->numeric()
-                            ->prefix(fn (callable $get) => match($get('currency')) {
-                                'TRY' => '₺',
-                                'USD' => '$',
-                                'EUR' => '€',
-                                'GBP' => '£',
-                                default => '₺',
-                            }),
-                    ])->visible(fn (callable $get) => $get('is_taxable') && $get('has_withholding')),
-            ])
-            ->collapsed()
-            ->collapsible();
+        $this->resetPage(); // Restore pagination reset
     }
 
     /**
@@ -641,19 +123,15 @@ class TransactionManager extends Component implements HasForms, HasTable
      */
     public function table(Tables\Table $table): Tables\Table
     {
+        // Define the base query without the active filter applied here
+        $baseQuery = Transaction::query()
+            ->with(['category', 'sourceAccount', 'destinationAccount'])
+            ->orderByDesc('id'); // Add default sorting by ID in descending order
+
         return $table
-            ->query(
-                Transaction::query()
-                    ->where('user_id', auth()->id())
-                    ->where(function ($query) {
-                        $query->where(function ($q) {
-                            $q->where('type', 'transfer')
-                              ->where('amount', '>', 0);
-                        })->orWhere('type', '!=', 'transfer');
-                    })
-                    ->latest('id')
-                    ->with(['category', 'sourceAccount', 'destinationAccount'])
-            )
+            ->query($baseQuery) // Use the base query
+            ->modifyQueryUsing(fn (Builder $query) => $this->applyActiveFilter($query)) // Apply filter dynamically
+            ->defaultSort('id', 'desc') // Add default sort to table configuration
             ->emptyStateHeading('İşlem Bulunamadı')
             ->emptyStateDescription('Başlamak için yeni bir işlem ekleyin.')
             ->columns([
@@ -729,20 +207,20 @@ class TransactionManager extends Component implements HasForms, HasTable
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Tür')
                     ->options([
-                        'income' => 'Gelir',
-                        'expense' => 'Gider',
-                        'transfer' => 'Transfer',
-                        'loan_payment' => 'Kredi Ödemesi',
-                        'payment' => 'Kredi Kartı Ödemesi',
+                        Transaction::TYPE_INCOME => 'Gelir',
+                        Transaction::TYPE_EXPENSE => 'Gider',
+                        Transaction::TYPE_TRANSFER => 'Transfer',
+                        Transaction::TYPE_LOAN_PAYMENT => 'Kredi Ödemesi',
+                        Transaction::TYPE_CREDIT_PAYMENT => 'Kredi Kartı Ödemesi',
                     ])
                     ->native(false),
                 
                 Tables\Filters\SelectFilter::make('income_category_id')
                     ->label('Gelir Kategorisi')
                     ->options(function() {
-                        return cache()->remember("user_{auth()->id()}_categories_income", now()->addHours(24), function () {
-                            return Category::where('user_id', auth()->id())
-                                ->where('type', 'income')
+                        return cache()->remember("all_categories_income", now()->addHours(24), function () {
+                            return Category::where('type', 'income')
+                                ->where('status', true)
                                 ->pluck('name', 'id')
                                 ->toArray();
                         });
@@ -762,9 +240,9 @@ class TransactionManager extends Component implements HasForms, HasTable
                 Tables\Filters\SelectFilter::make('expense_category_id')
                     ->label('Gider Kategorisi')
                     ->options(function() {
-                        return cache()->remember("user_{auth()->id()}_categories_expense", now()->addHours(24), function () {
-                            return Category::where('user_id', auth()->id())
-                                ->where('type', 'expense')
+                        return cache()->remember("all_categories_expense", now()->addHours(24), function () {
+                            return Category::where('type', 'expense')
+                                ->where('status', true)
                                 ->pluck('name', 'id')
                                 ->toArray();
                         });
@@ -823,9 +301,13 @@ class TransactionManager extends Component implements HasForms, HasTable
                     ->url(fn (Transaction $record): string => route('admin.transactions.edit', $record))
                     ->extraAttributes(['wire:navigate' => true])
                     ->icon('heroicon-m-pencil-square')
-                    ->visible(fn (Transaction $record) => !in_array($record->type, ['transfer', 'atm_deposit', 'atm_withdraw', 'loan_payment', 'payment'])),
+                    ->visible(fn (Transaction $record) => !in_array($record->type, ['transfer', 'atm_deposit', 'atm_withdraw', 'loan_payment', 'payment']) && auth()->user()->can('transactions.edit')),
 
                 Tables\Actions\DeleteAction::make()
+                    ->modalHeading('İşlemi Sil')
+                    ->modalDescription('Bu işlemi silmek istediğinize emin misiniz?')
+                    ->modalSubmitActionLabel('Sil')
+                    ->modalCancelActionLabel('İptal')
                     ->using(function (Transaction $record) {
                         if (in_array($record->type, ['transfer', 'atm_deposit', 'atm_withdraw', 'loan_payment', 'payment'])) {
                             Notification::make()
@@ -840,14 +322,10 @@ class TransactionManager extends Component implements HasForms, HasTable
                             $result = $this->transactionService->delete($record);
                             if ($result) {
                                 $this->dispatch('transactionDeleted');
-                                Notification::make()
-                                    ->title('İşlem Silindi')
-                                    ->success()
-                                    ->send();
                             }
                             return $result;
                         } catch (\Exception $e) {
-                            Log::error('Transaction delete error: ' . $e->getMessage());
+                            Log::error('İşlem silme hatası: ' . $e->getMessage());
                             Notification::make()
                                 ->title('Hata')
                                 ->body('İşlem silinirken bir hata oluştu: ' . $e->getMessage())
@@ -856,7 +334,7 @@ class TransactionManager extends Component implements HasForms, HasTable
                             return false;
                         }
                     })
-                    ->visible(fn (Transaction $record) => !in_array($record->type, ['transfer', 'atm_deposit', 'atm_withdraw', 'loan_payment', 'payment'])),
+                    ->visible(fn (Transaction $record) => !in_array($record->type, ['transfer', 'atm_deposit', 'atm_withdraw', 'loan_payment', 'payment']) && auth()->user()->can('transactions.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -904,15 +382,39 @@ class TransactionManager extends Component implements HasForms, HasTable
                                     ->warning()
                                     ->send();
                             }
-                        }),
+                        })
+                        ->visible(auth()->user()->can('transactions.delete')),
                 ]),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('create')
                     ->label('İşlem Oluştur')
                     ->url(route('admin.transactions.create'))
-                    ->extraAttributes(['wire:navigate' => true]),
+                    ->extraAttributes(['wire:navigate' => true])
+                    ->visible(auth()->user()->can('transactions.create')),
             ]);
+    }
+
+    /**
+     * Applies the currently active filter to the table query.
+     *
+     * @param Builder $query The Eloquent query builder instance.
+     * @return Builder The modified query builder instance.
+     */
+    protected function applyActiveFilter(Builder $query): Builder
+    {
+        if ($this->activeFilter === 'all') {
+            return $query; // No filter needed for 'all'
+        }
+
+        return match ($this->activeFilter) {
+            'income' => $query->where('type', Transaction::TYPE_INCOME),
+            'expense' => $query->where('type', Transaction::TYPE_EXPENSE),
+            'transfer' => $query->where('type', Transaction::TYPE_TRANSFER)->where('amount', '>', 0),
+            'payments' => $query->whereIn('type', [Transaction::TYPE_LOAN_PAYMENT, Transaction::TYPE_DEBT_PAYMENT, Transaction::TYPE_CREDIT_PAYMENT]),
+            'atm' => $query->whereIn('type', [Transaction::TYPE_ATM_DEPOSIT, Transaction::TYPE_ATM_WITHDRAW]),
+            default => $query, // Should not happen, but safety first
+        };
     }
 
     /**
@@ -922,8 +424,27 @@ class TransactionManager extends Component implements HasForms, HasTable
      */
     public function render(): View
     {
+        // Calculate filter counts
+        $baseCountQuery = Transaction::query();
+
+        $filterCounts = [
+            'all' => (clone $baseCountQuery)->where(function (Builder $query) {
+                            $query->where('type', '<>', 'transfer')
+                                  ->orWhere(function (Builder $q) {
+                                      $q->where('type', 'transfer')
+                                        ->where('amount', '>', 0);
+                                  });
+                        })->count(),
+            'income' => (clone $baseCountQuery)->where('type', Transaction::TYPE_INCOME)->count(),
+            'expense' => (clone $baseCountQuery)->where('type', Transaction::TYPE_EXPENSE)->count(),
+            'transfer' => (clone $baseCountQuery)->where('type', Transaction::TYPE_TRANSFER)->where('amount', '>', 0)->count(),
+            'payments' => (clone $baseCountQuery)->whereIn('type', [Transaction::TYPE_LOAN_PAYMENT, Transaction::TYPE_DEBT_PAYMENT, Transaction::TYPE_CREDIT_PAYMENT])->count(),
+            'atm' => (clone $baseCountQuery)->whereIn('type', [Transaction::TYPE_ATM_DEPOSIT, Transaction::TYPE_ATM_WITHDRAW])->count(),
+        ];
+
         return view('livewire.transaction.transaction-manager', [
             'stats' => new TransactionStatsWidget(),
+            'filterCounts' => $filterCounts, // Pass counts to the view
         ]);
     }
 

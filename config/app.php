@@ -78,17 +78,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'tr'),
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'tr',
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
-
-    'available_locales' => [
-        'en',
-        'tr',
-        'de',
-    ],
+    'faker_locale' => env('APP_FAKER_LOCALE', 'tr_TR'),
 
     /*
     |--------------------------------------------------------------------------
@@ -129,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demo Mode
+    |--------------------------------------------------------------------------
+    |
+    | This value determines if the application is in demo mode.
+    | When demo mode is enabled, special login options will be available.
+    |
+    */
+
+    'app_demo_mode' => (bool) env('APP_DEMO_MODE', false),
 ];

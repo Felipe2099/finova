@@ -67,7 +67,6 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
         return $table
             ->query(
                 Account::query()
-                    ->where('user_id', auth()->id())
                     ->where('type', Account::TYPE_VIRTUAL_POS)
             )
             ->emptyStateHeading('Sanal POS Bulunamadı')
@@ -118,18 +117,20 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                     ->modalHeading('Sanal POS Düzenle')
                     ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('virtual_pos.edit'))
                     ->form($this->getFormSchema())
                     ->using(function (Account $record, array $data) {
-                        $accountData = AccountData::fromArray([
-                            'name' => $data['name'],
-                            'type' => Account::TYPE_VIRTUAL_POS,
-                            'currency' => $data['currency'],
-                            'status' => $data['status'],
-                            'details' => [
-                                'provider' => $data['details']['provider'],
-                                'commission_rate' => $data['details']['commission_rate'],
-                            ],
-                        ]);
+                        $accountData = new AccountData(
+                            id: $record->id,
+                            user_id: $record->user_id, // Keep original user_id
+                            name: $data['name'],
+                            type: Account::TYPE_VIRTUAL_POS, // Explicitly set type
+                            currency: $data['currency'],
+                            balance: $data['balance'],
+                            description: $data['description'] ?? null, // Add description
+                            status: $data['status'],
+                            details: $data['details'] ?? null, // Pass full details array
+                        );
                         
                         return $this->accountService->updateAccount($record, $accountData);
                     }),
@@ -139,6 +140,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Sanal POS silindi')
+                    ->visible(fn () => auth()->user()->can('virtual_pos.delete'))
                     ->label('Sil')
                     ->using(function (Account $record) {
                         return $this->accountService->delete($record);
@@ -148,6 +150,14 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                     ->icon('heroicon-o-arrow-right-circle')
                     ->modalHeading('POS\'tan Banka Hesabına Transfer')
                     ->modalDescription('Bunu yapmak istediğinizden emin misiniz?')
+                    ->visible(function (Account $record): bool { 
+                        return auth()->user()->can('virtual_pos.transfer') &&
+                               Account::where('status', true)
+                                   ->where('type', Account::TYPE_BANK_ACCOUNT)
+                                   ->exists() && 
+                               $record->balance > 0 &&
+                               $record->status;
+                    })
                     ->form(function (Account $record) {
                         return [
                             Forms\Components\Grid::make()
@@ -485,19 +495,14 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                 ->danger()
                                 ->send();
                         }
-                    })
-                    ->visible(fn (Account $record): bool => 
-                        Account::where('status', true)
-                            ->where('type', Account::TYPE_BANK_ACCOUNT)
-                            ->exists() && 
-                        $record->calculateTryBalance() > 0 &&
-                        $record->status
-                    ),
+                    }),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Seçili POS\'ları Sil'),
+                        ->label('Seçili POS\'ları Sil')
+                        ->visible(fn () => auth()->user()->can('virtual_pos.delete')),
                 ]),
             ])
             ->headerActions([
@@ -506,6 +511,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                     ->modalHeading('Yeni Sanal POS')
                     ->modalSubmitActionLabel('Oluştur')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('virtual_pos.create'))
                     ->form($this->getFormSchema())
                     ->createAnother(false)
                     ->using(function (array $data) {
@@ -541,8 +547,10 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                     Forms\Components\Select::make('details.provider')
                         ->label('Sağlayıcı')
                         ->options([
-                            'iyzico' => 'iyzico',
+                            'stripe' => 'Stripe',
                             'PayTR' => 'PayTR',
+                            'vallet' => 'Vallet',
+                            'iyzico' => 'iyzico',
                             'Shopier' => 'Shopier',
                             'Other' => 'Diğer',
                         ])

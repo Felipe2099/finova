@@ -1,9 +1,9 @@
 <x-table.table-layout 
-    pageTitle="Role Management"
+    pageTitle="Rol Yönetimi"
     :breadcrumbs="[
         ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'wire' => true, 'icon' => 'fas fa-home'],
-        ['label' => 'Roles', 'icon' => 'fas fa-user-shield'],
-        ['label' => 'List']
+        ['label' => 'Roller', 'icon' => 'fas fa-user-shield'],
+        ['label' => 'Liste']
     ]"
 >
     {{ $this->table }}

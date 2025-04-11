@@ -66,4 +66,21 @@ class User extends Authenticatable
     {
         return $this->has_commission && $this->commission_rate > 0;
     }
+
+    /**
+     * Get the AI conversations for the user.
+     */
+    public function aiConversations()
+    {
+        return $this->hasMany(AIConversation::class);
+    }
+
+    /**
+     * Get the transactions for the user.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
 }

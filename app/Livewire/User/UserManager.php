@@ -99,7 +99,7 @@ class UserManager extends Component implements HasTable, HasForms
                     ->icon('heroicon-m-currency-dollar')
                     ->url(fn (User $record) => route('admin.users.commissions', $record))
                     ->extraAttributes(['wire:navigate' => true])
-                    ->visible(fn (User $record) => $record->has_commission),
+                    ->visible(fn (User $record) => $record->has_commission && auth()->user()->can('users.commissions')),
 
                 
                 Action::make('changePassword')
@@ -136,14 +136,17 @@ class UserManager extends Component implements HasTable, HasForms
                                 ->danger()
                                 ->send();
                         }
-                    }),
-
+                    })
+                    ->disabled(fn () => config('app.app_demo_mode', false))
+                    ->tooltip(fn () => config('app.app_demo_mode', false) ? 'Demo modunda şifre değiştirilemez' : null)
+                    ->visible(auth()->user()->can('users.change_password')),
 
                 Action::make('edit')
                     ->label('Düzenle')
                     ->url(fn (User $record) => route('admin.users.edit', $record))
                     ->extraAttributes(['wire:navigate' => true])
-                    ->icon('heroicon-m-pencil-square'),
+                    ->icon('heroicon-m-pencil-square')
+                    ->visible(auth()->user()->can('users.edit')),
 
                 
                 Action::make('delete')
@@ -169,14 +172,16 @@ class UserManager extends Component implements HasTable, HasForms
                                 ->send();
                         }
                     })
-                    ->hidden(fn (User $record) => $record->trashed()),
+                    ->hidden(fn (User $record) => $record->trashed())
+                    ->visible(auth()->user()->can('users.delete')),
 
             ])
             ->headerActions([
                 Action::make('create')
                     ->label('Kullanıcı Oluştur')
                     ->extraAttributes(['wire:navigate' => true])
-                    ->url(route('admin.users.create')),
+                    ->url(route('admin.users.create'))
+                    ->visible(auth()->user()->can('users.create')),
             ]);
     }
 

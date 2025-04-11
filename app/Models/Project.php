@@ -23,7 +23,7 @@ class Project extends Model
      * 
      * @var array<string>
      */
-    protected $fillable = ['name', 'description', 'status', 'created_by'];
+    protected $fillable = ['name', 'description', 'status', 'created_by', 'view_type'];
 
     /**
      * Model başlatıldığında çalışacak metodlar

@@ -63,6 +63,19 @@ final class LeadManager extends Component implements HasForms, HasTable
     {
         return $table
             ->query(Lead::query())
+            ->defaultGroup(
+                Tables\Grouping\Group::make('status')
+                    ->label('Durum')
+                    ->getTitleFromRecordUsing(fn (Lead $record): string => match ($record->status) {
+                        'new' => 'Yeni',
+                        'contacted' => 'İletişime Geçildi',
+                        'proposal_sent' => 'Teklif Gönderildi',
+                        'negotiating' => 'Görüşülüyor',
+                        'converted' => 'Müşteriye Çevrildi',
+                        'lost' => 'Kaybedildi',
+                        default => ucfirst($record->status),
+                    })
+            )
             ->emptyStateHeading('Potansiyel Müşteri Bulunamadı')
             ->emptyStateDescription('Başlamak için yeni bir potansiyel müşteri oluşturun.')
             ->columns([
@@ -98,7 +111,8 @@ final class LeadManager extends Component implements HasForms, HasTable
                         'negotiating' => 'primary',
                         'converted' => 'success',
                         'lost' => 'danger',
-                    }),
+                    })
+                    , // groupable() kaldırıldı
             ])
             ->filters([
                 SelectFilter::make('source')
@@ -127,6 +141,7 @@ final class LeadManager extends Component implements HasForms, HasTable
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->label('Düzenle')
+                    ->visible(fn () => auth()->user()->can('leads.edit'))
                     ->hidden(fn (Lead $record): bool => $record->status === 'converted')
                     ->modalHeading('Potansiyel Müşteriyi Düzenle')
                     ->modalSubmitActionLabel('Güncelle')
@@ -135,6 +150,7 @@ final class LeadManager extends Component implements HasForms, HasTable
                     ->successNotificationTitle('Potansiyel müşteri düzenlendi'),
                 Tables\Actions\Action::make('convert')
                     ->label('Müşteriye Çevir')
+                    ->visible(fn () => auth()->user()->can('leads.convert_customer'))
                     ->hidden(fn (Lead $record): bool => $record->status === 'converted')
                     ->icon('heroicon-m-user-plus')
                     ->modalWidth('4xl')
@@ -204,6 +220,7 @@ final class LeadManager extends Component implements HasForms, HasTable
                     ->modalSubmitActionLabel('Çevir'),
                 Tables\Actions\DeleteAction::make()
                     ->label('Sil')
+                    ->visible(fn () => auth()->user()->can('leads.delete'))
                     ->modalHeading('Potansiyel Müşteriyi Sil')
                     ->modalDescription('Bu potansiyel müşteriyi silmek istediğinize emin misiniz?')
                     ->modalSubmitActionLabel('Sil')
@@ -213,6 +230,7 @@ final class LeadManager extends Component implements HasForms, HasTable
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Potansiyel Müşteri Oluştur')
+                    ->visible(fn () => auth()->user()->can('leads.create'))
                     ->modalHeading('Yeni Potansiyel Müşteri')
                     ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
@@ -333,6 +351,7 @@ final class LeadManager extends Component implements HasForms, HasTable
      */
     public function render(): View
     {
+        abort_unless(auth()->user()->can('leads.view'), 403);
         return view('livewire.lead.lead-manager');
     }
 } 

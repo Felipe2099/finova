@@ -40,4 +40,13 @@ return [
         'api_url' => 'https://evds2.tcmb.gov.tr/service/evds/series',
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'default_chat_id' => env('TELEGRAM_DEFAULT_CHAT_ID'),
+    ],
+
 ];

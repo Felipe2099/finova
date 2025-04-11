@@ -55,13 +55,26 @@ class UserForm extends Component implements HasForms
     public bool $showRestoreModal = false;
 
     /**
+     * İzinleri bir modal içinde görüntüler
+     */
+    public $showPermissionsModal = false;
+    public $selectedRoleId = null;
+    public $permissionsList = [];
+
+    /**
      * Formu hazırlar ve varsa mevcut kullanıcı verilerini yükler
      */
     public function mount($user = null): void
     {
         // Düzenleme modu kontrolü
         $this->isEdit = $user !== null;
-        $this->user = $user ?? new User();
+        
+        // Düzenleme ise kullanıcı ve rollerini yükle
+        if ($this->isEdit) {
+            $this->user = User::with('roles')->find($user->id);
+        } else {
+            $this->user = new User();
+        }
         
         // Formları ayrı render et
         if ($this->isEdit) {
@@ -76,18 +89,23 @@ class UserForm extends Component implements HasForms
      */
     private function createEditForm(): void
     {
-        // Kullanıcı bilgilerini yükle
+        // Kullanıcı bilgilerini ve rol ID'sini al
         $role = $this->user->roles->first();
-        
-        $this->form->fill([
+        $roleId = $role ? $role->id : null;
+
+        // Formu doldurmak için verileri hazırla
+        $formData = [
             'name' => $this->user->name,
             'email' => $this->user->email,
             'phone' => $this->user->phone,
             'status' => $this->user->status,
-            'roles' => $role ? $role->id : null,
+            'roles' => $roleId,
             'has_commission' => $this->user->has_commission ?? false,
             'commission_rate' => $this->user->commission_rate,
-        ]);
+        ];
+
+        // Formu hazır verilerle doldur
+        $this->form->fill($formData);
     }
     
     /**
@@ -131,6 +149,7 @@ class UserForm extends Component implements HasForms
                         ->required()
                         ->default(1),
                     
+                    
                     Select::make('roles')
                         ->label('Rol')
                         ->preload()
@@ -139,7 +158,7 @@ class UserForm extends Component implements HasForms
                         ->native(false)
                         ->reactive(),
                     
-                    Placeholder::make('permissions')
+                    Placeholder::make('permissions_info')
                         ->label('İzinler')
                         ->content(function (Get $get) {
                             $roleId = $get('roles');
@@ -147,15 +166,15 @@ class UserForm extends Component implements HasForms
                                 return 'Rol seçilmedi.';
                             }
                             
-                            $permissions = Role::where('id', $roleId)
-                                ->with('permissions')
-                                ->first()
-                                ?->permissions
-                                ->pluck('name')
-                                ->sort()
-                                ->implode(', ');
+                            $role = Role::find($roleId);
+                            if (!$role || $role->permissions->isEmpty()) {
+                                return 'Bu role ait izin bulunmuyor.';
+                            }
                             
-                            return $permissions ?: 'Bu role ait izin bulunmuyor.';
+                            return view('livewire.user.partials.permissions-button', [
+                                'roleId' => $roleId,
+                                'count' => $role->permissions->count(),
+                            ]);
                         })
                         ->columnSpanFull(),
                 ]),
@@ -393,6 +412,33 @@ class UserForm extends Component implements HasForms
     public function cancel(): void
     {
         $this->redirectRoute('admin.users.index', navigate: true);
+    }
+
+    /**
+     * İzinleri bir modal içinde görüntüler
+     */
+    public function showPermissions($roleId): void
+    {
+        $this->selectedRoleId = $roleId;
+        
+        $role = Role::with('permissions')->find($roleId);
+        if ($role) {
+            // İzinleri Türkçe display_name ile hazırla
+            $this->permissionsList = $role->permissions->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'name' => $permission->name,
+                    'display_name' => $permission->display_name ?? $permission->name, // Doğrudan display_name kullan
+                ];
+            })->sortBy('display_name')->values()->toArray();
+        }
+        
+        $this->showPermissionsModal = true;
+    }
+
+    public function closePermissionsModal(): void
+    {
+        $this->showPermissionsModal = false;
     }
 
     /**

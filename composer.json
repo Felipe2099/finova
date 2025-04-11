@@ -12,10 +12,12 @@
         "filament/forms": "^3.2",
         "filament/tables": "^3.2",
         "filament/widgets": "^3.2",
+        "irazasyed/telegram-bot-sdk": "^3.15",
         "laravel-frontend-presets/tall": "^8.0",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
+        "openai-php/client": "^0.10.3",
         "spatie/eloquent-sortable": "^4.4",
         "spatie/laravel-permission": "^6.10"
     },
@@ -36,10 +38,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        },
-        "files": [
-            "app/Helpers/PermissionHelper.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {

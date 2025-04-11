@@ -9,8 +9,21 @@ use App\Services\Debt\Contracts\DebtServiceInterface;
 
 class Kernel extends ConsoleKernel
 {
+    /**
+     * Define the application's command schedule.
+     */
     protected function schedule(Schedule $schedule): void
     {
+        // $schedule->command('inspire')->hourly();
+        
+        // Her 30 dakikada bir demo verilerini güncelle
+        if (config('app.app_demo_mode')) {
+            $schedule->command('demo:refresh')
+                ->everyThirtyMinutes()
+                ->withoutOverlapping()
+                ->runInBackground();
+        }
+
         $schedule->call(function () {
             Debt::where('due_date', '<', now()->startOfDay())
                 ->where('status', 'pending')
@@ -19,13 +32,24 @@ class Kernel extends ConsoleKernel
                 });
         })->daily();
 
-        // Her gün sabah 6'da bloke süresi dolan işlemleri işle
-        $schedule->command('app:process-blocked-transfers')->dailyAt('06:00');
+        // Yaklaşan ödemeler için Telegram bildirimleri gönder
+        $schedule->command('notifications:upcoming-payments')
+            ->dailyAt('08:00')
+            ->when(function () {
+                $enabled = \App\Models\Setting::where('group', 'telegram')
+                    ->where('key', 'telegram_enabled')
+                    ->first();
+                return $enabled && filter_var($enabled->value, FILTER_VALIDATE_BOOLEAN);
+            });
     }
 
+    /**
+     * Register the commands for the application.
+     */
     protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
+
         require base_path('routes/console.php');
     }
 } 

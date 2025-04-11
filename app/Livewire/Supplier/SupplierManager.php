@@ -89,7 +89,8 @@ class SupplierManager extends Component implements HasForms, HasTable
                     ->form($this->getSupplierForm())
                     ->using(function (Supplier $record, array $data): Supplier {
                         return $this->supplierService->update($record, SupplierData::fromArray($data));
-                    }),
+                    })
+                    ->visible(auth()->user()->can('suppliers.edit')),
                 Tables\Actions\DeleteAction::make()
                     ->modalHeading('Tedarikçi Sil')
                     ->modalDescription('Bu tedarikçiyi silmek istediğinize emin misiniz?')
@@ -99,7 +100,8 @@ class SupplierManager extends Component implements HasForms, HasTable
                     ->label('Sil')
                     ->using(function (Supplier $record): void {
                         $this->supplierService->delete($record);
-                    }),
+                    })
+                    ->visible(auth()->user()->can('suppliers.delete')),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
@@ -112,7 +114,8 @@ class SupplierManager extends Component implements HasForms, HasTable
                     ->form($this->getSupplierForm())
                     ->using(function (array $data): Supplier {
                         return $this->supplierService->create(SupplierData::fromArray($data));
-                    }),
+                    })
+                    ->visible(auth()->user()->can('suppliers.create')),
             ]);
     }
 
@@ -124,18 +127,21 @@ class SupplierManager extends Component implements HasForms, HasTable
     protected function getSupplierForm(): array
     {
         return [
-            Forms\Components\TextInput::make('name')
-                ->label('Tedarikçi Adı')
-                ->required(),
-            Forms\Components\TextInput::make('contact_name')
-                ->label('İletişim Kişisi'),
-            Forms\Components\TextInput::make('phone')
-                ->label('Telefon')
-                ->tel(),
-            Forms\Components\TextInput::make('email')
-                ->label('E-posta')
-                ->email()
-                ->unique(Supplier::class, 'email', ignoreRecord: true),
+            Forms\Components\Grid::make(2)
+                ->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->label('Tedarikçi Adı')
+                        ->required(),
+                    Forms\Components\TextInput::make('contact_name')
+                        ->label('İletişim Kişisi'),
+                    Forms\Components\TextInput::make('phone')
+                        ->label('Telefon')
+                        ->tel(),
+                    Forms\Components\TextInput::make('email')
+                        ->label('E-posta')
+                        ->email()
+                        ->unique(Supplier::class, 'email', ignoreRecord: true),
+                ]),
             Forms\Components\Textarea::make('address')
                 ->label('Adres')
                 ->rows(3),

@@ -1,0 +1,60 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache; // Cache facade'ını ekle
+
+class SettingSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Önce mevcut ayarları temizleyebiliriz (isteğe bağlı)
+        // DB::table('settings')->truncate(); // Dikkatli kullanın!
+
+        $settings = [
+            // Site Ayarları
+            ['group' => 'site', 'key' => 'site_title', 'value' => 'Mikpa Yazılım | Gelir-Gider CRM', 'type' => 'text'],
+            ['group' => 'site', 'key' => 'site_logo', 'value' => 'site/logo.svg', 'type' => 'text'], // veya 'file' tipi varsa o kullanılabilir
+            ['group' => 'site', 'key' => 'site_favicon', 'value' => 'site/favicon.svg', 'type' => 'text'], // veya 'file'
+
+            // Bildirim Ayarları
+            ['group' => 'notification', 'key' => 'notify_credit_card_statement', 'value' => false, 'type' => 'boolean'],
+            ['group' => 'notification', 'key' => 'notify_loan_payment', 'value' => false, 'type' => 'boolean'],
+            ['group' => 'notification', 'key' => 'notify_recurring_payment', 'value' => false, 'type' => 'boolean'],
+            ['group' => 'notification', 'key' => 'notify_debt_receivable', 'value' => false, 'type' => 'boolean'],
+
+            // Telegram Ayarları
+            ['group' => 'telegram', 'key' => 'telegram_enabled', 'value' => false, 'type' => 'boolean'],
+            ['group' => 'telegram', 'key' => 'telegram_bot_token', 'value' => '', 'type' => 'text'],
+            ['group' => 'telegram', 'key' => 'telegram_chat_id', 'value' => '', 'type' => 'text'],
+        ];
+
+        foreach ($settings as $setting) {
+            // Aynı grup ve anahtara sahip ayar varsa güncelle, yoksa oluştur
+            Setting::updateOrCreate(
+                ['group' => $setting['group'], 'key' => $setting['key']],
+                ['value' => $setting['value'], 'type' => $setting['type']] // type alanını da ekle
+            );
+        }
+
+        // Site ayarları cache'ini güncelle
+        try {
+            $siteSettings = Setting::where('group', 'site')
+                ->pluck('value', 'key') // 'key' => 'value' formatında al
+                ->toArray();
+
+            if (!empty($siteSettings)) {
+                Cache::put('site_settings', $siteSettings);
+                $this->command->info('Site ayarları önbelleği güncellendi.');
+            }
+        } catch (\Exception $e) {
+             $this->command->error('Site ayarları önbelleği güncellenirken hata oluştu: ' . $e->getMessage());
+        }
+    }
+}

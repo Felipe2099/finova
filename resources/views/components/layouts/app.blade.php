@@ -3,11 +3,28 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @php
+        // Cache'den site ayarlarını al (AppServiceProvider'da dolduruluyor)
+        $siteSettings = \Illuminate\Support\Facades\Cache::get('site_settings', []);
+        $siteTitle = $siteSettings['site_title'] ?? config('app.name', 'Laravel');
+        $faviconPath = $siteSettings['site_favicon'] ?? null;
+        $faviconUrl = ($faviconPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($faviconPath))
+                      ? \Illuminate\Support\Facades\Storage::url($faviconPath)
+                      : null;
+    @endphp
+
+    <title>{{ $siteTitle }}</title> 
+
+    @if($faviconUrl)
+        <link rel="icon" href="{{ $faviconUrl }}">
+    @endif
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @filamentStyles
     @livewireStyles
+    @stack('styles')
 
     <style>
         /* Tüm toggle sütunlarını küçültme */
@@ -29,11 +46,11 @@
     </style>
 
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 font-sans antialiased"> 
     @auth
         @include('components.partials.header')
         @include('components.partials.sidebar')
-        
+
         <main class="lg:ml-64 pt-16">
             <div class="p-4">
                 <div class="w-full overflow-hidden">
@@ -41,13 +58,18 @@
                 </div>
             </div>
         </main>
+        
+        {{-- AI Chat Widget --}}
+        @role('admin')
+            <livewire:ai.chat-widget />
+        @endrole
     @else
         {{ $slot }}
     @endauth
-    
+
     @livewireScripts
     @filamentScripts
-   
+
     @livewire('notifications')
 
     @stack('scripts')

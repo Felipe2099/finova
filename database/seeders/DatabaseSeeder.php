@@ -14,8 +14,19 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@admin.com',
             'phone' => '+905555555555',
             'password' => 'admin123',
+            'has_commission' => false,
+            'commission_rate' => 0,
+            'status' => true,
+            'remember_token' => Str::random(10),
+        ]);
+
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@test.com',
+            'phone' => '+905555555554',
+            'password' => 'testtest',
             'has_commission' => true,
-            'commission_rate' => 10,
+            'commission_rate' => 15,
             'status' => true,
             'remember_token' => Str::random(10),
         ]);
@@ -23,8 +34,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             AdminUserSeeder::class,
-            CategorySeeder::class,
-            DemoDataSeeder::class
+            SettingSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }

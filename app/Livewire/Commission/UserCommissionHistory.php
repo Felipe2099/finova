@@ -158,7 +158,8 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
                     ->send();
 
                 $this->dispatch('commission-stats-updated');
-            });
+            })
+            ->visible(auth()->user()->can('users.commission.payment'));
     }
 
     /**

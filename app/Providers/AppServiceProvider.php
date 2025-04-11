@@ -53,9 +53,21 @@ use App\Services\Analytics\TransactionAnalyticsService;
 use App\Services\CreditCard\Contracts\CreditCardServiceInterface;
 use App\Services\CreditCard\Implementations\CreditCardService;
 
+use App\Services\AI\Contracts\AIAssistantInterface;
+use App\Services\AI\Implementations\OpenAIAssistant;
+use OpenAI\Client;
+use OpenAI\Laravel\Facades\OpenAI;
+
+use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
+
 /**
  * Uygulama Servis Sağlayıcısı
- * 
+ *
  * Uygulamanın servis kayıtlarını ve başlangıç yapılandırmasını yönetir.
  * Tüm servis arayüzlerinin implementasyonlarını kaydeder ve uygulama başlangıcında
  * gerekli yapılandırmaları gerçekleştirir.
@@ -64,14 +76,35 @@ class AppServiceProvider extends ServiceProvider
 {
     /**
      * Uygulama servislerini kaydeder
-     * 
+     *
      * Tüm servis arayüzlerini ilgili implementasyonlarına bağlar.
      * Singleton ve bind kayıtları yapılandırılır.
-     * 
+     *
      * @return void
      */
     public function register(): void
     {
+        try {
+            $settings = Cache::get('site_settings', []);
+
+            if (!empty($settings['site_title'])) {
+                config(['filament.brand' => $settings['site_title']]);
+            }
+
+            $logoUrl = null;
+            if (!empty($settings['site_logo'])) {
+                 $logoPath = $settings['site_logo'];
+            }
+
+            // Favicon
+            $faviconUrl = null;
+            if (!empty($settings['site_favicon'])) {
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Filament ayarları register metodunda yüklenirken hata oluştu: ' . $e->getMessage());
+        }
+
         // Temel servis arayüzlerini implementasyonlarına bağla
         $this->app->singleton(CustomerServiceInterface::class, CustomerService::class);
         $this->app->singleton(LeadServiceInterface::class, LeadService::class);
@@ -80,17 +113,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(BankAccountServiceInterface::class, BankAccountService::class);
         $this->app->singleton(ProjectServiceInterface::class, ProjectService::class);
         $this->app->singleton(UserServiceInterface::class, UserService::class);
-        
+
         // Kredi kartı servisi
         $this->app->bind(CreditCardServiceInterface::class, CreditCardService::class);
-        
+
         // Diğer temel servisler
         $this->app->bind(DebtServiceInterface::class, DebtService::class);
         $this->app->bind(RoleServiceInterface::class, RoleService::class);
         $this->app->bind(SupplierServiceInterface::class, SupplierService::class);
         $this->app->bind(LoanServiceInterface::class, LoanService::class);
         $this->app->bind(AccountServiceInterface::class, AccountService::class);
-        
+
         // Yardımcı servisleri singleton olarak kaydet
         $this->app->singleton(PaymentServiceInterface::class, PaymentService::class);
         $this->app->singleton(TransactionAnalyticsService::class);
@@ -105,18 +138,43 @@ class AppServiceProvider extends ServiceProvider
 
         // Planlama servisi
         $this->app->bind(PlanningServiceInterface::class, PlanningService::class);
+
+
+        $this->app->bind(AIAssistantInterface::class, function ($app) {
+            return match(config('ai.default')) {
+                'gemini' => new GeminiAssistant(),
+                'openai' => new OpenAIAssistant($app->make(Client::class)),
+                default => new GeminiAssistant(),
+            };
+        });
+
+        if (config('ai.default') === 'openai') {
+            $this->app->bind(Client::class, function ($app) {
+                return OpenAI::client(config('ai.openai.api_key'), [
+                    'organization' => config('ai.openai.organization'),
+                ]);
+            });
+        }
+
+        // AI ve SQL servisleri
+        $this->app->singleton(\App\Services\AI\DatabaseSchemaService::class);
+        $this->app->singleton(\App\Services\AI\SqlQueryService::class);
     }
 
     /**
      * Uygulama servislerini başlatır
-     * 
+     *
      * Uygulama başlangıcında gerekli yapılandırmaları gerçekleştirir.
      * Blade bileşenlerini, renk şemalarını ve sistem ayarlarını yapılandırır.
-     * 
+     *
      * @return void
      */
     public function boot(): void
     {
+        if($this->app->environment('production')) {
+            \URL::forceScheme('https');
+        }
+
         // Blade bileşenlerini kaydet
         Blade::component('auth', \App\View\Auth::class);
 
@@ -128,9 +186,40 @@ class AppServiceProvider extends ServiceProvider
             'success' => Color::Green,
             'warning' => Color::Yellow,
         ]);
-        
+
         // Sistem ayarlarını yapılandır
         ini_set('memory_limit', '512M');
         ini_set('max_execution_time', 300);
+
+        // Logo ve Favicon URL'lerini boot aşamasında ayarlamayı dene (config üzerinden)
+        try {
+             if ($this->app->runningInConsole() || !Schema::hasTable('settings')) {
+                 return;
+             }
+             $settings = Cache::get('site_settings', []); // Cache'den tekrar oku
+
+             // Site Logosu URL'sini ayarla
+             if (!empty($settings['site_logo']) && Storage::disk('public')->exists($settings['site_logo'])) {
+                 config(['filament.logo' => Storage::url($settings['site_logo'])]);
+             } else {
+                 config(['filament.logo' => null]); // Veya varsayılan bir URL
+             }
+
+             // Favicon URL'sini ayarla
+             if (!empty($settings['site_favicon']) && Storage::disk('public')->exists($settings['site_favicon'])) {
+                 config(['filament.favicon' => Storage::url($settings['site_favicon'])]);
+             } else {
+                 config(['filament.favicon' => null]);
+             }
+        } catch (\Exception $e) {
+             Log::error('Filament logo/favicon URL ayarlanırken hata oluştu (boot): ' . $e->getMessage());
+        }
+
+        if (config('app.app_demo_mode')) {
+            $this->app->bind(
+                \Illuminate\Foundation\MaintenanceMode::class,
+                \Illuminate\Foundation\MaintenanceModeBypassCookie::class
+            );
+        }
     }
 }

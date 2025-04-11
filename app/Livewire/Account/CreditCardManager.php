@@ -65,7 +65,6 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
         return $table
             ->query(
                 Account::query()
-                    ->where('user_id', auth()->id())
                     ->where('type', Account::TYPE_CREDIT_CARD)
             )
             ->emptyStateHeading('Kredi Kartı Bulunamadı')
@@ -175,19 +174,14 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                         $this->selectedCard = $record;
                         $this->activeTab = 'İşlemler';
                     })
-                    ->color('primary'),
-                Tables\Actions\Action::make('view_history')
-                    ->label('Bakiye Geçmişi')
-                    ->icon('heroicon-o-clock')
-                    ->url(fn (Account $record): string => route('admin.accounts.history', $record->id))
-                    ->openUrlInNewTab(false)
-                    ->extraAttributes(['wire:navigate' => true])
-                    ->color('gray'),
+                    ->color('primary')
+                    ->visible(fn () => auth()->user()->can('credit_cards.history')),
                 
                     Tables\Actions\EditAction::make()
                     ->modalHeading('Kredi Kartı Düzenle')
                     ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('credit_cards.edit'))
                     ->form($this->getFormSchema())
                     ->mutateRecordDataUsing(function (array $data) {
                         $account = Account::find($data['id']);
@@ -227,6 +221,7 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Kredi kartı silindi')
+                    ->visible(fn () => auth()->user()->can('credit_cards.delete'))
                     ->label('Sil')
                     ->using(function (Account $record) {
                         $result = $this->accountService->delete($record);
@@ -237,7 +232,8 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Seçili Kartları Sil'),
+                        ->label('Seçili Kartları Sil')
+                        ->visible(fn () => auth()->user()->can('credit_cards.delete')),
                 ]),
             ])
             ->headerActions([
@@ -246,6 +242,7 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                     ->modalHeading('Yeni Kredi Kartı')
                     ->modalSubmitActionLabel('Oluştur')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('credit_cards.create'))
                     ->form($this->getFormSchema())
                     ->createAnother(false)
                     ->using(function (array $data) {
@@ -358,6 +355,7 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
             ->label('Ödeme Yap')
             ->icon('heroicon-o-banknotes')
             ->color('success')
+            ->visible(fn () => auth()->user()->can('credit_cards.payments'))
             ->modalHeading('Kredi Kartı Ödemesi')
             ->form(function (Account $record): array {
                 return [

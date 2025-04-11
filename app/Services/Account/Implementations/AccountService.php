@@ -323,7 +323,7 @@ class AccountService implements AccountServiceInterface
         string $paymentMethod,
         ?int $sourceAccountId = null,
         ?string $date = null
-    ): void {
+    ) {
         try {
             DB::transaction(function () use ($creditCardId, $amount, $paymentMethod, $sourceAccountId, $date) {
                 $creditCard = Account::findOrFail($creditCardId);
@@ -339,8 +339,8 @@ class AccountService implements AccountServiceInterface
                     // Kullanıcıya bildirim gönder
                     Notification::make()
                         ->warning()
-                        ->title('Fazla Ödeme!')
-                        ->body("Kredi kartı borcunuzdan {$overpayment} {$creditCard->currency} daha fazla ödeme yaptınız. Ödeme miktarı mevcut borç kadar düşürüldü.")
+                        ->title('Fazla Ödeme Uyarısı')
+                        ->body("Kredi kartı borcunuz {$currentDebt} {$creditCard->currency}, ancak {$amount} {$creditCard->currency} ödeme yapmak istediniz. Ödeme miktarı mevcut borç kadar düşürüldü.")
                         ->duration(8000)
                         ->send();
                     
@@ -348,48 +348,41 @@ class AccountService implements AccountServiceInterface
                     $amount = $currentDebt;
                 }
                 
-                // Kredi kartı borcunu azalt (0'dan küçük olamaz)
+                // Kredi kartı borcunu azalt
                 $creditCard->balance = max(0, $creditCard->balance - $amount);
                 $creditCard->save();
 
-                // Eğer banka hesabından ödeme yapıldıysa
+                // Eğer banka hesabından ödeme yapıldıysa, banka hesabından da düşülecek miktar
+                // fazla ödeme durumunda sınırlandırılmış miktar olmalı
                 if ($paymentMethod === PaymentMethodEnum::BANK->value && $sourceAccountId) {
                     $sourceAccount = Account::findOrFail($sourceAccountId);
-                    $sourceAccount->balance -= $amount;
+                    $sourceAccount->balance -= $amount; // Artık sınırlandırılmış miktar kullanılıyor
                     $sourceAccount->save();
                 }
 
-                // Ödeme kaydını oluştur
-                Transaction::create([
-                    'user_id' => auth()->id(),
-                    'type' => 'payment', // Borç hesaplamalarında 'payment' türü kullanılıyor
-                    'source_account_id' => $sourceAccountId,
-                    'destination_account_id' => $creditCardId,
-                    'amount' => $amount,
-                    'currency' => $creditCard->currency,
-                    'try_equivalent' => $amount, // TL eşdeğeri
-                    'payment_method' => $paymentMethod,
-                    'date' => $date ?? now(),
-                    'description' => "{$creditCard->name} Ödemesi",
-                    'status' => 'completed'
-                ]);
-
+                // Ödeme işlemini kaydet
+                $transaction = new Transaction();
+                $transaction->user_id = auth()->id();
+                $transaction->source_account_id = $sourceAccountId;
+                $transaction->destination_account_id = $creditCard->id;
+                $transaction->type = Transaction::TYPE_CREDIT_PAYMENT;
+                $transaction->amount = $amount;
+                $transaction->currency = $creditCard->currency;
+                $transaction->date = $date ?? now();
+                $transaction->payment_method = $paymentMethod;
+                $transaction->description = 'Kredi kartı ödemesi';
+                $transaction->save();
+                
+                // Başarılı bildirim gönder
                 Notification::make()
                     ->success()
-                    ->title('Ödeme Başarılı!')
-                    ->body("{$creditCard->name} kartına {$amount} {$creditCard->currency} tutarında ödeme yapıldı.")
+                    ->title('Ödeme Başarılı')
+                    ->body("{$amount} {$creditCard->currency} tutarında kredi kartı ödemesi başarıyla gerçekleştirildi.")
                     ->duration(5000)
                     ->send();
             });
         } catch (\Exception $e) {
-            Notification::make()
-                ->danger()
-                ->title('Ödeme Başarısız!')
-                ->body('Kredi kartı ödemesi sırasında bir hata oluştu: ' . $e->getMessage())
-                ->duration(10000)
-                ->send();
-
-            throw $e;
+            throw new \Exception('Kredi kartı ödemesi yapılırken bir hata oluştu: ' . $e->getMessage());
         }
     }
 }

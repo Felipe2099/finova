@@ -68,7 +68,6 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
         return $table
             ->query(
                 Account::query()
-                    ->where('user_id', auth()->id())
                     ->where('type', Account::TYPE_BANK_ACCOUNT)
             )
             ->emptyStateHeading('Banka Hesabı Bulunamadı')
@@ -156,11 +155,13 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                     ->url(fn (Account $record): string => route('admin.accounts.history', $record->id))
                     ->openUrlInNewTab(false)
                     ->extraAttributes(['wire:navigate' => true])
-                    ->color('gray'),
+                    ->color('gray')
+                    ->visible(fn () => auth()->user()->can('bank_accounts.history')),
                 Tables\Actions\EditAction::make()
                     ->modalHeading('Banka Hesabı Düzenle')
                     ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('bank_accounts.edit'))
                     ->form($this->getFormSchema())
                     ->mutateRecordDataUsing(function (array $data) {
                         $account = Account::find($data['id']);
@@ -197,6 +198,7 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Banka hesabı silindi')
+                    ->visible(fn () => auth()->user()->can('bank_accounts.delete'))
                     ->label('Sil')
                     ->using(function (Account $record) {
                         return $this->accountService->delete($record);
@@ -206,6 +208,14 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                     ->icon('heroicon-o-arrow-right-circle')
                     ->modalHeading('Hesaplar Arası Transfer')
                     ->modalDescription('Bunu yapmak istediğinizden emin misiniz?')
+                    ->visible(fn (Account $record): bool => 
+                        auth()->user()->can('bank_accounts.transfers') &&
+                        Account::where('id', '!=', $record->id)
+                            ->where('status', true)
+                            ->where('type', Account::TYPE_BANK_ACCOUNT)
+                            ->exists() && 
+                        $record->balance > 0
+                    )
                     ->form(function (Account $record) {
                         return [
                             Forms\Components\Grid::make()
@@ -494,14 +504,7 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                                 ->danger()
                                 ->send();
                         }
-                    })
-                    ->visible(fn (Account $record): bool => 
-                        Account::where('id', '!=', $record->id)
-                            ->where('status', true)
-                            ->where('type', Account::TYPE_BANK_ACCOUNT)
-                            ->exists() && 
-                        $record->balance > 0
-                    ),
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -513,8 +516,9 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                 Tables\Actions\CreateAction::make()
                     ->label('Banka Hesabı Oluştur')
                     ->modalHeading('Yeni Banka Hesabı')
-                    ->modalSubmitActionLabel('Oluştur')
+                    ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('bank_accounts.create'))
                     ->form($this->getFormSchema())
                     ->createAnother(false)
                     ->using(function (array $data) {
@@ -541,6 +545,9 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                     ->color('success')
                     ->modalHeading('Bankamatik İşlemleri')
                     ->modalDescription('Para yatırma veya çekme işlemi yapabilirsiniz.')
+                    ->visible(function (): bool { 
+                        return auth()->user()->can('bank_accounts.transactions'); 
+                    })
                     ->form([
                         Forms\Components\Select::make('account_id')
                             ->label('Hesap')

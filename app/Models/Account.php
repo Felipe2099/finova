@@ -61,6 +61,19 @@ class Account extends Model
     ];
 
     /**
+     * Balance değerini ayarlarken kredi kartı için negatif kontrolü yapar
+     */
+    public function setBalanceAttribute($value)
+    {
+        if ($this->type === self::TYPE_CREDIT_CARD) {
+            // Kredi kartı için borç bakiyesi negatif olamaz
+            $this->attributes['balance'] = max(0, $value);
+        } else {
+            $this->attributes['balance'] = $value;
+        }
+    }
+
+    /**
      * Hesabın sahibi olan kullanıcı
      * 
      * @return BelongsTo

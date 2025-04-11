@@ -73,6 +73,8 @@ class LoanManager extends Component implements HasForms, HasTable
     {
         return $table
             ->query(Loan::query())
+            ->emptyStateHeading('Kredi Bulunamadı')
+            ->emptyStateDescription('Başlamak için yeni bir kredi oluşturun.')
             ->columns([
                 Tables\Columns\TextColumn::make('bank_name')
                     ->label('Banka')
@@ -135,6 +137,7 @@ class LoanManager extends Component implements HasForms, HasTable
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->modalHeading('Krediyi Düzenle')
+                    ->visible(fn () => auth()->user()->can('loans.edit'))
                     ->form($this->getLoanForm())
                     ->action(function (array $data, Loan $loan): void {
                         $loanData = LoanData::fromArray([
@@ -160,7 +163,7 @@ class LoanManager extends Component implements HasForms, HasTable
                     ->label('Ödeme Yap')
                     ->color('success')
                     ->icon('heroicon-m-banknotes')
-                    ->visible(fn (Loan $record): bool => $record->status !== 'paid' && $record->remaining_installments > 0)
+                    ->visible(fn (Loan $record): bool => auth()->user()->can('loans.payments') && $record->status !== 'paid' && $record->remaining_installments > 0)
                     ->form([
                         Forms\Components\TextInput::make('amount')
                             ->label('Ödeme Tutarı')
@@ -255,6 +258,7 @@ class LoanManager extends Component implements HasForms, HasTable
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Kredi silindi')
+                    ->visible(fn () => auth()->user()->can('loans.delete'))
                     ->action(function (Loan $loan): void {
                         $result = $this->loanService->delete($loan);
                         
@@ -277,6 +281,7 @@ class LoanManager extends Component implements HasForms, HasTable
                 Tables\Actions\CreateAction::make()
                     ->label('Yeni Kredi')
                     ->modalHeading('Yeni Kredi')
+                    ->visible(fn () => auth()->user()->can('loans.create'))
                     ->form($this->getLoanForm())
                     ->createAnother(false)
                     ->action(function (array $data): void {

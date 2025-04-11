@@ -1,20 +1,17 @@
-<aside x-data="{ 
-    activeMenu: @js(str_contains(request()->route()->getName(), 'accounts') ? 'accounts' : 
-               (str_contains(request()->route()->getName(), 'transactions') ? 'financial_transactions' : 
-               (str_contains(request()->route()->getName(), 'admin.analysis') ? 'analysis_tracking' :
-               (str_contains(request()->route()->getName(), 'admin.customers') ? 'customer_management' : null)))),
+<aside x-data="{
+    activeMenu: null,
     menuGroups: {
         'financial_transactions': [
             'admin.transactions.index',
             'admin.transactions.create',
             'admin.transactions.edit',
-            'admin.subscriptions.index',
+            'admin.recurring',
+            'admin.subscriptions.index', 
             'admin.deposits.index',
             'admin.credit-cards.index',
             'admin.credit-cards.transactions',
             'admin.debts.index',
             'admin.debts.payments',
-            'admin.suppliers.index',
             'admin.loans.index',
             'admin.loans.payments',
             'admin.loans.details'
@@ -30,15 +27,16 @@
             'admin.projects.active',
             'admin.projects.completed'
         ],
-        'proposal_management': [
-            'admin.proposals.list',
-            'admin.proposals.templates'
+        'debt_system': [
+            'admin.debts.index',
+            'admin.loans.index'
         ],
         'categories': [
             'admin.categories.index',
         ],
         'analysis_tracking': [
-            'admin.analysis.cash-flow'
+            'admin.analysis.cash-flow',
+            'admin.analysis.categories'
         ],
         'planning': [
             'admin.planning.savings',
@@ -46,12 +44,17 @@
         ],
         'reports': ['admin.reports.financial', 'admin.reports.customer', 'admin.reports.project', 'admin.reports.tax'],
         'documents': ['admin.documents.contracts', 'admin.documents.proposals', 'admin.documents.templates'],
-        'system_settings': ['admin.settings', 'admin.roles.index', 'admin.users', 'admin.logs.index'],
+        'system_settings': [
+            'admin.settings', 
+            'admin.roles', // Use prefix to cover index, create, edit, etc.
+            'admin.users', 
+        ],
         'accounts': [
             'admin.accounts.bank',
             'admin.accounts.credit-cards',
             'admin.accounts.crypto',
-            'admin.accounts.virtual-pos'
+            'admin.accounts.virtual-pos',
+            'admin.accounts.history'
         ]
     },
 
@@ -81,6 +84,11 @@
             return currentRoute === 'admin.customers.index' || currentRoute === 'admin.customers.show';
         }
         
+        // İşlemler için özel kontrol
+        if (routeName === 'admin.transactions.index') {
+            return currentRoute.startsWith('admin.transactions.');
+        }
+        
         // Kredi kartları için özel kontrol
         if (routeName === 'admin.credit-cards') {
             return currentRoute.startsWith('admin.credit-cards.');
@@ -96,8 +104,18 @@
             return currentRoute.startsWith('admin.debts.');
         }
         
-        // Diğer sayfalar için normal kontrol
-        return currentRoute.startsWith(routeName);
+        // Roller & İzinler için özel kontrol
+        if (routeName === 'admin.roles.index') {
+            return currentRoute.startsWith('admin.roles.');
+        }
+        
+        // Kullanıcılar için özel kontrol
+        if (routeName === 'admin.users.index') {
+            return currentRoute.startsWith('admin.users.');
+        }
+        
+        // Varsayılan kontrol (eğer özel bir durum yoksa)
+        return currentRoute === routeName;
     },
 
     // Kullanıcının izinlerine göre menüleri göster/gizle
@@ -122,133 +140,135 @@ id="sidebar"
 class="fixed left-0 top-0 z-40 h-screen pt-16 w-64 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-transform duration-300 -translate-x-full lg:translate-x-0" 
 aria-label="Sidebar">
     <!-- Logo Container -->
+    @php
+        // Cache'den site ayarlarını al (AppServiceProvider'da dolduruluyor)
+        $siteSettings = \Illuminate\Support\Facades\Cache::get('site_settings', []);
+        $logoPath = $siteSettings['site_logo'] ?? null;
+        $logoUrl = ($logoPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($logoPath))
+                   ? \Illuminate\Support\Facades\Storage::url($logoPath)
+                   : null; // Varsayılan logo URL'si veya null olabilir
+        $defaultLogoUrl = 'https://flowbite.s3.amazonaws.com/logo.svg'; // Varsayılan logo
+    @endphp
     <div class="absolute top-0 left-0 right-0 h-16 border-b border-gray-200 dark:border-gray-700">
-        <a href="{{ route('admin.dashboard') }}" class="flex items-center h-full px-3">
-            <img src="https://flowbite.s3.amazonaws.com/logo.svg" class="h-8 mr-3" alt="Logo" />
-            <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">{{ config('app.name') }}</span>
+        <a href="{{ route('admin.dashboard') }}" wire:navigate class="flex  text-center h-full px-3">
+            <img src="{{ $logoUrl ?? $defaultLogoUrl }}" class="h-10 my-auto" alt="Logo" />
         </a>
     </div>
 
-    <div class="h-full px-3 pb-4 overflow-y-auto my-4">
+    <div class="h-full px-3 pb-4 overflow-y-auto my-4 sidebar-scroll">
         <ul class="space-y-2">
             <li>
                 <a href="{{ route('admin.dashboard') }}" 
                    wire:navigate 
                    class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                    :class="{'bg-gray-100': isActive('admin.dashboard')}">
-                    <svg class="w-6 h-6 text-gray-500 transition duration-75" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
-                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     <span class="ml-3">Dashboard</span>
                 </a>
             </li>
+            @canany(['transactions.view', 'recurring_transactions.view', 'debts.view', 'loans.view'])
             <li>
+                <button @click="activeMenu = activeMenu === 'financial_transactions' ? null : 'financial_transactions'" 
+                        type="button" 
+                        class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h.01M11 15h2M6 5h12a3 3 0 013 3v8a3 3 0 01-3 3H6a3 3 0 01-3-3V8a3 3 0 013-3z"/>
+                    </svg>
+                    <span class="flex-1 ml-3 text-left">Finans Yönetimi</span>
+                    <svg :class="{'rotate-180': activeMenu === 'financial_transactions'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <ul x-show="activeMenu === 'financial_transactions'" x-collapse class="py-2 space-y-2">
+                    @can('transactions.view')
+                    <!-- Tüm İşlemler -->
+                    <li>
+                        <a href="{{ route('admin.transactions.index') }}" 
+                           wire:navigate 
+                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
+                           :class="{'bg-gray-100': isActive('admin.transactions.index')}">
+                           Tüm İşlemler
+                        </a>
+                    </li>
+                    @endcan
+                    @can('recurring_transactions.view')
+                    <!-- Devamlı İşlemler -->
+                    <li>
+                        <a href="{{ route('admin.recurring') }}"
+                           wire:navigate
+                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
+                           :class="{'bg-gray-100': isActive('admin.recurring')}">
+                           Devamlı İşlemler
+                        </a>
+                    </li>
+                    @endcan
+                </ul>
+            </li>
+            @endcanany
+            @canany(['customers.view', 'leads.view', 'customer_groups.view'])
+            <li></li>
                 <button @click="activeMenu = activeMenu === 'customer_management' ? null : 'customer_management'" 
                         type="button" 
                         class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                     <span class="flex-1 ml-3 text-left">Müşteriler</span>
-                    <svg :class="{'rotate-180': activeMenu === 'customer_management'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    <svg :class="{'rotate-180': activeMenu === 'customer_management'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul x-show="activeMenu === 'customer_management'" x-collapse class="py-2 space-y-2">
+                    @can('customers.view')
                     <li>
-                        <a href="{{ route('admin.customers.index') }}" 
-                           wire:navigate 
+                        <a href="{{ route('admin.customers.index') }}"
+                           wire:navigate
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': isActive('admin.customers.index')}">
                             Müşteri Listesi
                         </a>
                     </li>
+                    @endcan
+                    @can('leads.view')
                     <li>
-                        <a href="{{ route('admin.customers.potential') }}" 
-                           wire:navigate 
+                        <a href="{{ route('admin.customers.potential') }}"
+                           wire:navigate
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': isActive('admin.customers.potential')}">
                             Potansiyel Müşteriler
                         </a>
                     </li>
+                    @endcan
+                    @can('customer_groups.view')
                     <li>
-                        <a href="{{ route('admin.customers.groups') }}" 
-                           wire:navigate 
+                        <a href="{{ route('admin.customers.groups') }}"
+                           wire:navigate
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': isActive('admin.customers.groups')}">
                             Müşteri Grupları
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </li>
-            <li>
-                <a href="{{ route('admin.projects.index') }}" 
-                   wire:navigate 
-                   class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                   :class="{'bg-gray-100': isActive('admin.projects.index')}">
-                   <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1 1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1 1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1 1z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="ml-3">Projeler</span>
-                </a>
-            </li>
-            <!--
-            <li>
-                <a href="{{ route('admin.proposals.templates') }}" 
-                   wire:navigate 
-                   class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                   :class="{'bg-gray-100': isActive('admin.proposals.templates')}">
-                   <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"/>
-                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="ml-3">Teklifler</span>
-                </a>
-            </li>
-            -->
-
-            <!--
-            <li>
-                <button @click="activeMenu = activeMenu === 'invoice_management' ? null : 'invoice_management'" 
-                        type="button" 
-                        class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="flex-1 ml-3 text-left">Faturalar</span>
-                    <svg :class="{'rotate-180': activeMenu === 'invoice_management'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-                <ul x-show="activeMenu === 'invoice_management'" x-collapse class="py-2 space-y-2">
-                    <li>
-                        <a href="#" class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100">
-                            Fatura Oluştur
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100">
-                            Fatura Listesi
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            -->
+            @endcanany
+            @canany(['bank_accounts.view', 'credit_cards.view', 'crypto_wallets.view', 'virtual_pos.view'])
             <li>
                 <button @click="activeMenu = activeMenu === 'accounts' ? null : 'accounts'" 
                         type="button" 
                         class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21h18M3 10h18M12 3L4 9h16l-8-6zM4 10v8M8 10v8M12 10v8M16 10v8M20 10v8"/>
                     </svg>
                     <span class="flex-1 ml-3 text-left">Hesaplar</span>
-                    <svg :class="{'rotate-180': activeMenu === 'accounts'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    <svg :class="{'rotate-180': activeMenu === 'accounts'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul x-show="activeMenu === 'accounts'" x-collapse class="py-2 space-y-2">
+                    @can('bank_accounts.view')
                     <li>
                         <a href="{{ route('admin.accounts.bank') }}" 
                            wire:navigate 
@@ -257,91 +277,56 @@ aria-label="Sidebar">
                            Banka Hesapları
                         </a>
                     </li>
+                    @endcan
+                    @can('credit_cards.view')
                     <li>
-                        <a href="{{ route('admin.accounts.credit-cards') }}" 
-                           wire:navigate 
+                        <a href="{{ route('admin.accounts.credit-cards') }}"
+                           wire:navigate
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': '{{ request()->routeIs('admin.accounts.credit-cards') }}' === '1'}">
                            Kredi Kartları
                         </a>
                     </li>
+                    @endcan
+                    @can('crypto_wallets.view')
                     <li>
-                        <a href="{{ route('admin.accounts.crypto') }}" 
-                           wire:navigate 
+                        <a href="{{ route('admin.accounts.crypto') }}"
+                           wire:navigate
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': '{{ request()->routeIs('admin.accounts.crypto') }}' === '1'}">
                            Kripto Cüzdanları
                         </a>
                     </li>
+                    @endcan
+                    @can('virtual_pos.view')
                     <li>
-                        <a href="{{ route('admin.accounts.virtual-pos') }}" 
-                           wire:navigate 
+                        <a href="{{ route('admin.accounts.virtual-pos') }}"
+                           wire:navigate
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': '{{ request()->routeIs('admin.accounts.virtual-pos') }}' === '1'}">
                            Sanal POS
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </li>
-            <li>
-                <button @click="activeMenu = activeMenu === 'financial_transactions' ? null : 'financial_transactions'" 
-                        type="button" 
-                        class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
-                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="flex-1 ml-3 text-left">Finans Yönetimi</span>
-                    <svg :class="{'rotate-180': activeMenu === 'financial_transactions'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-                <ul x-show="activeMenu === 'financial_transactions'" 
-                    x-collapse 
-                    class="py-2 space-y-2">
-                    <!-- Tüm İşlemler -->
-                    <li>
-                        <a href="{{ route('admin.transactions.index') }}" 
-                           wire:navigate 
-                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                           :class="{'bg-gray-100': isActive('admin.transactions')}">
-                           Tüm İşlemler
-                        </a>
-                    </li>
-  
-                    <!-- Borç-Alacak -->
-                    <li>
-                        <a href="{{ route('admin.debts.index') }}" 
-                           wire:navigate 
-                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                           :class="{'bg-gray-100': '{{ request()->routeIs('admin.debts.index') }}' === '1'}">
-                           Borç-Alacak
-                        </a>
-                    </li>
-                    <!-- Krediler -->
-                    <li>
-                        <a href="{{ route('admin.loans.index') }}" 
-                           wire:navigate 
-                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                           :class="{'bg-gray-100': '{{ request()->routeIs('admin.loans.index') }}' === '1'}">
-                           Krediler
-                        </a>
-                    </li>
-                </ul>
-            </li>
+            @endcanany
+
+            @canany(['reports.cash_flow', 'reports.category_analysis'])
             <li>
                 <button @click="activeMenu = activeMenu === 'analysis_tracking' ? null : 'analysis_tracking'" 
                         type="button" 
                         class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                    <span class="flex-1 ml-3 text-left">Analizler</span>
-                    <svg :class="{'rotate-180': activeMenu === 'analysis_tracking'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    <span class="flex-1 ml-3 text-left">Analiz ve Raporlar</span>
+                    <svg :class="{'rotate-180': activeMenu === 'analysis_tracking'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul x-show="activeMenu === 'analysis_tracking'" x-collapse class="py-2 space-y-2">
+                    @can('reports.cash_flow')
                     <li>
                         <a href="{{ route('admin.analysis.cash-flow') }}" 
                            wire:navigate 
@@ -350,6 +335,8 @@ aria-label="Sidebar">
                             Nakit Akışı
                         </a>
                     </li>
+                    @endcan
+                    @can('reports.category_analysis')
                     <li>
                         <a href="{{ route('admin.analysis.categories') }}" 
                            wire:navigate 
@@ -358,91 +345,174 @@ aria-label="Sidebar">
                             Kategori Analizi
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </li>
+            @endcanany
+            @canany(['savings.view', 'investments.view'])
             <li>
                 <button @click="activeMenu = activeMenu === 'planning' ? null : 'planning'" 
                         type="button" 
                         class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     <span class="flex-1 ml-3 text-left">Planlama</span>
-                    <svg :class="{'rotate-180': activeMenu === 'planning'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    <svg :class="{'rotate-180': activeMenu === 'planning'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul x-show="activeMenu === 'planning'" x-collapse class="py-2 space-y-2">
+                    @can('savings.view')
                     <li>
                         <a href="{{ route('admin.planning.savings') }}" 
                            wire:navigate 
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': isActive('admin.planning.savings')}">
-                           Tasarruf Planları
+                            Tasarruf Planı
                         </a>
                     </li>
+                    @endcan
+                    @can('investments.view')
                     <li>
                         <a href="{{ route('admin.planning.investments') }}" 
                            wire:navigate 
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                            :class="{'bg-gray-100': isActive('admin.planning.investments')}">
-                           Yatırım Planları
+                            Yatırım Planları
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </li>
-
+            @endcanany
+            @canany(['debts.view', 'loans.view'])
+            <li>
+                <button @click="activeMenu = activeMenu === 'debt_system' ? null : 'debt_system'" 
+                        type="button" 
+                        class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="flex-1 ml-3 text-left">Borç Yönetimi</span>
+                    <svg :class="{'rotate-180': activeMenu === 'debt_system'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <ul x-show="activeMenu === 'debt_system'" x-collapse class="py-2 space-y-2">
+                    <!-- Borç-Alacak -->
+                    @can('debts.view')
+                    <li>
+                        <a href="{{ route('admin.debts.index') }}"
+                           wire:navigate
+                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
+                           :class="{'bg-gray-100': '{{ request()->routeIs('admin.debts.index') }}' === '1'}">
+                           Borç-Alacak
+                        </a>
+                    </li>
+                    @endcan
+                    <!-- Krediler -->
+                    @can('loans.view')
+                    <li>
+                        <a href="{{ route('admin.loans.index') }}"
+                           wire:navigate
+                           class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
+                           :class="{'bg-gray-100': '{{ request()->routeIs('admin.loans.index') }}' === '1'}">
+                           Krediler
+                        </a>
+                    </li>
+                    @endcan
+                </ul>
+            </li>
+            @endcanany
+            @can('suppliers.view')
+            <li>
+                <a href="{{ route('admin.suppliers.index') }}" 
+                   wire:navigate 
+                   class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
+                   :class="{'bg-gray-100': isActive('admin.suppliers.index')}">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                    </svg>
+                    <span class="ml-3">Tedarikçiler</span>
+                </a>
+            </li>
+            @endcan
+            @can('categories.view')
             <li>
                 <a href="{{ route('admin.categories.index') }}" 
                    wire:navigate 
                    class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
                    :class="{'bg-gray-100': isActive('admin.categories.index')}">
-                   <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
                     <span class="ml-3">Kategoriler</span>
                 </a>
             </li>
-     
+            @endcan
+            @can(['projects.view'])
+            <li>
+                <a href="{{ route('admin.projects.index') }}" 
+                   wire:navigate 
+                   class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
+                   :class="{'bg-gray-100': isActive('admin.projects.index')}">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="ml-3">Projeler</span>
+                </a>
+            </li>
+            @endcan
+            @canany(['settings.view','settings.site', 'settings.notification', 'settings.telegram', 'roles.view', 'users.view'])
             <li>
                 <button @click="activeMenu = activeMenu === 'system_settings' ? null : 'system_settings'" 
                         type="button" 
                         class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                     <span class="flex-1 ml-3 text-left">Sistem</span>
-                    <svg :class="{'rotate-180': activeMenu === 'system_settings'}" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    <svg :class="{'rotate-180': activeMenu === 'system_settings'}" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
                 <ul x-show="activeMenu === 'system_settings'" x-collapse class="py-2 space-y-2">
+                    @canany('settings.view')
                     <li>
                         <a href="{{ route('admin.settings.index') }}" 
                            wire:navigate 
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                           :class="{'bg-gray-100': isActive('admin.settings')}">
+                           :class="{'bg-gray-100': isActive('admin.settings.index')}">
                            Ayarlar
                         </a>
                     </li>
+                    @endcanany
+                    @can('roles.view')
                     <li>
                         <a href="{{ route('admin.roles.index') }}" 
                            wire:navigate 
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                           :class="{'bg-gray-100': isActive('admin.roles')}">
-                           Roller & İzinler
+                           :class="{'bg-gray-100': isActive('admin.roles.index')}">
+                            Roller & İzinler
                         </a>
                     </li>
+                    @endcan
+                    @can('users.view')
                     <li>
                         <a href="{{ route('admin.users.index') }}" 
                            wire:navigate 
                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg hover:bg-gray-100"
-                           :class="{'bg-gray-100': isActive('admin.users')}">
-                           Kullanıcılar
+                           :class="{'bg-gray-100': isActive('admin.users.index')}">
+                            Kullanıcılar
                         </a>
                     </li>
+                    @endcan
                     <li>
-                        <a href="#" 
+                        <a href="https://wa.me/908505324527" 
+                           target="_blank"
                            class="flex items-center p-2 pl-11 w-full text-base font-normal rounded-lg hover:bg-gray-100"
                            style="color: #3E82F8">
                            Yardım
@@ -450,6 +520,8 @@ aria-label="Sidebar">
                     </li>
                 </ul>
             </li>
+            @endcanany
         </ul>
     </div>
 </aside>
+

@@ -27,15 +27,14 @@ interface SubscriptionTransactionServiceInterface
     public function create(TransactionData $data): Transaction;
 
     /**
-     * Yaklaşan abonelikleri getirir
-     * 
-     * Belirtilen gün sayısı içinde ödenmesi gereken abonelikleri listeler.
-     * 
-     * @param int $days Kaç gün içindeki aboneliklerin getirileceği
-     * @param int $limit Maksimum kaç abonelik getirileceği
-     * @return \Illuminate\Database\Eloquent\Collection Yaklaşan abonelikler
+     * Aktif devamlı işlemleri getirir
+     *
+     * 'is_subscription' true olan tüm işlemleri getirir,
+     * en yakın ödeme tarihine göre sıralar.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection Aktif devamlı işlemler
      */
-    public function getUpcomingSubscriptions(int $days = 30, int $limit = 10): \Illuminate\Database\Eloquent\Collection;
+    public function getActiveSubscriptions(): \Illuminate\Database\Eloquent\Collection;
 
     /**
      * Abonelikten yeni bir işlem oluşturur
@@ -48,21 +47,21 @@ interface SubscriptionTransactionServiceInterface
     public function createFromSubscription(Transaction $subscription): Transaction;
 
     /**
-     * Aboneliği deaktif eder
-     * 
-     * Aboneliğin otomatik yenilenmesini durdurur.
-     * 
-     * @param Transaction $subscription Deaktif edilecek abonelik
+     * Aboneliği sonlandırır
+     *
+     * İşlemin 'is_subscription' flag'ini false yapar.
+     *
+     * @param Transaction $subscription Sonlandırılacak abonelik
      */
-    public function deactivateSubscription(Transaction $subscription): void;
+    public function endSubscription(Transaction $subscription): void;
 
     /**
      * Bir sonraki ödeme tarihini hesaplar
      * 
      * Abonelik periyoduna göre bir sonraki ödeme tarihini belirler.
      * 
-     * @param Transaction $transaction Abonelik işlemi
+     * @param Transaction|TransactionData $transaction Abonelik işlemi veya verisi
      * @return Carbon Bir sonraki ödeme tarihi
      */
-    public function calculateNextPaymentDate(Transaction $transaction): Carbon;
+    public function calculateNextPaymentDate(Transaction|TransactionData $transaction): Carbon;
 } 

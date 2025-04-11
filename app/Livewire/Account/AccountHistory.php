@@ -27,6 +27,7 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
     use Tables\Concerns\InteractsWithTable;
     use Forms\Concerns\InteractsWithForms;
 
+
     /** @var Account İşlem geçmişi görüntülenecek hesap */
     public Account $account;
 
@@ -70,7 +71,6 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
                         $query->where('source_account_id', $this->account->id)
                             ->orWhere('destination_account_id', $this->account->id);
                     })
-                    ->where('user_id', auth()->id())
                     ->orderBy('id', 'desc')
             )
             ->emptyStateHeading('İşlem Geçmişi Bulunamadı')
@@ -189,13 +189,6 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
                             $query->where('date', '<=', $data['end_date']);
                         }
                     }),
-            ])
-            ->actions([
-                Tables\Actions\Action::make('view_details')
-                    ->label('Detaylar')
-                    ->icon('heroicon-o-eye')
-                    ->action(fn (Transaction $record) => $this->redirect(route('transactions.show', $record->id)))
-                    ->color('gray'),
             ]);
     }
 

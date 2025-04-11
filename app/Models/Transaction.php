@@ -31,6 +31,9 @@ class Transaction extends Model
     const TYPE_LOAN_PAYMENT = 'loan_payment';
     const TYPE_DEBT_PAYMENT = 'debt_payment';
     const TYPE_CREDIT_PAYMENT = 'payment';
+    const TYPE_ATM_DEPOSIT = 'atm_deposit';
+    const TYPE_ATM_WITHDRAW = 'atm_withdraw';
+    
 
     /**
      * Ödeme tipleri
@@ -38,7 +41,6 @@ class Transaction extends Model
     const PAYMENT_CASH = 'cash';
     const PAYMENT_BANK_TRANSFER = 'bank_transfer';
     const PAYMENT_CREDIT_CARD = 'credit_card';
-    const PAYMENT_PAYPAL = 'paypal';
 
     /**
      * Veri tipleri dönüşümleri
@@ -279,12 +281,28 @@ class Transaction extends Model
             } else {
                 $transaction->withholding_amount = null;
             }
+
+            // Eğer gelir işlemi ise ve miktar değiştiyse komisyonu güncelle
+            if ($transaction->type === TransactionTypeEnum::INCOME->value && $transaction->isDirty('amount')) {
+                if ($transaction->commission) {
+                    $commission = $transaction->commission;
+                    $commission->commission_amount = $transaction->amount * ($commission->commission_rate / 100);
+                    $commission->save();
+                }
+            }
         });
 
         static::created(function ($transaction) {
             // Sadece gelir işlemlerinde komisyon hesapla
             if ($transaction->type === TransactionTypeEnum::INCOME->value) {
                 app(CommissionService::class)->createCommissionForTransaction($transaction);
+            }
+        });
+
+        static::deleted(function ($transaction) {
+            // İşlem silindiğinde ilişkili komisyonu da sil
+            if ($transaction->commission) {
+                $transaction->commission->delete();
             }
         });
     }

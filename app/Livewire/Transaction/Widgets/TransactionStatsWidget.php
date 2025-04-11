@@ -122,10 +122,8 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'income')
                 ->whereDate('date', Carbon::today())
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching today income: ' . $e->getMessage());
@@ -142,10 +140,8 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'expense')
                 ->whereDate('date', Carbon::today())
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching today expense: ' . $e->getMessage());
@@ -162,11 +158,9 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'income')
                 ->whereYear('date', Carbon::now()->year)
                 ->whereMonth('date', Carbon::now()->month)
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching current month income: ' . $e->getMessage());
@@ -183,11 +177,9 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'expense')
                 ->whereYear('date', Carbon::now()->year)
                 ->whereMonth('date', Carbon::now()->month)
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching current month expense: ' . $e->getMessage());
@@ -262,10 +254,8 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'income')
                 ->whereDate('date', Carbon::yesterday())
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching yesterday income: ' . $e->getMessage());
@@ -282,10 +272,8 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'expense')
                 ->whereDate('date', Carbon::yesterday())
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching yesterday expense: ' . $e->getMessage());
@@ -302,11 +290,9 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'income')
                 ->whereYear('date', Carbon::now()->subMonth()->year)
                 ->whereMonth('date', Carbon::now()->subMonth()->month)
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching last month income: ' . $e->getMessage());
@@ -323,11 +309,9 @@ class TransactionStatsWidget extends BaseWidget
     {
         try {
             return Transaction::query()
-                ->where('user_id', auth()->id())
                 ->where('type', 'expense')
                 ->whereYear('date', Carbon::now()->subMonth()->year)
                 ->whereMonth('date', Carbon::now()->subMonth()->month)
-                ->whereNull('reference_id')
                 ->sum('try_equivalent');
         } catch (\Exception $e) {
             \Log::error('Error fetching last month expense: ' . $e->getMessage());

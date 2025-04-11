@@ -144,17 +144,20 @@ final class InvestmentPlanner extends Component implements Tables\Contracts\HasT
                     ])
                     ->action(function (InvestmentPlan $record, array $data): InvestmentPlan {
                         return $this->planningService->updateInvestmentPlan($record, $data);
-                    }),
+                    })
+                    ->visible(auth()->user()->can('investments.edit')),
                 DeleteAction::make()
                     ->label('Sil')
                     ->modalHeading('Yatırım Planını Sil')
                     ->action(function (InvestmentPlan $record): void {
                         $this->planningService->deleteInvestmentPlan($record);
-                    }),
+                    })
+                    ->visible(auth()->user()->can('investments.delete')),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(auth()->user()->can('investments.delete')),
                 ]),
             ])
             ->headerActions([
@@ -192,7 +195,8 @@ final class InvestmentPlanner extends Component implements Tables\Contracts\HasT
                     ->action(function (array $data): InvestmentPlan {
                         return $this->planningService->createInvestmentPlan($data);
                     })
-                    ->modalSubmitActionLabel('Kaydet'),
+                    ->modalSubmitActionLabel('Kaydet')
+                    ->visible(auth()->user()->can('investments.create')),
             ]);
     }
 

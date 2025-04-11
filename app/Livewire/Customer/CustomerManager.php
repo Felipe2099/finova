@@ -107,13 +107,15 @@ final class CustomerManager extends Component implements HasForms, HasTable
                     ->modalHeading('Müşteri Bilgileri')
                     ->label('Detay')
                     ->url(fn (Customer $record) => route('admin.customers.show', $record))
-                    ->extraAttributes(['wire:navigate' => true]),
+                    ->extraAttributes(['wire:navigate' => true])
+                    ->visible(fn () => auth()->user()->can('customers.detail')),
                 Tables\Actions\EditAction::make()
                     ->modalHeading('Müşteriyi Düzenle')
                     ->modalSubmitActionLabel('Güncelle')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Müşteri düzenlendi')
                     ->label('Düzenle')
+                    ->visible(fn () => auth()->user()->can('customers.edit'))
                     ->form($this->getCustomerForm())
                     ->using(function (Customer $record, array $data): Customer {
                         $customerData = CustomerData::fromArray([
@@ -128,6 +130,7 @@ final class CustomerManager extends Component implements HasForms, HasTable
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Müşteri silindi')
+                    ->visible(fn () => auth()->user()->can('customers.delete'))
                     ->using(function (Customer $record): void {
                         $this->customerService->delete($record, true);
                     }),
@@ -140,6 +143,7 @@ final class CustomerManager extends Component implements HasForms, HasTable
                     ->modalCancelActionLabel('İptal')
                     ->createAnother(false)
                     ->successNotificationTitle('Müşteri oluşturuldu')
+                    ->visible(fn () => auth()->user()->can('customers.create'))
                     ->form($this->getCustomerForm())
                     ->using(function (array $data): Customer {
                         $customerData = CustomerData::fromArray([

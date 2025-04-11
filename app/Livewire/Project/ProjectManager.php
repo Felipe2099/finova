@@ -97,10 +97,12 @@ class ProjectManager extends Component implements HasForms, HasTable
                 Tables\Actions\Action::make('boards')
                     ->label('Proje Yönetimi')
                     ->url(fn (Project $record): string => route('admin.projects.boards', $record))
-                    ->icon('heroicon-m-squares-2x2'),
+                    ->icon('heroicon-m-squares-2x2')
+                    ->visible(fn () => auth()->user()->can('projects.details')),
                 Tables\Actions\EditAction::make()
                     ->label('Düzenle')
                     ->modalHeading('Proje Düzenle')
+                    ->visible(fn () => auth()->user()->can('projects.edit'))
                     ->form([
                         Forms\Components\TextInput::make('name')
                             ->label('Proje Adı')
@@ -121,6 +123,7 @@ class ProjectManager extends Component implements HasForms, HasTable
                     }),
                 Tables\Actions\DeleteAction::make()
                     ->label('Sil')
+                    ->visible(fn () => auth()->user()->can('projects.delete'))
                     ->using(function (Project $record): void {
                         $this->projectService->delete($record);
                     }),
@@ -129,6 +132,7 @@ class ProjectManager extends Component implements HasForms, HasTable
                 Tables\Actions\CreateAction::make()
                     ->label('Proje Oluştur')
                     ->modalHeading('Yeni Proje')
+                    ->visible(fn () => auth()->user()->can('projects.create'))
                     ->createAnother(false)
                     ->form([
                         Forms\Components\TextInput::make('name')

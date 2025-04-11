@@ -83,6 +83,7 @@ final class CustomerGroupManager extends Component implements HasForms, HasTable
                     ->modalSubmitActionLabel('Güncelle')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Müşteri grubu düzenlendi')
+                    ->visible(fn () => auth()->user()->can('customer_groups.edit'))
                     ->using(function (CustomerGroup $record, array $data): CustomerGroup {
                         $groupData = CustomerGroupData::fromArray([
                             ...$data,
@@ -97,6 +98,7 @@ final class CustomerGroupManager extends Component implements HasForms, HasTable
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Müşteri grubu silindi')
+                    ->visible(fn () => auth()->user()->can('customer_groups.delete'))
                     ->using(function (CustomerGroup $record): void {
                         $this->customerGroupService->delete($record);
                     }),
@@ -109,6 +111,7 @@ final class CustomerGroupManager extends Component implements HasForms, HasTable
                     ->modalCancelActionLabel('İptal')
                     ->createAnother(false)
                     ->successNotificationTitle('Müşteri grubu oluşturuldu')
+                    ->visible(fn () => auth()->user()->can('customer_groups.create'))
                     ->using(function (array $data): CustomerGroup {
                         $groupData = CustomerGroupData::fromArray([
                             ...$data,
@@ -147,6 +150,7 @@ final class CustomerGroupManager extends Component implements HasForms, HasTable
      */
     public function render(): View
     {
+        abort_unless(auth()->user()->can('customer_groups.view'), 403);
         return view('livewire.customer-group.customer-group-manager');
     }
 } 

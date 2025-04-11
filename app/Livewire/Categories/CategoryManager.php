@@ -43,6 +43,15 @@ final class CategoryManager extends Component implements HasForms, HasTable
     {
         return $table
             ->query(Category::query())
+            ->defaultGroup(
+                Tables\Grouping\Group::make('type')
+                    ->label('Tip')
+                    ->getTitleFromRecordUsing(fn (Category $record): string => match ($record->type) {
+                        'income' => 'Gelir',
+                        'expense' => 'Gider',
+                        default => ucfirst($record->type),
+                    })
+            )
             ->emptyStateHeading('Kategori Bulunamadı')
             ->emptyStateDescription('Başlamak için yeni bir kategori ekleyin.')
             ->columns([
@@ -55,7 +64,8 @@ final class CategoryManager extends Component implements HasForms, HasTable
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'income' => 'Gelir',
                         'expense' => 'Gider',
-                    }),
+                    })
+                    , // groupable() kaldırıldı
                 Tables\Columns\ColorColumn::make('color')
                     ->label('Renk'),
                 Tables\Columns\IconColumn::make('status')
@@ -96,13 +106,15 @@ final class CategoryManager extends Component implements HasForms, HasTable
                         Forms\Components\Toggle::make('status')
                             ->label('Durum')
                             ->default(true),
-                    ]),
+                    ])
+                    ->visible(auth()->user()->can('categories.edit')),
                 Tables\Actions\DeleteAction::make()
                     ->modalHeading('Kategori Sil')
                     ->modalDescription('Bu kategoriyi silmek istediğinize emin misiniz?')
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
-                    ->successNotificationTitle('Kategori silindi'),
+                    ->successNotificationTitle('Kategori silindi')
+                    ->visible(auth()->user()->can('categories.delete')),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
@@ -133,7 +145,8 @@ final class CategoryManager extends Component implements HasForms, HasTable
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['user_id'] = auth()->id();
                         return $data;
-                    }),
+                    })
+                    ->visible(auth()->user()->can('categories.create')),
             ]);
     }
 

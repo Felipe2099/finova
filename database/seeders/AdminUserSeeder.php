@@ -21,73 +21,41 @@ class AdminUserSeeder extends Seeder
         DB::table('roles')->truncate();
         Schema::enableForeignKeyConstraints();
 
-        // Varsayılan takım ID'si (ana şirket/organizasyon)
-        $defaultTeamId = 1;
-
         // Super Admin rolü oluştur
         $superAdminRole = Role::create([
-            'name' => 'super_admin',
-            'guard_name' => 'web',
-            'team_id' => $defaultTeamId
+            'name' => 'admin',
+            'guard_name' => 'web'
         ]);
         $superAdminRole->syncPermissions(Permission::all());
 
-        // Admin rolü oluştur
-        $adminRole = Role::create([
-            'name' => 'admin',
-            'guard_name' => 'web',
-            'team_id' => $defaultTeamId
+        // Employee rolü oluştur
+        $employeeRole = Role::create([
+            'name' => 'employee',
+            'guard_name' => 'web'
         ]);
-        $adminRole->syncPermissions(Permission::whereNotIn('name', [
-            'users.view', 'users.create', 'users.edit', 'users.delete',
-            'roles.view', 'roles.create', 'roles.edit', 'roles.delete'
-        ])->get());
-
-        // Manager rolü oluştur
-        $managerRole = Role::create([
-            'name' => 'manager',
-            'guard_name' => 'web',
-            'team_id' => $defaultTeamId
-        ]);
-        $managerRole->syncPermissions([
-            'customers.view', 'customers.create', 'customers.edit', 'customers.delete',
-            'transactions.view', 'transactions.create', 'transactions.edit', 'transactions.delete',
-            'reports.cash_flow', 'reports.category_analysis'
-        ]);
-
-        // Staff rolü oluştur
-        $staffRole = Role::create([
-            'name' => 'staff',
-            'guard_name' => 'web',
-            'team_id' => $defaultTeamId
-        ]);
-        $staffRole->syncPermissions([
-            'customers.view', 'customers.create', 'customers.edit',
-            'transactions.view', 'transactions.create',
-            'reports.cash_flow'
-        ]);
-
-        // Accountant rolü oluştur
-        $accountantRole = Role::create([
-            'name' => 'accountant',
-            'guard_name' => 'web',
-            'team_id' => $defaultTeamId
-        ]);
-        $accountantRole->syncPermissions([
-            'transactions.view', 'transactions.create', 'transactions.edit', 'transactions.delete',
-            'reports.cash_flow', 'reports.category_analysis',
-            'categories.view', 'categories.create', 'categories.edit', 'categories.delete'
+        $employeeRole->syncPermissions([
+            'customers.view',
+            'customers.create',
+            'customers.edit',
+            'customers.detail',
+            'leads.view',
+            'leads.create',
+            'leads.edit',
+            'leads.convert_customer',
+            'projects.view',
+            'projects.create',
+            'projects.edit',
+            'projects.details',
         ]);
 
         // Admin kullanıcısına Super Admin rolünü ata
         $admin = User::where('email', 'admin@admin.com')->first();
+        $employee = User::where('email', 'test@test.com')->first();
         if ($admin) {
-            DB::table('model_has_roles')->insert([
-                'role_id' => $superAdminRole->id,
-                'model_type' => User::class,
-                'model_id' => $admin->id,
-                'team_id' => $defaultTeamId
-            ]);
+            $admin->assignRole($superAdminRole);
+        }
+        if ($employee) {
+            $employee->assignRole($employeeRole);
         }
     }
 } 

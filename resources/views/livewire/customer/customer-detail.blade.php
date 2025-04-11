@@ -97,7 +97,7 @@
                         <x-heroicon-m-currency-dollar class="w-5 h-5" />
                         Finansal İşlemler
                     </button>
-
+                    @can('customers.agreements')
                     <button @click="activeTab = 'agreements'"
                         :class="{'border-blue-500 text-blue-600': activeTab === 'agreements',
                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'agreements'}"
@@ -105,7 +105,8 @@
                         <x-heroicon-m-document-text class="w-5 h-5" />
                         Anlaşmalar
                     </button>
-
+                    @endcan
+                    @can('customers.credentials')
                     <button @click="activeTab = 'credentials'"
                         :class="{'border-blue-500 text-blue-600': activeTab === 'credentials',
                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'credentials'}"
@@ -113,7 +114,7 @@
                         <x-heroicon-m-key class="w-5 h-5" />
                         Hassas Bilgiler
                     </button>
-        
+                    @endcan
                 </nav>
             </div>
 

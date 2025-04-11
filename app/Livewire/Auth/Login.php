@@ -11,8 +11,8 @@ use Illuminate\Contracts\View\View;
 
 final class Login extends Component
 {
-    public string $email = '';
-    public string $password = '';
+    public string $email = 'admin@admin.com';
+    public string $password = 'admin123';
 
     // validate
     protected $rules = [
@@ -20,40 +20,48 @@ final class Login extends Component
         'password' => 'required|min:8',
     ];
 
+    protected $messages = [
+        'email.required' => 'Email alanı zorunludur.',
+        'email.email' => 'Geçerli bir email adresi giriniz.',
+        'password.required' => 'Şifre alanı zorunludur.',
+        'password.min' => 'Şifre en az 8 karakter olmalıdır.',
+    ];
+
     public function mount(): void
     {
         if (Auth::check()) {
-            $this->redirect(route('admin.dashboard'), navigate: true);
+            $this->redirect(route('admin.dashboard'));
         }
     }
 
-    public function submit(): void
+    public function submit()
     {
-        // Authenticate the user
         $credentials = $this->validate();
 
-        // check if user is authenticated
         if (Auth::attempt($credentials)) {
             session()->regenerate();
+            
+            $this->dispatch('loginSuccess');
+            
             Notification::make()
-                ->title(__('auth.login_success'))
+                ->title(__('Giriş Başarılı'))
                 ->success()
                 ->send();
-            $this->redirect(route('admin.dashboard'), navigate: true);
+                
+            return redirect()->intended(route('admin.dashboard'));
         }
-
+        
         Notification::make()
-            ->title(__('auth.login_failed'))
+            ->title(__('Giriş Başarısız'))
             ->danger()
             ->send();
+            
         $this->resetPasswordField();
     }
 
-    // reset password field
     public function resetPasswordField(): void
     {
         $this->password = '';
-        // Ensure email remains unchanged
     }
 
     public function render(): View

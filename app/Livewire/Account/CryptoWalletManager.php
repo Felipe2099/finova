@@ -67,7 +67,6 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
         return $table
             ->query(
                 Account::query()
-                    ->where('user_id', auth()->id())
                     ->where('type', Account::TYPE_CRYPTO_WALLET)
             )
             ->emptyStateHeading('Kripto Cüzdanı Bulunamadı')
@@ -79,9 +78,6 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                     ->sortable(),
                 Tables\Columns\TextColumn::make('details.platform')
                     ->label('Platform'),
-                Tables\Columns\TextColumn::make('details.wallet_address')
-                    ->label('Cüzdan Adresi')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('currency')
                     ->label('Para Birimi')
                     ->badge(),
@@ -137,10 +133,13 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                     ->label('Platform')
                     ->options([
                         'Binance' => 'Binance',
+                        'Bybit' => 'Bybit',
+                        'Kraken' => 'Kraken',
+                        'Kucoin' => 'Kucoin',
+                        'Gateio' => 'Gate.io',
                         'Coinbase' => 'Coinbase',
                         'MetaMask' => 'MetaMask',
                         'Trust Wallet' => 'Trust Wallet',
-                        'Ledger' => 'Ledger',
                         'Other' => 'Diğer',
                     ])
                     ->multiple()
@@ -165,6 +164,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                     ->modalHeading('Kripto Cüzdan Düzenle')
                     ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('crypto_wallets.edit'))
                     ->form($this->getFormSchema()),
                 Tables\Actions\DeleteAction::make()
                     ->modalHeading('Kripto Cüzdanı Sil')
@@ -172,6 +172,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
                     ->successNotificationTitle('Kripto cüzdanı silindi')
+                    ->visible(fn () => auth()->user()->can('crypto_wallets.delete'))
                     ->label('Sil')
                     ->using(function (Account $record) {
                         return $this->accountService->delete($record);
@@ -181,6 +182,14 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                     ->icon('heroicon-o-arrow-right-circle')
                     ->modalHeading('Kripto Cüzdandan Banka Hesabına Transfer')
                     ->modalDescription('Bunu yapmak istediğinizden emin misiniz?')
+                    ->visible(function (Account $record): bool { 
+                        return auth()->user()->can('crypto_wallets.transfer') &&
+                               Account::where('status', true)
+                                   ->where('type', Account::TYPE_BANK_ACCOUNT)
+                                   ->exists() && 
+                               $record->balance > 0 &&
+                               $record->status;
+                    })
                     ->form(function (Account $record) {
                         return [
                             Forms\Components\Grid::make()
@@ -498,18 +507,20 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                 ->send();
                         }
                     })
-                    ->visible(fn (Account $record): bool => 
-                        Account::where('status', true)
-                            ->where('type', Account::TYPE_BANK_ACCOUNT)
-                            ->exists() && 
-                        $record->balance > 0 &&
-                        $record->status
-                    ),
+                    ->visible(function (Account $record): bool { 
+                        return auth()->user()->can('crypto_wallets.transfer') &&
+                               Account::where('status', true)
+                                   ->where('type', Account::TYPE_BANK_ACCOUNT)
+                                   ->exists() && 
+                               $record->balance > 0 &&
+                               $record->status;
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->label('Seçili Cüzdanları Sil'),
+                        ->label('Seçili Cüzdanları Sil')
+                        ->visible(fn () => auth()->user()->can('crypto_wallets.delete')),
                 ]),
             ])
             ->headerActions([
@@ -518,6 +529,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                     ->modalHeading('Yeni Kripto Cüzdan')
                     ->modalSubmitActionLabel('Oluştur')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('crypto_wallets.create'))
                     ->form($this->getFormSchema())
                     ->createAnother(false)
                     ->mutateFormDataUsing(function (array $data) {
@@ -558,12 +570,14 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                         ->label('Platform')
                         ->options([
                             'Binance' => 'Binance',
+                            'Gateio' => 'Gate.io',
                             'Coinbase' => 'Coinbase',
+                            'Bybit' => 'Bybit',
+                            'Kraken' => 'Kraken',
+                            'Kucoin' => 'Kucoin',
                             'MetaMask' => 'MetaMask',
                             'Trust Wallet' => 'Trust Wallet',
-                            'Ledger' => 'Ledger',
-                            'Trezor' => 'Trezor',
-                            'Diğer' => 'Diğer',
+                            'Other' => 'Diğer',
                         ])
                         ->required()
                         ->native(false),

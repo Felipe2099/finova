@@ -19,13 +19,13 @@ use App\Livewire\{
 use App\Livewire\Settings\{
     SettingsIndex,
     SiteSettings,
-    PaymentSettings,
     NotificationSettings,
-    SmtpSettings
+    TelegramSettings
 };
 
 // Livewire Role Components
 use App\Livewire\Role\RoleManager;
+use App\Livewire\Role\RoleForm;
 
 // Livewire Income & Expense Components
 use App\Livewire\Categories\{
@@ -99,6 +99,7 @@ use App\Livewire\User\UserForm;
 use App\Livewire\Commission\CommissionManager;
 use App\Livewire\Commission\UserCommissionHistory;
 
+use  \App\Livewire\Transaction\RecurringTransactionList;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,12 +112,9 @@ use App\Livewire\Commission\UserCommissionHistory;
 |
 */
 
-// Public Routes
-Route::view('/', 'welcome')->name('home');
-
 // Auth Routes
-Route::get('/login', Login::class)->name('login');
-Route::get('/register', Register::class)->name('register');
+Route::get('/', Login::class)->name('login');
+//Route::get('/register', Register::class)->name('register');
 
 // Protected Routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -130,35 +128,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
         // Role Management
-        Route::get('/roles', RoleManager::class)->name('roles.index');
+        Route::prefix('roles')->name('roles.')->group(function () {
+            Route::get('/', RoleManager::class)->name('index')->middleware('permission:roles.view');
+            Route::get('/create', RoleForm::class)->name('create')->middleware('permission:roles.create');
+            Route::get('/{role}/edit', RoleForm::class)->name('edit')->middleware('permission:roles.edit');
+        });
 
         // Settings Management
         Route::prefix('settings')->name('settings.')->group(function () {
-            Route::get('/', SettingsIndex::class)->name('index');
-            Route::get('/site', SiteSettings::class)->name('site');
-            Route::get('/payment', PaymentSettings::class)->name('payment');
-            Route::get('/smtp', SmtpSettings::class)->name('smtp');
-            Route::get('/notification', NotificationSettings::class)->name('notification');
+            Route::get('/', SettingsIndex::class)->name('index')->middleware('permission:settings.view');
+            Route::get('/site', SiteSettings::class)->name('site')->middleware('permission:settings.site');
+            Route::get('/notification', NotificationSettings::class)->name('notification')->middleware('permission:settings.notification');
+            Route::get('/telegram', TelegramSettings::class)->name('telegram')->middleware('permission:settings.telegram'); 
         });
 
         // User Management
         Route::prefix('users')->name('users.')->group(function () {
-            Route::get('/', UserManager::class)->name('index');
-            Route::get('/create', UserForm::class)->name('create');
-            Route::get('/{user}/edit', UserForm::class)->name('edit');
-            Route::get('/{user}/commissions', UserCommissionHistory::class)->name('commissions');
+            Route::get('/', UserManager::class)->name('index')->middleware('permission:users.view');
+            Route::get('/create', UserForm::class)->name('create')->middleware('permission:users.create');
+            Route::get('/{user}/edit', UserForm::class)->name('edit')->middleware('permission:users.edit');
+            Route::get('/{user}/commissions', UserCommissionHistory::class)->name('commissions')->middleware('permission:users.commissions');
         });
 
         // Gelir & Gider Yönetimi
         Route::prefix('transactions')->group(function () {
-            Route::get('/', TransactionManager::class)->name('transactions.index');
-            Route::get('/create', TransactionForm::class)->name('transactions.create');
-            Route::get('/{transaction}/edit', TransactionForm::class)->name('transactions.edit');
+            Route::get('/', TransactionManager::class)->name('transactions.index')->middleware('permission:transactions.view');
+            Route::get('/create', TransactionForm::class)->name('transactions.create')->middleware('permission:transactions.create');
+            Route::get('/{transaction}/edit', TransactionForm::class)->name('transactions.edit')->middleware('permission:transactions.edit');
         });
+        
+        Route::get('/recurring', RecurringTransactionList::class)->name('recurring')->middleware('permission:recurring_transactions.view');
 
         // Category Management
         Route::prefix('categories')->name('categories.')->group(function () {
-            Route::get('/', CategoryManager::class)->name('index');
+            Route::get('/', CategoryManager::class)->name('index')->middleware('permission:categories.view');
         });
 
         // Proposal Routes
@@ -171,54 +174,54 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Supplier Routes
         Route::prefix('suppliers')->name('suppliers.')->group(function () {
-            Route::get('/', SupplierManager::class)->name('index');
+            Route::get('/', SupplierManager::class)->name('index')->middleware('permission:suppliers.view');
         });
 
         // Customer Routes
         Route::prefix('customers')->name('customers.')->group(function () {
-            Route::get('/', CustomerManager::class)->name('index');
-            Route::get('/groups', CustomerGroupManager::class)->name('groups');
-            Route::get('/potential', LeadManager::class)->name('potential');
-            Route::get('/{customer}', CustomerDetail::class)->name('show');
+            Route::get('/', CustomerManager::class)->name('index')->middleware('permission:customers.view');
+            Route::get('/groups', CustomerGroupManager::class)->name('groups')->middleware('permission:customer_groups.view');
+            Route::get('/potential', LeadManager::class)->name('potential')->middleware('permission:leads.view');
+            Route::get('/{customer}', CustomerDetail::class)->name('show')->middleware('permission:customers.detail');
         });
 
         // Proje Yönetimi
         Route::prefix('projects')->name('projects.')->group(function () {
-            Route::get('/', ProjectManager::class)->name('index');
-            Route::get('/{project}/boards', BoardManager::class)->name('boards');
+            Route::get('/', ProjectManager::class)->name('index')->middleware('permission:projects.view');
+            Route::get('/{project}/boards', BoardManager::class)->name('boards')->middleware('permission:projects.details');
         });
 
         // Kredi Yönetimi
         Route::prefix('loans')->name('loans.')->group(function () {
-            Route::get('/', LoanManager::class)->name('index');
+            Route::get('/', LoanManager::class)->name('index')->middleware(['permission:loans.view']);
         });
 
         // Borç & Alacak Takibi
         Route::prefix('debts')->name('debts.')->group(function () {
-            Route::get('/', DebtManager::class)->name('index');
+            Route::get('/', DebtManager::class)->name('index')->middleware(['permission:debts.view']);
             // Not active - Route::get('/payments/{debt}', DebtPayments::class)->name('payments');
         });
 
         // Finans Yönetimi Routes
         Route::prefix('accounts')->name('accounts.')->group(function () {
-            Route::get('/bank', BankAccountManager::class)->name('bank');
-            Route::get('/credit-cards', CreditCardManager::class)->name('credit-cards');
-            Route::get('/crypto', CryptoWalletManager::class)->name('crypto');
-            Route::get('/virtual-pos', VirtualPosManager::class)->name('virtual-pos');
-            Route::get('/{account}/history', AccountHistory::class)->name('history');
+            Route::get('/bank', BankAccountManager::class)->name('bank')->middleware(['permission:bank_accounts.view']);
+            Route::get('/credit-cards', CreditCardManager::class)->name('credit-cards')->middleware(['permission:credit_cards.view']);
+            Route::get('/crypto', CryptoWalletManager::class)->name('crypto')->middleware(['permission:crypto_wallets.view']);
+            Route::get('/virtual-pos', VirtualPosManager::class)->name('virtual-pos')->middleware(['permission:virtual_pos.view']);
+            Route::get('/{account}/history', AccountHistory::class)->name('history')->middleware(['permission:bank_accounts.history']);
         });
         
         // Analiz ve Takip Routes
         Route::prefix('analysis')->name('analysis.')->group(function () {
             // Finansal Analizler
-            Route::get('/cash-flow', CashFlowAnalysis::class)->name('cash-flow');
-            Route::get('/categories', CategoryAnalysis::class)->name('categories');
+            Route::get('/cash-flow', CashFlowAnalysis::class)->name('cash-flow')->middleware(['permission:reports.cash_flow']);
+            Route::get('/categories', CategoryAnalysis::class)->name('categories')->middleware(['permission:reports.category_analysis']);
         });
 
         // Planlama Modülü
         Route::prefix('planning')->name('planning.')->group(function () {
-            Route::get('/savings', \App\Livewire\Planning\SavingsPlanner::class)->name('savings');
-            Route::get('/investments', \App\Livewire\Planning\InvestmentPlanner::class)->name('investments');
+            Route::get('/savings', \App\Livewire\Planning\SavingsPlanner::class)->name('savings')->middleware(['permission:savings.view']);
+            Route::get('/investments', \App\Livewire\Planning\InvestmentPlanner::class)->name('investments')->middleware(['permission:investments.view']);
         });
 
     });

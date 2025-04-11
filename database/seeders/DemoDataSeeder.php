@@ -12,35 +12,86 @@ use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class DemoDataSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    private $faker;
+    private $admin;
+    private $employee;
+    private $startDate;
+    private $endDate;
+
+    public function __construct()
+    {
+        $this->faker = Faker::create('tr_TR');
+        $this->startDate = Carbon::create(2023, 1, 1);
+        $this->endDate = Carbon::now();
+    }
+
     public function run(): void
     {
-        $user = User::where('email', 'admin@admin.com')->first();
-        
-        // Müşteri grupları oluştur
-        $this->createCustomerGroups($user);
-        
-        // Müşteriler ve potansiyel müşteriler oluştur
-        $this->createCustomersAndLeads($user);
-        
-        // Hesaplar oluştur
-        $this->createAccounts($user);
-        
-        // Projeler oluştur
-        $this->createProjects($user);
-        
-        // Gelir ve giderler oluştur
-        $this->createTransactions($user);
-    }
+        $this->admin = User::where('email', 'admin@admin.com')->first();
+        if (!$this->admin) {
+            throw new \RuntimeException('Admin kullanıcısı bulunamadı. Önce UserSeeder çalıştırılmalı.');
+        }
+
+        $this->employee = User::where('email', 'test@test.com')->first();
+        if (!$this->employee) {
+            throw new \RuntimeException('Test kullanıcısı bulunamadı. Önce UserSeeder çalıştırılmalı.');
+        }
+
+        // Admin için tüm veriler
+        $this->createCustomerGroups($this->admin);
+        $this->createCategories($this->admin);
+        $this->createCustomersAndLeads($this->admin);
+        $this->createCustomerNotes($this->admin);
+        $this->createCustomerAgreements($this->admin);
+        $this->createAccounts($this->admin);
+        $this->createLoans($this->admin);
+        $this->createSavingsAndInvestments($this->admin);
+        $this->createProjects($this->admin);
+        $this->createTransactions($this->admin);
+
+        // Çalışan için SADECE müşteri yönetimi ve işlemleri
+        // Hesaplar, Kategoriler, Gruplar admin tarafından oluşturulanları kullanacak
+        $this->createCustomersAndLeads($this->employee); // Çalışan kendi müşterilerini ekler
+        $this->createCustomerNotes($this->employee);   // Çalışan kendi notlarını ekler
+        $this->createTransactions($this->employee);    // Çalışan kendi müşterileri için işlem ekler (Admin hesap/kategorilerini kullanarak)
+        $this->createCommissionPayouts($this->employee); // Komisyon ödemelerini çalışan için oluştur
     
-    /**
-     * Müşteri grupları oluştur
-     */
+    }
+
+    private function createCategories(User $user): void
+    {
+        // Sadeleştirilmiş kategori yapısı (5-6 Gelir, 5-6 Gider)
+        $incomeCategories = [
+            ['name' => 'Hizmet Geliri', 'type' => 'income'],
+            ['name' => 'Satış Geliri', 'type' => 'income'],
+            ['name' => 'Abonelik Geliri', 'type' => 'income'],
+            ['name' => 'Komisyon Geliri', 'type' => 'income'],
+            ['name' => 'Faiz Geliri', 'type' => 'income'],
+            ['name' => 'Diğer Gelirler', 'type' => 'income'],
+        ];
+
+        $expenseCategories = [
+            ['name' => 'Ofis Giderleri', 'type' => 'expense'], // Kira, Fatura, Malzeme vb.
+            ['name' => 'Personel Giderleri', 'type' => 'expense'],
+            ['name' => 'Yazılım & Abonelikler', 'type' => 'expense'],
+            ['name' => 'Pazarlama & Reklam Giderleri', 'type' => 'expense'],
+            ['name' => 'Banka & Finansman Giderleri', 'type' => 'expense'],
+            ['name' => 'Diğer Giderler', 'type' => 'expense'],
+        ];
+
+        foreach (array_merge($incomeCategories, $expenseCategories) as $category) {
+            Category::create([
+                'name' => $category['name'],
+                'type' => $category['type'],
+                'user_id' => $user->id,
+            ]);
+        }
+    }
+
     private function createCustomerGroups(User $user): void
     {
         $groups = [
@@ -70,580 +121,887 @@ class DemoDataSeeder extends Seeder
             ]);
         }
     }
-    
-    /**
-     * Müşteriler ve potansiyel müşteriler oluştur
-     */
+
     private function createCustomersAndLeads(User $user): void
     {
-        $corporateGroup = CustomerGroup::where('name', 'Kurumsal Müşteriler')->first();
-        $individualGroup = CustomerGroup::where('name', 'Bireysel Müşteriler')->first();
-        $ecommerceGroup = CustomerGroup::where('name', 'E-ticaret Müşterileri')->first();
-        $internationalGroup = CustomerGroup::where('name', 'Yurtdışı Müşteriler')->first();
-        
-        // Kurumsal Müşteriler
-        $corporateCustomers = [
-            [
-                'name' => 'Teknoloji A.Ş.',
-                'type' => 'corporate',
-                'tax_number' => '1234567890',
-                'tax_office' => 'İstanbul',
-                'email' => 'info@teknoloji.com',
-                'phone' => '0212 555 1234',
-                'address' => 'Levent Mah. İş Kulesi No:1',
-                'city' => 'İstanbul',
-                'district' => 'Levent',
-                'description' => 'Yazılım ve teknoloji çözümleri sunan firma',
-                'status' => true,
-                'customer_group_id' => $corporateGroup->id,
-            ],
-            [
-                'name' => 'İnşaat Ltd. Şti.',
-                'type' => 'corporate',
-                'tax_number' => '2345678901',
-                'tax_office' => 'Ankara',
-                'email' => 'info@insaat.com',
-                'phone' => '0312 444 5678',
-                'address' => 'Çankaya Cad. No:42',
-                'city' => 'Ankara',
-                'district' => 'Çankaya',
-                'description' => 'İnşaat ve taahhüt işleri yapan firma',
-                'status' => true,
-                'customer_group_id' => $corporateGroup->id,
-            ],
-            [
-                'name' => 'Mobilya Sanayi A.Ş.',
-                'type' => 'corporate',
-                'tax_number' => '3456789012',
-                'tax_office' => 'İzmir',
-                'email' => 'satis@mobilya.com',
-                'phone' => '0232 333 9876',
-                'address' => 'Organize Sanayi Bölgesi No:15',
-                'city' => 'İzmir',
-                'district' => 'Bornova',
-                'description' => 'Ofis ve ev mobilyaları üreten firma',
-                'status' => true,
-                'customer_group_id' => $corporateGroup->id,
-            ],
-        ];
-        
-        // Bireysel Müşteriler
-        $individualCustomers = [
-            [
-                'name' => 'Ahmet Yılmaz',
-                'type' => 'individual',
-                'tax_number' => '12345678901',
-                'tax_office' => 'İstanbul',
-                'email' => 'ahmet@gmail.com',
-                'phone' => '0532 123 4567',
-                'address' => 'Bağdat Cad. No:123',
-                'city' => 'İstanbul',
-                'district' => 'Kadıköy',
-                'description' => 'Düzenli alışveriş yapan müşteri',
-                'status' => true,
-                'customer_group_id' => $individualGroup->id,
-            ],
-            [
-                'name' => 'Ayşe Demir',
-                'type' => 'individual',
-                'tax_number' => '23456789012',
-                'tax_office' => 'İstanbul',
-                'email' => 'ayse@gmail.com',
-                'phone' => '0533 234 5678',
-                'address' => 'Nispetiye Cad. No:45',
-                'city' => 'İstanbul',
-                'district' => 'Etiler',
-                'description' => 'Premium hizmet alan müşteri',
-                'status' => true,
-                'customer_group_id' => $individualGroup->id,
-            ],
-        ];
-        
-        // E-ticaret Müşterileri
-        $ecommerceCustomers = [
-            [
-                'name' => 'Mehmet Kaya',
-                'type' => 'individual',
-                'tax_number' => '34567890123',
-                'tax_office' => 'Bursa',
-                'email' => 'mehmet@hotmail.com',
-                'phone' => '0535 345 6789',
-                'address' => 'Cumhuriyet Mah. No:78',
-                'city' => 'Bursa',
-                'district' => 'Nilüfer',
-                'description' => 'Online mağazadan alışveriş yapan müşteri',
-                'status' => true,
-                'customer_group_id' => $ecommerceGroup->id,
-            ],
-            [
-                'name' => 'Zeynep Öztürk',
-                'type' => 'individual',
-                'tax_number' => '45678901234',
-                'tax_office' => 'Antalya',
-                'email' => 'zeynep@gmail.com',
-                'phone' => '0536 456 7890',
-                'address' => 'Lara Cad. No:56',
-                'city' => 'Antalya',
-                'district' => 'Lara',
-                'description' => 'Düzenli online alışveriş yapan müşteri',
-                'status' => true,
-                'customer_group_id' => $ecommerceGroup->id,
-            ],
-        ];
-        
-        // Yurtdışı Müşteriler
-        $internationalCustomers = [
-            [
-                'name' => 'Global Tech GmbH',
-                'type' => 'corporate',
-                'tax_number' => 'DE123456789',
-                'tax_office' => 'Berlin',
-                'email' => 'contact@globaltech.de',
-                'phone' => '+49 30 12345678',
-                'address' => 'Berliner Str. 123',
-                'city' => 'Berlin',
-                'district' => 'Mitte',
-                'description' => 'Alman teknoloji şirketi',
-                'status' => true,
-                'customer_group_id' => $internationalGroup->id,
-            ],
-            [
-                'name' => 'American Trade Inc.',
-                'type' => 'corporate',
-                'tax_number' => 'US987654321',
-                'tax_office' => 'New York',
-                'email' => 'info@americantrade.com',
-                'phone' => '+1 212 9876543',
-                'address' => '5th Avenue 789',
-                'city' => 'New York',
-                'district' => 'Manhattan',
-                'description' => 'Amerikan ticaret şirketi',
-                'status' => true,
-                'customer_group_id' => $internationalGroup->id,
-            ],
-        ];
-        
-        // Potansiyel Müşteriler (Leads)
-        $leads = [
-            [
-                'name' => 'Dijital Medya Ltd.',
-                'type' => 'corporate',
-                'email' => 'info@dijitalmedya.com',
-                'phone' => '0216 789 1234',
-                'address' => 'Ataşehir Bulvarı No:67',
-                'city' => 'İstanbul',
-                'district' => 'Ataşehir',
-                'source' => 'website',
-                'status' => 'new',
-                'last_contact_date' => Carbon::now()->subDays(5),
-                'next_contact_date' => Carbon::now()->addDays(2),
-                'notes' => 'Web sitesi tasarımı ve dijital pazarlama hizmetleri ile ilgileniyor',
-            ],
-            [
-                'name' => 'Organik Gıda A.Ş.',
-                'type' => 'corporate',
-                'email' => 'iletisim@organikgida.com',
-                'phone' => '0224 567 8901',
-                'address' => 'Yıldırım Cad. No:34',
-                'city' => 'Bursa',
-                'district' => 'Yıldırım',
-                'source' => 'referral',
-                'status' => 'contacted',
-                'last_contact_date' => Carbon::now()->subDays(10),
-                'next_contact_date' => Carbon::now()->addDays(5),
-                'notes' => 'Organik gıda üretimi yapan firma, muhasebe yazılımı arıyor',
-            ],
-            [
-                'name' => 'Fatma Şahin',
-                'type' => 'individual',
-                'email' => 'fatma@gmail.com',
-                'phone' => '0537 567 8901',
-                'address' => 'Bahçelievler Mah. No:23',
-                'city' => 'İzmir',
-                'district' => 'Karşıyaka',
-                'source' => 'social_media',
-                'status' => 'contacted',
-                'last_contact_date' => Carbon::now()->subDays(3),
-                'next_contact_date' => Carbon::now()->addDays(1),
-                'notes' => 'Kişisel finansal danışmanlık hizmeti almak istiyor',
-            ],
-            [
-                'name' => 'Eğitim Akademisi',
-                'type' => 'corporate',
-                'email' => 'bilgi@egitimakademisi.com',
-                'phone' => '0312 678 9012',
-                'address' => 'Kızılay Meydanı No:12',
-                'city' => 'Ankara',
-                'district' => 'Kızılay',
-                'source' => 'other',
-                'status' => 'negotiating',
-                'last_contact_date' => Carbon::now()->subDays(7),
-                'next_contact_date' => Carbon::now()->addDays(3),
-                'notes' => 'Online eğitim platformu için yazılım çözümleri arıyor',
-            ],
-        ];
-        
-        // Müşterileri oluştur
-        foreach (array_merge($corporateCustomers, $individualCustomers, $ecommerceCustomers, $internationalCustomers) as $customerData) {
-            $customerData['user_id'] = $user->id;
-            Customer::create($customerData);
+        // Önce grupların var olduğundan emin ol
+        // Müşteri gruplarını HER ZAMAN admin kullanıcısından al
+        $groups = CustomerGroup::where('user_id', $this->admin->id)->get();
+        if ($groups->isEmpty()) {
+            throw new \RuntimeException('Müşteri grupları bulunamadı. Önce createCustomerGroups çalıştırılmalı.');
         }
+
+        // Son 1 yıl için müşteri oluştur
+        $startDate = Carbon::now()->subYear();
+        $currentDate = $startDate->copy();
         
-        // Potansiyel müşterileri oluştur
-        foreach ($leads as $leadData) {
-            $leadData['user_id'] = $user->id;
-            Lead::create($leadData);
+        while ($currentDate <= Carbon::now()) {
+            // Her ay için 5-10 arası müşteri
+            $monthlyCustomerCount = $this->faker->numberBetween(5, 10);
+            
+            for ($i = 0; $i < $monthlyCustomerCount; $i++) {
+                $group = $groups->random(); // Rastgele bir grup seç
+                $createdAt = $currentDate->copy()->addDays($this->faker->numberBetween(1, 28));
+                
+                $isCompany = $this->faker->boolean(70);
+                Customer::create([
+                    'name' => $isCompany ? $this->faker->company : $this->faker->name,
+                    'type' => $isCompany ? 'corporate' : 'individual',
+                    'tax_number' => $this->faker->numerify('##########'),
+                    'tax_office' => $this->faker->city,
+                    'email' => $this->faker->companyEmail,
+                    'phone' => $this->faker->phoneNumber,
+                    'address' => $this->faker->address,
+                    'city' => $this->faker->city,
+                    'district' => $this->faker->city,
+                    'description' => $this->faker->sentence,
+                    'status' => true, // Tüm müşteriler aktif olsun
+                    'customer_group_id' => $group->id,
+                    'user_id' => $user->id,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
+                ]);
+            }
+
+            // Lead'ler sadece admin için
+            if ($user->hasRole('admin')) {
+                $monthlyLeadCount = $this->faker->numberBetween(2, 4);
+                
+                for ($i = 0; $i < $monthlyLeadCount; $i++) {
+                    $createdAt = $currentDate->copy()->addDays($this->faker->numberBetween(1, 28));
+                    $nextContactDate = $createdAt->copy()->addDays($this->faker->numberBetween(1, 30));
+                    
+                    Lead::create([
+                        'name' => $this->faker->company,
+                        'type' => 'corporate',
+                        'email' => $this->faker->companyEmail,
+                        'phone' => $this->faker->phoneNumber,
+                        'address' => $this->faker->address,
+                        'city' => $this->faker->city,
+                        'district' => $this->faker->city,
+                        'source' => $this->faker->randomElement(['website', 'referral', 'social_media', 'other']),
+                        'status' => $this->faker->randomElement(['new', 'contacted', 'negotiating', 'converted', 'lost']),
+                        'last_contact_date' => $createdAt,
+                        'next_contact_date' => $nextContactDate,
+                        'notes' => $this->faker->paragraph,
+                        'user_id' => $user->id,
+                        'created_at' => $createdAt,
+                        'updated_at' => $createdAt,
+                    ]);
+                }
+            }
+
+            $currentDate->addMonth();
         }
     }
-    
-    /**
-     * Hesaplar oluştur
-     */
+
     private function createAccounts(User $user): void
     {
         $accounts = [
-            // Banka Hesapları
             [
-                'name' => 'İş Bankası Vadesiz TL',
+                'name' => 'Ana Banka Hesabı',
                 'type' => Account::TYPE_BANK_ACCOUNT,
                 'currency' => 'TRY',
-                'balance' => 15000.00,
+                'balance' => 50000,
                 'details' => [
                     'bank_name' => 'İş Bankası',
-                    'account_number' => '1234567890',
-                    'iban' => 'TR123456789012345678901234',
-                    'branch' => 'Levent Şubesi',
-                ],
-                'status' => true,
+                    'branch' => 'Merkez',
+                    'account_no' => '1234567890',
+                    'iban' => 'TR33 0006 4000 0011 2345 6789 01'
+                ]
             ],
             [
-                'name' => 'Garanti USD Hesabı',
+                'name' => 'USD Hesabı',
                 'type' => Account::TYPE_BANK_ACCOUNT,
                 'currency' => 'USD',
-                'balance' => 5000.00,
+                'balance' => 5000,
                 'details' => [
-                    'bank_name' => 'Garanti Bankası',
-                    'account_number' => '0987654321',
-                    'iban' => 'TR098765432109876543210987',
-                    'branch' => 'Kadıköy Şubesi',
-                ],
-                'status' => true,
+                    'bank_name' => 'Akbank',
+                    'branch' => 'Merkez',
+                    'account_no' => '1234567891',
+                    'iban' => 'TR33 0006 4000 0011 2345 6789 02'
+                ]
             ],
-            
-            // Kredi Kartları
             [
-                'name' => 'Yapı Kredi Worldcard',
-                'type' => Account::TYPE_CREDIT_CARD,
-                'currency' => 'TRY',
-                'balance' => -3500.00,
+                'name' => 'EUR Hesabı',
+                'type' => Account::TYPE_BANK_ACCOUNT,
+                'currency' => 'EUR',
+                'balance' => 3000,
                 'details' => [
                     'bank_name' => 'Yapı Kredi',
-                    'card_number' => '5412********3456',
-                    'expiry_date' => '12/27',
-                    'credit_limit' => 20000.00,
-                ],
-                'status' => true,
+                    'branch' => 'Merkez',
+                    'account_no' => '1234567892',
+                    'iban' => 'TR33 0006 4000 0011 2345 6789 03'
+                ]
             ],
-            
-            // Kripto Cüzdanı
             [
-                'name' => 'USDT (Tether) Cüzdanı',
+                'name' => 'Maximum Kart',
+                'type' => Account::TYPE_CREDIT_CARD,
+                'currency' => 'TRY',
+                'balance' => 15000,
+                'details' => [
+                    'bank_name' => 'İş Bankası',
+                    'credit_limit' => 20000,
+                    'statement_day' => 15,
+                    'current_debt' => 15000
+                ]
+            ],
+            [
+                'name' => 'Binance BTC Cüzdanı',
                 'type' => Account::TYPE_CRYPTO_WALLET,
                 'currency' => 'USD',
-                'balance' => 1500.00,
+                'balance' => 1000,
                 'details' => [
-                    'wallet_address' => '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
                     'platform' => 'Binance',
-                ],
-                'status' => true,
-            ],
-            
-            // Sanal POS
-            [
-                'name' => 'iyzico Sanal POS',
-                'type' => Account::TYPE_VIRTUAL_POS,
-                'currency' => 'TRY',
-                'balance' => 7500.00,
-                'details' => [
-                    'provider' => 'iyzico',
-                    'merchant_id' => 'MER123456',
-                    'api_key' => 'api_key_123456',
-                ],
-                'status' => true,
+                    'wallet_address' => '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+
+                ]
             ],
             [
                 'name' => 'PayTR Sanal POS',
                 'type' => Account::TYPE_VIRTUAL_POS,
                 'currency' => 'TRY',
-                'balance' => 4200.00,
+                'balance' => 2575,
                 'details' => [
                     'provider' => 'PayTR',
-                    'merchant_id' => 'MER654321',
-                    'api_key' => 'api_key_654321',
-                ],
-                'status' => true,
+                ]
             ],
-            
-            // Nakit
             [
                 'name' => 'Nakit Kasa',
                 'type' => Account::TYPE_CASH,
                 'currency' => 'TRY',
-                'balance' => 2500.00,
-                'details' => [],
-                'status' => true,
+                'balance' => 5000,
             ],
         ];
-        
-        foreach ($accounts as $accountData) {
-            $accountData['user_id'] = $user->id;
-            Account::create($accountData);
+
+        foreach ($accounts as $account) {
+            Account::create([
+                'name' => $account['name'],
+                'type' => $account['type'],
+                'currency' => $account['currency'],
+                'balance' => $account['balance'],
+                'details' => $account['details'] ?? null,
+                'user_id' => $user->id,
+            ]);
         }
     }
-    
-    /**
-     * Projeler oluştur
-     */
+
     private function createProjects(User $user): void
     {
-        $projects = [
+        // Tek bir proje oluştur
+        $project = Project::create([
+            'name' => 'Müşteri Yönetim Sistemi',
+            'description' => 'Müşteri ilişkileri ve satış süreçlerinin yönetimi için yazılım projesi',
+            'status' => 'active',
+            'view_type' => 'list',
+            'created_by' => $user->id,
+        ]);
+
+        // Ana board'u oluştur
+
+
+        // Task listelerini oluştur
+        $lists = [
+            ['name' => 'Bekliyor', 'order' => 1],
+            ['name' => 'İşlemde', 'order' => 2],
+            ['name' => 'Test Ediliyor', 'order' => 3],
+            ['name' => 'Tamamlandı', 'order' => 4]
+        ];
+
+        $taskLists = [];
+        foreach ($lists as $list) {
+            $taskLists[$list['name']] = \App\Models\TaskList::create([
+                'board_id' => 1,
+                'name' => $list['name'],
+                'order' => $list['order']
+            ]);
+        }
+
+        // İşlemde olan görevler
+        $tasks = [
             [
-                'name' => 'Web Sitesi Yenileme',
-                'description' => 'Kurumsal web sitesinin yenilenmesi projesi',
-                'status' => 'active',
+                'list' => 'İşlemde',
+                'tasks' => [
+                    [
+                        'title' => 'Müşteri raporlama sistemi geliştirmesi',
+                        'content' => 'Müşteri bazlı gelir ve aktivite raporlarının oluşturulması',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(5),
+                    ],
+                    [
+                        'title' => 'E-posta bildirim sistemi entegrasyonu',
+                        'content' => 'Önemli müşteri aktiviteleri için otomatik e-posta bildirimleri',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(7),
+                    ]
+                ]
             ],
             [
-                'name' => 'Mobil Uygulama Geliştirme',
-                'description' => 'iOS ve Android için mobil uygulama geliştirme projesi',
-                'status' => 'active',
+                'list' => 'Test Ediliyor',
+                'tasks' => [
+                    [
+                        'title' => 'Müşteri portalı arayüz güncellemesi',
+                        'content' => 'Yeni tasarım ve kullanıcı deneyimi iyileştirmeleri',
+                        'priority' => 'medium',
+                        'due_date' => now()->addDays(3),
+                    ],
+                    [
+                        'title' => 'Tahsilat takip modülü',
+                        'content' => 'Müşteri ödemelerinin takibi ve raporlanması',
+                        'priority' => 'high',
+                        'due_date' => now()->addDays(2),
+                    ]
+                ]
             ],
             [
-                'name' => 'E-ticaret Entegrasyonu',
-                'description' => 'Mevcut sisteme e-ticaret modülü entegrasyonu',
-                'status' => 'active',
+                'list' => 'Tamamlandı',
+                'tasks' => [
+                    [
+                        'title' => 'Müşteri veri tabanı optimizasyonu',
+                        'content' => 'Performans iyileştirmeleri ve indeksleme',
+                        'priority' => 'high',
+                        'due_date' => now()->subDays(2),
+                    ],
+                    [
+                        'title' => 'Yetkilendirme sistemi güncellemesi',
+                        'content' => 'Rol bazlı erişim kontrolü ve güvenlik güncellemeleri',
+                        'priority' => 'high',
+                        'due_date' => now()->subDays(1),
+                    ]
+                ]
+            ]
+        ];
+
+        // Görevleri oluştur
+        foreach ($tasks as $listTasks) {
+            $list = $taskLists[$listTasks['list']];
+            foreach ($listTasks['tasks'] as $index => $task) {
+                \App\Models\Task::create([
+                    'task_list_id' => $list->id,
+                    'title' => $task['title'],
+                    'content' => $task['content'],
+                    'priority' => $task['priority'],
+                    'due_date' => $task['due_date'],
+                    'order' => $index + 1,
+                    'assigned_to' => $user->id
+                ]);
+            }
+        }
+    }
+
+    private function createSavingsAndInvestments(User $user): void
+    {
+        // Sadece 2 tasarruf planı
+        $savingsPlans = [
+            [
+                'goal_name' => 'Acil Durum Fonu',
+                'target_amount' => 50000,
+                'saved_amount' => 35000,
+                'target_date' => Carbon::now()->addMonths(6),
+                'status' => 'active'
             ],
             [
-                'name' => 'Sosyal Medya Kampanyası',
-                'description' => 'Yeni ürün lansmanı için sosyal medya kampanyası',
-                'status' => 'completed',
+                'goal_name' => 'Ofis Taşınma Fonu',
+                'target_amount' => 100000,
+                'saved_amount' => 25000,
+                'target_date' => Carbon::now()->addYear(),
+                'status' => 'active'
+            ]
+        ];
+
+        foreach ($savingsPlans as $plan) {
+            \App\Models\SavingsPlan::create([
+                'user_id' => $user->id,
+                'goal_name' => $plan['goal_name'],
+                'target_amount' => $plan['target_amount'],
+                'saved_amount' => $plan['saved_amount'],
+                'target_date' => $plan['target_date'],
+                'status' => $plan['status']
+            ]);
+        }
+
+        // Sadece 2 yatırım planı
+        $investmentPlans = [
+            [
+                'investment_name' => 'Bitcoin Yatırımı',
+                'invested_amount' => 20000,
+                'current_value' => 25000,
+                'investment_type' => 'crypto',
+                'investment_date' => Carbon::now()->subMonths(3)
+            ],
+            [
+                'investment_name' => 'Hisse Senedi Portföyü',
+                'invested_amount' => 50000,
+                'current_value' => 55000,
+                'investment_type' => 'stocks',
+                'investment_date' => Carbon::now()->subMonths(6)
+            ]
+        ];
+
+        foreach ($investmentPlans as $plan) {
+            \App\Models\InvestmentPlan::create([
+                'user_id' => $user->id,
+                'investment_name' => $plan['investment_name'],
+                'invested_amount' => $plan['invested_amount'],
+                'current_value' => $plan['current_value'],
+                'investment_type' => $plan['investment_type'],
+                'investment_date' => $plan['investment_date']
+            ]);
+        }
+    }
+
+    private function createLoans(User $user): void
+    {
+        // Krediler sadece admin için oluşturulur
+        if (!$user->hasRole('admin')) {
+            return;
+        }
+
+        $loans = [
+            [
+                'bank_name' => 'İş Bankası',
+                'loan_type' => 'business',
+                'amount' => 100000,
+                'installments' => 24,
+                'monthly_payment' => 5000,
+                'remaining_installments' => 18,
+                'start_date' => Carbon::now()->subMonths(6),
+            ]
+        ];
+
+        foreach ($loans as $loan) {
+            $startDate = $loan['start_date'];
+            $monthlyPayment = $loan['monthly_payment'];
+            $remainingInstallments = $loan['remaining_installments'];
+
+            \App\Models\Loan::create([
+                'user_id' => $user->id,
+                'bank_name' => $loan['bank_name'],
+                'loan_type' => $loan['loan_type'],
+                'amount' => $loan['amount'],
+                'monthly_payment' => $monthlyPayment,
+                'installments' => $loan['installments'],
+                'remaining_installments' => $remainingInstallments,
+                'start_date' => $startDate,
+                'next_payment_date' => Carbon::now()->addMonth()->startOfMonth(),
+                'due_date' => $startDate->copy()->addMonths($loan['installments']),
+                'remaining_amount' => $monthlyPayment * $remainingInstallments,
+                'status' => 'pending', // Durumu string olarak 'active' yapalım
+                'notes' => 'İşletme giderlerinin finansmanı için kullanılan kredi',
+            ]);
+        }
+    }
+
+    private function createTransactions(User $user): void
+    {
+        // Hesapları ve Kategorileri HER ZAMAN admin kullanıcısından al
+        // --- Veri Hazırlama (Döngüden Önce) ---
+
+        // 1. Gerekli Admin Hesaplarını Çek ve Kontrol Et
+        $mainAccount = Account::where('user_id', $this->admin->id)->where('name', 'Ana Banka Hesabı')->first();
+        $creditCard = Account::where('user_id', $this->admin->id)->where('type', Account::TYPE_CREDIT_CARD)->first();
+        $cryptoWallet = Account::where('user_id', $this->admin->id)->where('type', Account::TYPE_CRYPTO_WALLET)->first();
+        $virtualPos = Account::where('user_id', $this->admin->id)->where('type', Account::TYPE_VIRTUAL_POS)->first(); // İlk Sanal POS'u alalım
+        $cashAccount = Account::where('user_id', $this->admin->id)->where('type', Account::TYPE_CASH)->first();
+
+        if (!$mainAccount) {
+            \Log::error('DemoDataSeeder: Admin için Ana Banka Hesabı bulunamadı!');
+            return; // Ana hesap yoksa devam etme
+        }
+
+        // 2. Admin Kategorilerinin ID'lerini Dizilere Çek ve Kontrol Et
+        $adminIncomeCategoryIds = Category::where('user_id', $this->admin->id)->where('type', 'income')->pluck('id')->toArray();
+        $adminExpenseCategoryIds = Category::where('user_id', $this->admin->id)->where('type', 'expense')->pluck('id')->toArray();
+
+        if (empty($adminIncomeCategoryIds) || empty($adminExpenseCategoryIds)) {
+             \Log::error('DemoDataSeeder: Admin için gelir veya gider kategorileri bulunamadı!');
+            return; // Kategoriler yoksa devam etme
+        }
+
+        // 3. Mevcut Kullanıcının Müşteri ID'lerini Diziye Çek ve Kontrol Et
+        $customerIds = Customer::where('user_id', $user->id)->pluck('id')->toArray();
+        if (empty($customerIds) && $user->id !== $this->admin->id) {
+             \Log::warning("DemoDataSeeder: Kullanıcı {$user->id} için müşteri bulunamadı, işlem oluşturulamıyor.");
+             // Çalışan için müşteri yoksa gelir işlemi oluşturamayız, ancak diğer işlemler (varsa) devam edebilir.
+             // Bu yüzden burada return ETMİYORUZ, sadece gelir döngüsünü atlayacağız.
+        }
+
+        // --- İşlem Oluşturma Döngüleri ---
+
+        $startDate = $this->startDate->copy();
+        $endDate = Carbon::now(); // Bugünün tarihi
+        $oneMonthAgo = Carbon::now()->subMonth();
+        $createdIncomeTransactionIdsLastMonth = []; // Son ayda oluşturulan gelir işlemi ID'lerini tutmak için
+
+        while ($startDate <= $endDate) {
+
+            // A. Kredi Kartı Harcaması ve Ödemesi (Sadece admin için mantıklı, ama her kullanıcı için oluşturuluyor - şimdilik kalsın)
+            if ($creditCard && $mainAccount) {
+                $expenseCatId = !empty($adminExpenseCategoryIds) ? $adminExpenseCategoryIds[array_rand($adminExpenseCategoryIds)] : null;
+                if ($expenseCatId) {
+                    $ccAmount = $this->faker->numberBetween(1000, 9999);
+                    Transaction::create([
+                        'user_id' => $user->id,
+                        'category_id' => $expenseCatId,
+                        'source_account_id' => $creditCard->id,
+                        'destination_account_id' => null,
+                        'type' => 'expense',
+                        'amount' => $ccAmount,
+                        'currency' => 'TRY',
+                        'exchange_rate' => 1,
+                        'try_equivalent' => $ccAmount,
+                        // Tarih bugünü geçmesin
+                        'date' => min($startDate->copy()->addDays($this->faker->numberBetween(1, 15)), $endDate),
+                        'payment_method' => 'credit_card',
+                        'description' => 'Aylık kredi kartı harcamaları',
+                        'status' => 'completed',
+                    ]);
+
+                    // Ödeme (Ayın sonuna doğru)
+                    $paymentDate = $startDate->copy()->endOfMonth()->subDays(rand(0, 5));
+                    if ($paymentDate <= $endDate) {
+                         Transaction::create([
+                            'user_id' => $user->id,
+                            'source_account_id' => $mainAccount->id,
+                            'destination_account_id' => $creditCard->id,
+                            'type' => 'payment', // Ödeme tipi
+                            'category_id' => null, // Ödemenin kategorisi olmaz
+                            'amount' => $ccAmount, // Harcama kadar ödeme
+                            'currency' => 'TRY',
+                            'exchange_rate' => 1,
+                            'try_equivalent' => $ccAmount,
+                            // Tarih bugünü geçmesin
+                            'date' => min($paymentDate, $endDate),
+                            'payment_method' => 'bank',
+                            'description' => 'Kredi kartı ödemesi',
+                            'status' => 'completed',
+                        ]);
+                    }
+                }
+            }
+
+            // B. Müşteri Gelirleri (Sadece müşteri varsa)
+            if (!empty($customerIds)) {
+                $incomeCount = $this->faker->numberBetween(3, 8); // Daha az işlem
+                for ($i = 0; $i < $incomeCount; $i++) {
+                    $customerId = $customerIds[array_rand($customerIds)];
+                    $incomeCatId = !empty($adminIncomeCategoryIds) ? $adminIncomeCategoryIds[array_rand($adminIncomeCategoryIds)] : null;
+
+                    // Geçerli ID'ler varsa devam et
+                    if ($customerId && $incomeCatId) {
+                        $amount = $this->faker->numberBetween(500, 6000);
+                        $paymentMethodType = $this->faker->randomElement(['bank', 'virtual_pos', 'cash']);
+                        // Tarih bugünü geçmesin
+                        $transactionDate = min($startDate->copy()->addDays($this->faker->numberBetween(1, 28)), $endDate);
+
+                        // Hesapları ve ödeme yöntemini belirle (daha katı kontrol)
+                        $sourceAccount = null;
+                        $destAccount = null;
+                        $paymentMethod = null;
+                        $description = null;
+
+                        if ($paymentMethodType === 'virtual_pos') {
+                            // Sadece admin'in Sanal POS ve Ana Hesabı varsa bu yöntemi kullan
+                            if ($virtualPos && $mainAccount) {
+                                $sourceAccount = $virtualPos;
+                                $destAccount = $mainAccount;
+                                $paymentMethod = 'virtual_pos';
+                                $description = 'Sanal POS tahsilatı';
+                            } else {
+                                continue; // Gerekli hesap yoksa bu müşteri için bu işlemi ATLA
+                            }
+                        } elseif ($paymentMethodType === 'cash') {
+                             // Sadece admin'in Nakit Hesabı varsa bu yöntemi kullan
+                            if ($cashAccount) {
+                                $sourceAccount = $cashAccount;
+                                $destAccount = null;
+                                $paymentMethod = 'cash';
+                                $description = 'Nakit tahsilat';
+                            } else {
+                                continue; // Gerekli hesap yoksa bu müşteri için bu işlemi ATLA
+                            }
+                        } elseif ($paymentMethodType === 'bank') {
+                             // Sadece admin'in Ana Hesabı varsa bu yöntemi kullan
+                             if ($mainAccount) {
+                                $sourceAccount = $mainAccount;
+                                $destAccount = null;
+                                $paymentMethod = 'bank';
+                                $description = 'Havale/EFT tahsilatı';
+                            } else {
+                                // Ana hesap yoksa zaten fonksiyon başında çıkmıştık ama yine de atla
+                                continue;
+                            }
+                        } else {
+                             // Beklenmedik paymentMethodType, bu işlemi atla
+                             \Log::warning("DemoDataSeeder: Beklenmedik paymentMethodType: {$paymentMethodType}");
+                             continue;
+                        }
+                        // Bu noktaya gelindiyse, $sourceAccount ve $paymentMethod geçerli olmalı
+
+                        // Kaynak hesap geçerliyse işlemi oluştur
+                        if ($sourceAccount) {
+                            $transactionData = [
+                                'user_id' => $user->id,
+                                'category_id' => $incomeCatId,
+                                'customer_id' => $customerId,
+                                'source_account_id' => $sourceAccount->id,
+                                'destination_account_id' => $destAccount ? $destAccount->id : null,
+                                'type' => 'income',
+                                'amount' => $amount,
+                                'currency' => $sourceAccount->currency === 'USD' ? 'USD' : 'TRY', // Hesaba göre para birimi
+                                'exchange_rate' => $sourceAccount->currency === 'USD' ? 32 : 1, // Basit kur
+                                'try_equivalent' => $sourceAccount->currency === 'USD' ? $amount * 32 : $amount,
+                                'date' => $transactionDate,
+                                'payment_method' => $paymentMethod,
+                                'description' => $description,
+                                'status' => 'completed',
+                                'is_subscription' => false,
+                            ];
+
+                            // Abonelik için ID'yi kaydet (döngüden sonra işlenecek)
+                            if ($transactionDate >= $oneMonthAgo) {
+                                $createdIncomeTransactionIdsLastMonth[] = Transaction::create($transactionData)->id; // ID'yi al ve diziye ekle
+                                continue; // Bu işlemi tekrar oluşturmamak için döngünün başına dön
+                            }
+
+                            // Normal işlemi oluştur (abonelik değilse veya eski tarihliyse)
+                            Transaction::create($transactionData);
+                        }
+                    }
+                }
+            }
+
+            // C. Sabit Giderler (Sadece admin için)
+            if ($user->hasRole('admin') && $mainAccount) {
+                 $expenseCatId = !empty($adminExpenseCategoryIds) ? $adminExpenseCategoryIds[array_rand($adminExpenseCategoryIds)] : null;
+                 if($expenseCatId) {
+                    $expenses = [ 
+                    ['name' => 'Ofis kirası', 'amount' => 15000],
+                     ['name' => 'Elektrik faturası', 'amount' => [400, 800]],
+                     ['name' => 'Su faturası', 'amount' => [200, 400]],
+                     ['name' => 'İnternet faturası', 'amount' => 500],
+                     ['name' => 'Telefon faturası', 'amount' => [300, 600]],
+                     ['name' => 'Temizlik hizmeti', 'amount' => 2000],
+                    ]; // Diziyi burada kapat
+
+                    foreach ($expenses as $expense) {
+                        $amount = is_array($expense['amount'])
+                            ? $this->faker->numberBetween($expense['amount'][0], $expense['amount'][1])
+                            : $expense['amount'];
+
+                        Transaction::create([
+                            'user_id' => $user->id,
+                            'category_id' => $expenseCatId,
+                            'source_account_id' => $mainAccount->id, // Ana hesaptan gider
+                            'destination_account_id' => null,
+                            'type' => 'expense',
+                            'amount' => $amount,
+                            'currency' => 'TRY',
+                            'exchange_rate' => 1,
+                            'try_equivalent' => $amount,
+                            // Tarih bugünü geçmesin
+                            'date' => min($startDate->copy()->addDays($this->faker->numberBetween(1, 28)), $endDate),
+                            'payment_method' => 'bank',
+                            'description' => $expense['name'],
+                            'status' => 'completed'
+                        ]);
+                    }
+                 }
+            }
+
+            $startDate->addMonth();
+        } // while ($startDate <= $endDate) döngüsü sonu
+
+        // --- Abonelikleri Ayarla (Döngüden Sonra) ---
+        if (!empty($createdIncomeTransactionIdsLastMonth)) {
+            $subscriptionCount = $this->faker->numberBetween(5, 10); // 5-10 arası abonelik
+            // Diziyi karıştır ve istenen sayıda ID seç
+            shuffle($createdIncomeTransactionIdsLastMonth);
+            $subscriptionIds = array_slice($createdIncomeTransactionIdsLastMonth, 0, $subscriptionCount);
+
+            if (!empty($subscriptionIds)) {
+                // Seçilen işlemleri güncelle
+                Transaction::whereIn('id', $subscriptionIds)->update([
+                    'is_subscription' => true,
+                    'subscription_period' => 'monthly',
+                    'auto_renew' => true,
+                    // next_payment_date'i her işlem için ayrı ayrı hesaplamak daha doğru olur,
+                    // ama basitlik için toplu güncellemede transaction date + 1 ay yapalım
+                    // Dikkat: Bu SQL sorgusu doğrudan çalışmaz, her birini ayrı güncellemek gerekebilir.
+                    // Şimdilik sadece is_subscription'ı güncelleyelim, diğerleri manuel ayarlanabilir.
+                    // 'next_payment_date' => DB::raw('DATE_ADD(date, INTERVAL 1 MONTH)'), // Bu satır doğrudan çalışmaz
+                ]);
+
+                // next_payment_date ve description'ı ayrı ayrı güncelleyelim
+                $subscriptionsToUpdate = Transaction::whereIn('id', $subscriptionIds)->get();
+                foreach ($subscriptionsToUpdate as $sub) {
+                    $sub->update([
+                        'next_payment_date' => Carbon::parse($sub->date)->addMonth(),
+                        'description' => $sub->description . ' (Aylık Abonelik)'
+                    ]);
+                }
+            }
+        }
+
+        // D. Kripto İşlemleri (Sadece admin için ve hesaplar varsa)
+        if ($user->hasRole('admin') && $cryptoWallet && $mainAccount) {
+            $cryptoTransactions = [ // Dizi tanımını burada başlat
+                 ['type' => 'expense', 'description' => 'BTC Alım', 'amount' => 10000],
+                ['type' => 'income', 'description' => 'BTC Satış', 'amount' => 12000],
+                ['type' => 'expense', 'description' => 'ETH Alım', 'amount' => 5000],
+                ['type' => 'income', 'description' => 'ETH Satış', 'amount' => 6000],
+            ]; // Diziyi burada kapat
+
+            foreach ($cryptoTransactions as $index => $tx) {
+                $date = Carbon::now()->subMonths($index + 1);
+                $exchangeRate = $this->faker->randomFloat(2, 28, 32);
+                $categoryId = null;
+                if($tx['type'] === 'income' && !empty($adminIncomeCategoryIds)) {
+                    $categoryId = $adminIncomeCategoryIds[array_rand($adminIncomeCategoryIds)];
+                } elseif ($tx['type'] === 'expense' && !empty($adminExpenseCategoryIds)) {
+                     $categoryId = $adminExpenseCategoryIds[array_rand($adminExpenseCategoryIds)];
+                }
+
+                if($categoryId) { // Kategori bulunduysa devam et
+                    $transactionData = [
+                        'user_id' => $user->id,
+                        'category_id' => $categoryId,
+                        'type' => $tx['type'],
+                        'amount' => $tx['amount'],
+                        'currency' => 'USD',
+                        'exchange_rate' => $exchangeRate,
+                        'try_equivalent' => $tx['amount'] * $exchangeRate,
+                        'date' => $date,
+                        'payment_method' => 'crypto',
+                        'description' => $tx['description'],
+                        'status' => 'completed'
+                    ];
+
+                    if ($tx['type'] === 'income') { // Satış: Kripto -> Banka
+                        $transactionData['source_account_id'] = $cryptoWallet->id;
+                        $transactionData['destination_account_id'] = $mainAccount->id;
+                    } else { // Alım: Banka -> Kripto
+                        $transactionData['source_account_id'] = $mainAccount->id;
+                        $transactionData['destination_account_id'] = $cryptoWallet->id;
+                    }
+                    Transaction::create($transactionData);
+                }
+            }
+        }
+    }
+
+    private function getPaymentMethod(string $accountType): string
+    {
+        return match ($accountType) {
+            Account::TYPE_BANK_ACCOUNT => 'bank',
+            Account::TYPE_CREDIT_CARD => 'credit_card',
+            Account::TYPE_CRYPTO_WALLET => 'crypto',
+            Account::TYPE_VIRTUAL_POS => 'virtual_pos',
+            Account::TYPE_CASH => 'cash',
+            default => 'bank',
+        };
+    }
+
+    private function createCustomerNotes(User $user): void
+    {
+        $customers = \App\Models\Customer::where('user_id', $user->id)->get();
+        $noteTypes = ['note', 'call', 'meeting', 'email', 'other'];
+
+        // Anlamlı not içerikleri
+        $noteContents = [
+            'note' => [
+                'Müşteri ile genel durum değerlendirmesi yapıldı.',
+                'Yeni proje teklifi hakkında bilgi verildi.',
+                'Ödeme hatırlatması yapılması gerekiyor.',
+                'Müşteri memnuniyeti anketi gönderildi.',
+                'Rakip analizi hakkında notlar alındı.',
+            ],
+            'call' => [
+                'Müşteri ile telefon görüşmesi yapıldı, teklif detayları konuşuldu.',
+                'Destek talebi için arandı, sorun çözüldü.',
+                'Yeni kampanya hakkında bilgi vermek için arandı.',
+                'Randevu teyidi için arandı.',
+                'Tahsilat durumu hakkında görüşüldü.',
+            ],
+            'meeting' => [
+                'Müşteri ofisinde toplantı yapıldı, proje sunumu gerçekleştirildi.',
+                'Online toplantı ile demo gösterimi yapıldı.',
+                'Strateji toplantısı yapıldı, sonraki adımlar belirlendi.',
+                'Yıllık değerlendirme toplantısı gerçekleştirildi.',
+                'Yeni iş birliği olanakları üzerine toplantı yapıldı.',
+            ],
+            'email' => [
+                'Teklif e-posta ile gönderildi.',
+                'Toplantı özeti e-posta ile paylaşıldı.',
+                'Sözleşme taslağı e-posta ile iletildi.',
+                'Bilgilendirme e-postası gönderildi.',
+                'Destek talebi yanıtı e-posta ile gönderildi.',
+            ],
+            'other' => [
+                'Müşteri etkinliğine katılım sağlandı.',
+                'Sosyal medya üzerinden etkileşim kuruldu.',
+                'Referans kontrolü yapıldı.',
+                'Fuar ziyareti sırasında görüşüldü.',
+                'Genel araştırma notları.',
             ],
         ];
         
-        foreach ($projects as $projectData) {
-            $projectData['created_by'] = $user->id;
-            Project::create($projectData);
+        foreach ($customers as $customer) {
+            // Her müşteri için 3-8 not oluştur
+            $noteCount = $this->faker->numberBetween(3, 5);
+            
+            for ($i = 0; $i < $noteCount; $i++) {
+                $type = $this->faker->randomElement($noteTypes);
+                $activityDate = $this->faker->boolean(70) 
+                    ? $this->faker->dateTimeBetween('-6 months', 'now')
+                    : $this->faker->dateTimeBetween('now', '+1 month');
+
+                // Türüne göre anlamlı içerik seç
+                $content = isset($noteContents[$type]) && !empty($noteContents[$type])
+                    ? $this->faker->randomElement($noteContents[$type])
+                    : $this->faker->sentence; // Eğer tür için içerik yoksa rastgele cümle
+
+                \App\Models\CustomerNote::create([
+                    'customer_id' => $customer->id,
+                    'user_id' => $user->id,
+                    'assigned_user_id' => $this->faker->boolean(30) ? $user->id : null,
+                    'content' => $content, // Anlamlı içerik ata
+                    'type' => $type,
+                    'activity_date' => $activityDate,
+                ]);
+            }
         }
     }
-    
-    /**
-     * Gelir ve giderler oluştur
-     */
-    private function createTransactions(User $user): void
+
+    private function createCustomerAgreements(User $user): void
     {
-        // Hesapları al
-        $bankAccount = Account::where('name', 'İş Bankası Vadesiz TL')->first();
-        $usdAccount = Account::where('name', 'Garanti USD Hesabı')->first();
-        $creditCard = Account::where('name', 'Yapı Kredi Worldcard')->first();
-        $cryptoWallet = Account::where('name', 'USDT (Tether) Cüzdanı')->first();
-        $virtualPos1 = Account::where('name', 'iyzico Sanal POS')->first();
-        $virtualPos2 = Account::where('name', 'PayTR Sanal POS')->first();
-        $cashAccount = Account::where('name', 'Nakit Kasa')->first();
+        $customers = \App\Models\Customer::where('user_id', $user->id)->get();
         
-        // Müşterileri al
-        $techCompany = Customer::where('name', 'Teknoloji A.Ş.')->first();
-        $constructionCompany = Customer::where('name', 'İnşaat Ltd. Şti.')->first();
-        $furnitureCompany = Customer::where('name', 'Mobilya Sanayi A.Ş.')->first();
-        $ahmet = Customer::where('name', 'Ahmet Yılmaz')->first();
-        $ayse = Customer::where('name', 'Ayşe Demir')->first();
-        $mehmet = Customer::where('name', 'Mehmet Kaya')->first();
-        $zeynep = Customer::where('name', 'Zeynep Öztürk')->first();
-        $globalTech = Customer::where('name', 'Global Tech GmbH')->first();
-        $americanTrade = Customer::where('name', 'American Trade Inc.')->first();
-        
-        // Kategorileri al
-        $incomeCategories = Category::where('type', 'income')->get();
-        $expenseCategories = Category::where('type', 'expense')->get();
-        
-        // Son 2 yıl için gelir ve giderler oluştur
-        $startDate = Carbon::now()->subYears(2);
-        $endDate = Carbon::now();
-        
-        $currentDate = clone $startDate;
-        
-        while ($currentDate <= $endDate) {
-            // Her ay için 5-10 gelir işlemi
-            $incomeCount = rand(5, 10);
-            for ($i = 0; $i < $incomeCount; $i++) {
-                $transactionDate = clone $currentDate;
-                $transactionDate->addDays(rand(0, 30));
+        foreach ($customers as $customer) {
+            // Her müşteri için 1-3 anlaşma oluştur
+            if ($this->faker->boolean(70)) {
+                $agreementCount = $this->faker->numberBetween(1, 3);
                 
-                if ($transactionDate > $endDate) {
-                    continue;
-                }
-                
-                // Rastgele müşteri seç
-                $customers = [$techCompany, $constructionCompany, $furnitureCompany, $ahmet, $ayse, $mehmet, $zeynep, $globalTech, $americanTrade];
-                $customer = $customers[array_rand($customers)];
-                
-                // Rastgele hesap seç
-                $accounts = [$bankAccount, $virtualPos1, $virtualPos2, $cashAccount];
-                if ($customer === $globalTech || $customer === $americanTrade) {
-                    $accounts[] = $usdAccount; // Yurtdışı müşteriler için USD hesabı da ekle
-                }
-                $account = $accounts[array_rand($accounts)];
-                
-                // Rastgele kategori seç
-                $category = $incomeCategories->random();
-                
-                // Gelir miktarı belirle (müşteri tipine göre)
-                $amount = 0;
-                if ($customer->type === 'corporate') {
-                    $amount = rand(1000, 10000) + (rand(0, 99) / 100);
-                } else {
-                    $amount = rand(100, 2000) + (rand(0, 99) / 100);
-                }
-                
-                // USD hesabı için dolar cinsinden işlem
-                if ($account === $usdAccount) {
-                    $amount = $amount / 30; // Basit bir kur hesabı
-                    $tryEquivalent = $amount * 30;
-                } else {
-                    $tryEquivalent = $amount;
-                }
-                
-                // İşlemi oluştur
-                $paymentMethod = Transaction::PAYMENT_METHOD_BANK;
-                
-                if ($account->type === Account::TYPE_CASH) {
-                    $paymentMethod = Transaction::PAYMENT_METHOD_CASH;
-                } elseif ($account->type === Account::TYPE_BANK_ACCOUNT) {
-                    $paymentMethod = Transaction::PAYMENT_METHOD_BANK;
-                } elseif ($account->type === Account::TYPE_VIRTUAL_POS) {
-                    $paymentMethod = Transaction::PAYMENT_METHOD_VIRTUAL_POS;
-                }
-                
-                Transaction::create([
-                    'user_id' => $user->id,
-                    'source_account_id' => $account->id,
-                    'category_id' => $category->id,
-                    'customer_id' => $customer->id,
-                    'type' => Transaction::TYPE_INCOME,
-                    'amount' => $amount,
-                    'currency' => $account->currency,
-                    'exchange_rate' => $account->currency === 'TRY' ? 1 : 30,
-                    'try_equivalent' => $tryEquivalent,
-                    'date' => $transactionDate,
-                    'description' => $category->name . ' geliri - ' . $customer->name,
-                    'payment_method' => $paymentMethod,
-                    'status' => 'completed',
-                ]);
-            }
-            
-            // Her ay için 8-15 gider işlemi
-            $expenseCount = rand(8, 15);
-            for ($i = 0; $i < $expenseCount; $i++) {
-                $transactionDate = clone $currentDate;
-                $transactionDate->addDays(rand(0, 30));
-                
-                if ($transactionDate > $endDate) {
-                    continue;
-                }
-                
-                // Rastgele hesap seç (giderler için kredi kartı da dahil)
-                $accounts = [$bankAccount, $creditCard, $cashAccount];
-                $account = $accounts[array_rand($accounts)];
-                
-                // Rastgele kategori seç
-                $category = $expenseCategories->random();
-                
-                // Gider miktarı belirle (kategoriye göre)
-                $amount = 0;
-                if (strpos(strtolower($category->name), 'kira') !== false || 
-                    strpos(strtolower($category->name), 'maaş') !== false) {
-                    $amount = rand(3000, 8000) + (rand(0, 99) / 100);
-                } else {
-                    $amount = rand(50, 1500) + (rand(0, 99) / 100);
-                }
-                
-                // İşlemi oluştur
-                $paymentMethod = Transaction::PAYMENT_METHOD_BANK;
-                
-                if ($account->type === Account::TYPE_CASH) {
-                    $paymentMethod = Transaction::PAYMENT_METHOD_CASH;
-                } elseif ($account->type === Account::TYPE_BANK_ACCOUNT) {
-                    $paymentMethod = Transaction::PAYMENT_METHOD_BANK;
-                } elseif ($account->type === Account::TYPE_CREDIT_CARD) {
-                    $paymentMethod = Transaction::PAYMENT_METHOD_CREDIT_CARD;
-                }
-                
-                Transaction::create([
-                    'user_id' => $user->id,
-                    'source_account_id' => $account->id,
-                    'category_id' => $category->id,
-                    'type' => Transaction::TYPE_EXPENSE,
-                    'amount' => $amount,
-                    'currency' => 'TRY',
-                    'exchange_rate' => 1,
-                    'try_equivalent' => $amount,
-                    'date' => $transactionDate,
-                    'description' => $category->name . ' gideri',
-                    'payment_method' => $paymentMethod,
-                    'status' => 'completed',
-                ]);
-            }
-            
-            // Her 3 ayda bir kripto işlemi (son 1 yıl için)
-            if ($currentDate >= Carbon::now()->subYear() && $currentDate->month % 3 === 0) {
-                $transactionDate = clone $currentDate;
-                $transactionDate->addDays(rand(0, 30));
-                
-                if ($transactionDate <= $endDate) {
-                    // Kripto alımı veya satımı
-                    $isBuy = rand(0, 1) === 0;
-                    $usdAmount = rand(100, 1000); // 100 - 1000 USD
-                    $tryAmount = $usdAmount * 32; // Basit bir USD/TRY kuru
-                    
-                    // Kategorileri bul
-                    $incomeCategory = $incomeCategories->where('name', 'Yatırım Gelirleri')->first();
-                    $expenseCategory = $expenseCategories->where('name', 'Diğer Giderler')->first();
-                    
-                    Transaction::create([
+                for ($i = 0; $i < $agreementCount; $i++) {
+                    $startDate = $this->faker->dateTimeBetween('-1 year', 'now');
+                    $amount = $this->faker->numberBetween(5000, 50000);
+
+                    \App\Models\CustomerAgreement::create([
                         'user_id' => $user->id,
-                        'source_account_id' => $cryptoWallet->id,
-                        'destination_account_id' => $bankAccount->id, // Banka hesabı eklendi
-                        'category_id' => $isBuy ? $expenseCategory->id : $incomeCategory->id,
-                        'type' => $isBuy ? Transaction::TYPE_EXPENSE : Transaction::TYPE_INCOME,
-                        'amount' => $usdAmount,
-                        'currency' => 'USD',
-                        'exchange_rate' => 32,
-                        'try_equivalent' => $tryAmount,
-                        'date' => $transactionDate,
-                        'description' => $isBuy ? 'USDT (Tether) alımı' : 'USDT (Tether) satışı',
-                        'payment_method' => Transaction::PAYMENT_METHOD_CRYPTO, // Kripto ödeme yöntemi
-                        'status' => 'completed',
-                    ]);
-                    
-                    // Alım ise banka hesabından para çıkışı, satış ise banka hesabına para girişi
-                    Transaction::create([
-                        'user_id' => $user->id,
-                        'source_account_id' => $bankAccount->id,
-                        'destination_account_id' => $cryptoWallet->id, // Kripto cüzdanı eklendi
-                        'category_id' => $isBuy ? $expenseCategory->id : $incomeCategory->id,
-                        'type' => $isBuy ? Transaction::TYPE_EXPENSE : Transaction::TYPE_INCOME,
-                        'amount' => $tryAmount,
-                        'currency' => 'TRY',
-                        'exchange_rate' => 1,
-                        'try_equivalent' => $tryAmount,
-                        'date' => $transactionDate,
-                        'description' => $isBuy ? 'USDT (Tether) alımı için ödeme' : 'USDT (Tether) satışından gelir',
-                        'payment_method' => Transaction::PAYMENT_METHOD_BANK,
-                        'status' => 'completed',
+                        'customer_id' => $customer->id,
+                        'name' => $this->faker->randomElement([
+                            'Aylık Bakım Anlaşması',
+                            'Yazılım Geliştirme Projesi',
+                            'Danışmanlık Hizmeti',
+                            'Teknik Destek Paketi',
+                            'SEO Hizmeti'
+                        ]),
+                        'description' => $this->faker->sentence(10),
+                        'amount' => $amount,
+                        'start_date' => $startDate,
+                        'next_payment_date' => Carbon::parse($startDate)->addMonth(),
+                        'status' => $this->faker->randomElement(['active', 'completed', 'cancelled'])
                     ]);
                 }
             }
-            
-            // Bir sonraki aya geç
-            $currentDate->addMonth();
+        }
+    }
+
+
+    private function createCommissionPayouts(User $employee): void // Parametre adını employee olarak değiştirelim
+    {
+        // Ödeme için gerekli Admin kategorisini ve hesabını al
+        $adminExpenseCategory = Category::where('user_id', $this->admin->id)
+            ->where('type', 'expense')
+            ->where('name', 'Personel Giderleri')
+            ->first();
+
+        $adminMainAccount = Account::where('user_id', $this->admin->id)
+            ->where('name', 'Ana Banka Hesabı')
+            ->first();
+
+        if (!$adminExpenseCategory || !$adminMainAccount) {
+            \Log::warning('DemoDataSeeder: Komisyon ödemesi için gerekli admin kategorisi veya hesabı bulunamadı.');
+            return;
+        }
+
+        // Son iki ayı hedefle
+        $currentMonthStart = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
+        $previousMonthStart = Carbon::now()->subMonth()->startOfMonth();
+        $previousMonthEnd = Carbon::now()->subMonth()->endOfMonth();
+
+        // Çalışanın komisyon oranını al (varsayılan %5)
+        $commissionRate = $employee->commission_rate ? ($employee->commission_rate / 100) : 0.05;
+
+        // 1. Önceki Ay Komisyonu (Tam Ödeme)
+        $previousMonthCommission = Transaction::where('user_id', $employee->id)
+            ->where('type', 'income')
+            ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
+            ->sum('amount') * $commissionRate;
+
+        if ($previousMonthCommission > 0) {
+            $paymentDate = $currentMonthStart->copy()->addDays(5); // Bu ayın başında öde
+
+            // CommissionPayout kaydı (Çalışana ait)
+            \App\Models\CommissionPayout::create([
+                'user_id' => $employee->id,
+                'amount' => $previousMonthCommission,
+                'payment_date' => $paymentDate,
+            ]);
+
+            // Transaction kaydı (Gider, Çalışana ait, Admin hesabından)
+            Transaction::create([
+                'user_id' => $employee->id, // Gider çalışana ait
+                'type' => 'expense',
+                'category_id' => $adminExpenseCategory->id, // Admin'in Personel Gideri kategorisi
+                'source_account_id' => $adminMainAccount->id, // Admin'in ana hesabından ödeme
+                'destination_account_id' => null,
+                'amount' => $previousMonthCommission,
+                'currency' => 'TRY',
+                'exchange_rate' => 1,
+                'try_equivalent' => $previousMonthCommission,
+                'date' => $paymentDate,
+                'payment_method' => 'bank',
+                'description' => $previousMonthStart->format('F Y') . ' dönemi komisyon ödemesi (Tamamı)',
+                'status' => 'completed',
+            ]);
+        }
+
+        // 2. Mevcut Ay Komisyonu (Yarım Ödeme)
+        $currentMonthCommission = Transaction::where('user_id', $employee->id)
+            ->where('type', 'income')
+            ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
+            ->sum('amount') * $commissionRate;
+
+        if ($currentMonthCommission > 0) {
+            $amountToPay = round($currentMonthCommission / 2, 2); // Yarısını öde
+            $paymentDate = $currentMonthEnd->copy()->addDays(5); // Gelecek ayın başında öde (veya ay sonunda)
+
+             // CommissionPayout kaydı (Çalışana ait, yarım tutar)
+            \App\Models\CommissionPayout::create([
+                'user_id' => $employee->id,
+                'amount' => $amountToPay, // Sadece ödenen yarım tutar
+                'payment_date' => $paymentDate,
+                // Not: Belki buraya toplam hak edilen komisyonu da eklemek mantıklı olabilir
+            ]);
+
+            // Transaction kaydı (Gider, Çalışana ait, Admin hesabından, yarım tutar)
+            Transaction::create([
+                'user_id' => $employee->id,
+                'type' => 'expense',
+                'category_id' => $adminExpenseCategory->id,
+                'source_account_id' => $adminMainAccount->id,
+                'destination_account_id' => null,
+                'amount' => $amountToPay,
+                'currency' => 'TRY',
+                'exchange_rate' => 1,
+                'try_equivalent' => $amountToPay,
+                'date' => $paymentDate,
+                'payment_method' => 'bank',
+                'description' => $currentMonthStart->format('F Y') . ' dönemi komisyon ödemesi (Yarısı)',
+                'status' => 'completed',
+            ]);
         }
     }
 }

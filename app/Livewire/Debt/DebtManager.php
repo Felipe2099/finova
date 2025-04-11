@@ -64,7 +64,6 @@ final class DebtManager extends Component implements HasForms, HasTable
         return $table
             ->query(
                 Debt::query()
-                    ->where('user_id', auth()->id())
             )
             ->emptyStateHeading('Borç/Alacak Bulunamadı')
             ->emptyStateDescription('Başlamak için yeni bir kayıt ekleyin.')
@@ -180,6 +179,7 @@ final class DebtManager extends Component implements HasForms, HasTable
                     ->modalHeading('Düzenle')
                     ->modalSubmitActionLabel('Güncelle')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('debts.edit'))
                     ->successNotificationTitle('Kayıt güncellendi')
                     ->form($this->getDebtForm())
                     ->using(function (Debt $record, array $data): Debt {
@@ -192,6 +192,7 @@ final class DebtManager extends Component implements HasForms, HasTable
                     ->modalDescription('Bu kaydı silmek istediğinize emin misiniz?')
                     ->modalSubmitActionLabel('Sil')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('debts.delete'))
                     ->successNotificationTitle('Kayıt silindi')
                     ->using(function (Debt $record) {
                         $this->service->delete($record);
@@ -204,6 +205,7 @@ final class DebtManager extends Component implements HasForms, HasTable
                     ->modalHeading('Yeni Borç/Alacak')
                     ->modalSubmitActionLabel('Kaydet')
                     ->modalCancelActionLabel('İptal')
+                    ->visible(fn () => auth()->user()->can('debts.create'))
                     ->createAnother(false)
                     ->successNotificationTitle('Kayıt eklendi')
                     ->form($this->getDebtForm())

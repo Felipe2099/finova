@@ -122,7 +122,6 @@ final class DebtService implements DebtServiceInterface
      * 
      * @param Debt $debt Hatırlatma eklenecek borç/alacak kaydı
      */
-    /**
     private function scheduleReminder(Debt $debt): void
     {
         if ($debt->due_date) {
@@ -135,7 +134,6 @@ final class DebtService implements DebtServiceInterface
             }
         }
     }
-    **/
 
     /**
      * Borç/Alacak kayıtlarını sıralı şekilde getirir
