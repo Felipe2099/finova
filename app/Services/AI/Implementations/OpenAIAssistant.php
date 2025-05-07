@@ -96,10 +96,7 @@ class OpenAIAssistant implements AIAssistantInterface
         $summary = [
             'income_total' => 0.0,
             'expense_total' => 0.0,
-            'net_total' => 0.0,
-            'commission_total' => 0.0,
-            'commission_paid' => 0.0,
-            'commission_remaining' => 0.0
+            'net_total' => 0.0
         ];
 
         // Kategori bazlı toplam ve ortalama hesapla
@@ -130,26 +127,9 @@ class OpenAIAssistant implements AIAssistantInterface
             ->where('type', TransactionTypeEnum::EXPENSE->value)
             ->sum(DB::raw('CASE WHEN try_equivalent IS NOT NULL THEN try_equivalent ELSE amount END'));
 
-        // Komisyon hesaplamaları
-        // 1. Toplam kazanılan komisyon (ödenmiş + ödenmemiş)
-        $commissionTotal = DB::table('commissions')
-            ->where('status', 'approved')  // Sadece onaylanmış komisyonları topla
-            ->sum('commission_amount');
-
-        // 2. Ödenmiş komisyonlar
-        $commissionPaid = DB::table('commission_payouts')
-            ->where('status', 'completed')  // Sadece tamamlanmış ödemeleri topla
-            ->sum('amount');
-
-        // 3. Bekleyen ödemeler (onaylanmış ama ödenmemiş)
-        $commissionPending = $commissionTotal - $commissionPaid;
-
         $summary['income_total'] = (float) $incomeTotal;
         $summary['expense_total'] = abs((float) $expenseTotal);
         $summary['net_total'] = $summary['income_total'] - $summary['expense_total'];
-        $summary['commission_total'] = (float) $commissionTotal;
-        $summary['commission_paid'] = (float) $commissionPaid;
-        $summary['commission_remaining'] = (float) $commissionPending;
 
         // İstatistikleri düzenle
         foreach ($categoryStats->groupBy('category') as $category => $dataForCategory) {
@@ -175,10 +155,7 @@ class OpenAIAssistant implements AIAssistantInterface
         $stats['summary'] = [
             'income_total' => $this->formatCurrency($summary['income_total']),
             'expense_total' => $this->formatCurrency($summary['expense_total']),
-            'net_total' => $this->formatCurrency($summary['net_total']),
-            'commission_total' => $this->formatCurrency($summary['commission_total']),
-            'commission_paid' => $this->formatCurrency($summary['commission_paid']),
-            'commission_remaining' => $this->formatCurrency($summary['commission_remaining'])
+            'net_total' => $this->formatCurrency($summary['net_total'])
         ];
 
         return $stats;
@@ -314,7 +291,8 @@ class OpenAIAssistant implements AIAssistantInterface
         $messages = [];
 
         // 1. Sistem Prompt'u
-        $messages[] = ['role' => 'system', 'content' => config('ai.system_prompt')];
+        $systemPrompt = config('ai.system_prompt') . "\n\nElinde olmayan veriyle ilgili sorularda, sadece mevcut veriler üzerinden analiz yap ve eksik olanı belirt. Eğer kullanıcı örneğin kredi kartı komisyonu gibi bir veri sorarsa ve bu veri yoksa, 'Bu konuda elimde veri yok, sadece mevcut işlemler üzerinden analiz yapabilirim.' şeklinde cevap ver.";
+        $messages[] = ['role' => 'system', 'content' => $systemPrompt];
 
         // 2. Konuşma Geçmişi
         if (!empty($history)) {

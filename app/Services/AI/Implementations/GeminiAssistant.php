@@ -198,10 +198,7 @@ class GeminiAssistant implements AIAssistantInterface
         $summary = [
             'income_total' => 0.0,
             'expense_total' => 0.0,
-            'net_total' => 0.0,
-            'commission_total' => 0.0,
-            'commission_paid' => 0.0,
-            'commission_remaining' => 0.0
+            'net_total' => 0.0
         ];
         
         $categoryStats = DB::table('transactions')
@@ -218,20 +215,6 @@ class GeminiAssistant implements AIAssistantInterface
             )
             ->groupBy('categories.name', 'transactions.type', 'month')
             ->get();
-
-        // Komisyon hesaplamaları
-        // 1. Toplam kazanılan komisyon (ödenmiş + ödenmemiş)
-        $commissionTotal = DB::table('commissions')
-            ->where('status', 'approved')  // Sadece onaylanmış komisyonları topla
-            ->sum('commission_amount');
-
-        // 2. Ödenmiş komisyonlar
-        $commissionPaid = DB::table('commission_payouts')
-            ->where('status', 'completed')  // Sadece tamamlanmış ödemeleri topla
-            ->sum('amount');
-
-        // 3. Bekleyen ödemeler (onaylanmış ama ödenmemiş)
-        $commissionPending = $commissionTotal - $commissionPaid;
 
         foreach ($categoryStats->groupBy('category') as $category => $types) {
             foreach ($types->groupBy('type') as $type => $months) {
@@ -255,9 +238,9 @@ class GeminiAssistant implements AIAssistantInterface
         }
 
         $stats['summary'] = [
-            'commission_total' => $this->formatCurrency($commissionTotal),
-            'commission_paid' => $this->formatCurrency($commissionPaid),
-            'commission_remaining' => $this->formatCurrency($commissionPending)
+            'income_total' => $this->formatCurrency($summary['income_total']),
+            'expense_total' => $this->formatCurrency($summary['expense_total']),
+            'net_total' => $this->formatCurrency($summary['net_total'])
         ];
 
         return $stats;
@@ -321,7 +304,8 @@ class GeminiAssistant implements AIAssistantInterface
         $prompt .= "Önemli Notlar:\n";
         $prompt .= "1. Lütfen yanıtlarında Türk Lirası tutarlarını '.' binlik ayracı ve ',' ondalık ayracı ile formatla (Örnek: 1.234,56 TL)\n";
         $prompt .= "2. Sadece soru sahibinin kendi verileri gösterilmektedir.\n";
-        $prompt .= "3. Transfer işlemleri hesaplamalara dahil edilmemiştir.\n\n";
+        $prompt .= "3. Transfer işlemleri hesaplamalara dahil edilmemiştir.\n";
+        $prompt .= "4. Elinde olmayan veriyle ilgili sorularda, sadece mevcut veriler üzerinden analiz yap ve eksik olanı belirt. Eğer kullanıcı örneğin kredi kartı komisyonu gibi bir veri sorarsa ve bu veri yoksa, 'Bu konuda elimde veri yok, sadece mevcut işlemler üzerinden analiz yapabilirim.' şeklinde cevap ver.\n\n";
         
         $prompt .= "Kategori Bazlı İstatistikler:\n" . json_encode($stats, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
         $prompt .= "İşlemler:\n" . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
