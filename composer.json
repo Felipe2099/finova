@@ -17,7 +17,7 @@
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
-        "openai-php/client": "^0.10.3",
+        "openai-php/client": "^0.17.0",
         "spatie/eloquent-sortable": "^4.4",
         "spatie/laravel-permission": "^6.10"
     },
