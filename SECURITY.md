@@ -35,35 +35,21 @@ We take the security of Finova seriously. If you discover a security vulnerabili
 3. **API Keys**
    - Keep OpenAI/Gemini API keys secure
    - Use environment variables
-   - Monitor API usage regularly
 
 4. **Server Configuration**
    - Keep PHP and Laravel updated
    - Use HTTPS only
-   - Enable firewall rules
-   - Regular security updates
 
 ### For Development
 
 1. **Dependencies**
-   - Run `composer audit` regularly
    - Keep dependencies updated
    - Review package permissions
 
 2. **Code Quality**
-   - Enable PHPStan static analysis
    - Follow security best practices
    - Sanitize user inputs
    - Use parameterized queries
-
-## 🔄 Supported Versions
-
-We provide security updates for the following versions:
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
 
 ## 📋 Security Checklist for Self-Hosting
 
@@ -73,38 +59,7 @@ We provide security updates for the following versions:
 - [ ] Set up regular backups
 - [ ] Enable HTTPS with valid SSL certificate
 - [ ] Configure proper CORS settings
-- [ ] Set up rate limiting
-- [ ] Enable database encryption
 - [ ] Review and configure `.htaccess` or nginx rules
-- [ ] Set up monitoring and logging
-
-## 🚨 Known Security Considerations
-
-### Sensitive Data Storage
-
-- Customer credentials are encrypted using Laravel's encryption
-- API keys should be stored in environment variables only
-- Database backups should be encrypted
-
-### AI Integration
-
-- OpenAI and Gemini API keys must be kept secure
-- Monitor API usage to prevent abuse
-- Consider implementing usage limits per user
-
-### File Uploads
-
-- Validate file types and sizes
-- Scan uploaded files for malware
-- Store files outside web root when possible
-
-## 📞 Contact
-
-For security-related questions or concerns:
-- **Email:** security@mikpa.com
-- **PGP Key:** Available upon request
-
----
 
 **Thank you for helping keep Finova secure!** 🙏
 
