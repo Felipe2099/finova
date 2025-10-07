@@ -276,8 +276,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Laravel](https://laravel.com) - The PHP framework
 - [Livewire](https://laravel-livewire.com) - Reactive components
 - [Filament](https://filamentphp.com) - Admin panel
+- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
+- [Alpine.js](https://alpinejs.dev) - Lightweight JavaScript framework
 - [OpenAI](https://openai.com) - AI integration
 - [Google Gemini](https://ai.google.dev) - AI integration
+
 
 ## 💬 Community & Support
 
