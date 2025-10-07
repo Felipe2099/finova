@@ -24,19 +24,20 @@ use App\Models\Commission;
 use App\Services\Commission\CommissionService;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Carbon;
+
 /**
- * Kullanıcı yönetimi için liste ve CRUD işlemleri sağlayan bileşen.
+ * Component for managing users.
  * 
- * Bu bileşen, kullanıcıların listelenmesi, filtrelenmesi, ve yönetimi için
- * Filament Table API kullanarak bir arayüz sağlar. Temel kullanıcı işlemleri
- * (düzenleme, silme, geri alma) ve toplu işlemler bu bileşen üzerinden yönetilir.
- */
+ * This component provides a list and CRUD interface for managing users
+ * using the Filament Table API. Basic user operations
+ * (edit, delete, restore) and bulk operations are managed through this component.
+ */ 
 class UserManager extends Component implements HasTable, HasForms
 {
     use InteractsWithTable;
     use InteractsWithForms;
     /**
-     * Tablo yapılandırmasını tanımlar
+     * Defines the table configuration
      */
     public function table(Table $table): Table
     {
@@ -187,7 +188,7 @@ class UserManager extends Component implements HasTable, HasForms
 
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      */
     public function render()
     {

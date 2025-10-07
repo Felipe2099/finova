@@ -12,30 +12,30 @@ use App\DTOs\Account\AccountData;
 use Filament\Notifications\Notification;
 
 /**
- * Hesap Yönetimi Bileşeni
+ * Account Manager Component
  * 
- * Tüm hesap türlerinin (banka, kredi kartı, kripto, sanal POS, nakit) 
- * genel yönetimini sağlayan Livewire bileşeni.
+ * Livewire component to manage all account types (bank, credit card, crypto, virtual POS, cash).
+ * Provides general management for all account types.
  * 
- * Özellikler:
- * - Tüm hesapların listesi
- * - Hesap türü ve para birimi filtreleme
- * - Hesap durumu yönetimi
- * - Hesap detayları görüntüleme
- * - Toplu hesap silme
+ * Features:
+ * - All accounts list
+ * - Account type and currency filtering
+ * - Account status management
+ * - Account details view
+ * - Bulk account deletion
  */
 class AccountManager extends Component implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
     use Forms\Concerns\InteractsWithForms;
     use Tables\Concerns\InteractsWithTable;
 
-    /** @var AccountService Hesap işlemleri için servis */
+    /** @var AccountService Account service */
     private AccountService $accountService;
 
     /**
-     * Bileşen başlatma
+     * Initialize the component
      * 
-     * @param AccountService $accountService Hesap servisi
+     * @param AccountService $accountService Account service
      * @return void
      */
     public function boot(AccountService $accountService): void 
@@ -44,9 +44,9 @@ class AccountManager extends Component implements Forms\Contracts\HasForms, Tabl
     }
 
     /**
-     * Hesap listesi tablosunu yapılandırır
+     * Configure the account list table
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -150,7 +150,7 @@ class AccountManager extends Component implements Forms\Contracts\HasForms, Tabl
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view
      * 
      * @return View
      */

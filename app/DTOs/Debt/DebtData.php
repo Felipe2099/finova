@@ -5,29 +5,29 @@ declare(strict_types=1);
 namespace App\DTOs\Debt;
 
 /**
- * Borç Veri Transfer Nesnesi
+ * Debt Data Transfer Object
  * 
- * Borç verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Borç oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
- * Kıymetli madenler ve normal para birimleri için farklı hesaplama mantığı içerir.
+ * Used to transfer and convert debt data.
+ * Used for debt creation, updating, and viewing.
+ * Contains different calculation logic for precious metals and other currencies.
  */
 final class DebtData
 {
     /**
-     * @param int|null $user_id Kullanıcı ID
-     * @param int|null $customer_id Müşteri ID
-     * @param int|null $supplier_id Tedarikçi ID
-     * @param string $type Borç türü
-     * @param string|null $description Açıklama
-     * @param float $amount Tutar
-     * @param string $currency Para birimi (varsayılan: TRY)
-     * @param float|null $buy_price Alış fiyatı
-     * @param float|null $sell_price Satış fiyatı
-     * @param float|null $profit_loss Kar/Zarar
-     * @param string|null $due_date Vade tarihi
-     * @param string $status Durum
-     * @param string|null $notes Notlar
-     * @param string|null $date İşlem tarihi
+     * @param int|null $user_id User ID
+     * @param int|null $customer_id Customer ID
+     * @param int|null $supplier_id Supplier ID
+     * @param string $type Debt type
+     * @param string|null $description Description
+     * @param float $amount Amount
+     * @param string $currency Currency (default: TRY)
+     * @param float|null $buy_price Buy price
+     * @param float|null $sell_price Sell price
+     * @param float|null $profit_loss Profit/Loss
+     * @param string|null $due_date Due date
+     * @param string $status Status
+     * @param string|null $notes Notes
+     * @param string|null $date Date
      */
     public function __construct(
         public readonly ?int $user_id,
@@ -47,12 +47,11 @@ final class DebtData
     ) {}
 
     /**
-     * Dizi verisinden borç verisi oluşturur
+     * Create debt data from array
      * 
-     * Kıymetli madenler (XAU, XAG) için gram bazında,
-     * diğer para birimleri için birim bazında hesaplama yapar.
+     * Contains different calculation logic for precious metals and other currencies.
      * 
-     * @param array $data Borç verileri dizisi
+     * @param array $data Debt data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -61,15 +60,15 @@ final class DebtData
         $amount = (float) $data['amount'];
         $buyPrice = isset($data['buy_price']) ? (float) $data['buy_price'] : null;
 
-        // Kıymetli madenler için gram bazında, diğerleri için birim bazında
+        // Precious metals (XAU, XAG) in gram basis, other currencies in unit basis
         if (in_array($currency, ['XAU', 'XAG'])) {
-            // Gram bazında işlem
+            // Gram basis
             $amount = $amount;
-            $buyPrice = $buyPrice; // Gram başına fiyat
+            $buyPrice = $buyPrice; // Gram basis
         } else {
-            // Birim bazında işlem
+            // Unit basis
             $amount = $amount;
-            $buyPrice = $buyPrice; // Birim başına fiyat
+            $buyPrice = $buyPrice; // Unit basis
         }
 
         return new self(
@@ -91,7 +90,7 @@ final class DebtData
     }
 
     /**
-     * Borç verisini dizi formatına dönüştürür
+     * Convert debt data to array
      * 
      * @return array
      */

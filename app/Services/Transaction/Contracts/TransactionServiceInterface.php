@@ -8,42 +8,42 @@ use App\Models\Transaction;
 use App\DTOs\Transaction\TransactionData;
 
 /**
- * İşlem servisi arayüzü
+ * Transaction service interface
  * 
- * Temel işlem operasyonlarını tanımlar.
- * Her işlem tipi için ilgili alt servislere yönlendirme yapar.
+ * Defines core transaction operations and delegates to specialized
+ * services for each transaction type.
  */
 interface TransactionServiceInterface
 {
     /**
-     * Yeni bir işlem oluşturur
+     * Create a new transaction.
      * 
-     * İşlem tipine göre ilgili servisi kullanır.
+     * Uses the appropriate service based on the transaction type.
      * 
-     * @param TransactionData $data İşlem verileri
-     * @return Transaction Oluşturulan işlem
-     * @throws \InvalidArgumentException Geçersiz işlem tipi durumunda
+     * @param TransactionData $data Transaction data
+     * @return Transaction Created transaction
+     * @throws \InvalidArgumentException When the transaction type is invalid
      */
     public function create(TransactionData $data): Transaction;
 
     /**
-     * İşlemi günceller
+     * Update the transaction.
      * 
-     * İşlem verilerini günceller ve ilgili hesap bakiyelerini düzenler.
+     * Updates transaction data and adjusts related account balances.
      * 
-     * @param Transaction $transaction Güncellenecek işlem
-     * @param TransactionData $data Yeni işlem verileri
-     * @return Transaction Güncellenmiş işlem
+     * @param Transaction $transaction Transaction to update
+     * @param TransactionData $data New transaction data
+     * @return Transaction Updated transaction
      */
     public function update(Transaction $transaction, TransactionData $data): Transaction;
 
     /**
-     * İşlemi siler
+     * Delete the transaction.
      * 
-     * İşlemi silmeden önce ilgili hesap bakiyelerini geri alır.
+     * Reverts related account balances before deletion.
      * 
-     * @param Transaction $transaction Silinecek işlem
-     * @return bool İşlem başarılı ise true
+     * @param Transaction $transaction Transaction to delete
+     * @return bool True if the operation succeeded
      */
     public function delete(Transaction $transaction): bool;
 }

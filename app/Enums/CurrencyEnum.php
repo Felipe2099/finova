@@ -3,41 +3,41 @@
 namespace App\Enums;
 
 /**
- * Para Birimi Enum Sınıfı
+ * Currency Enum Class
  * 
- * Sistemde desteklenen para birimlerini tanımlar.
- * Her para birimi için renk ve sembol bilgilerini içerir.
+ * Defines the supported currencies in the system.
+ * Contains color and symbol information for each currency.
  */
 enum CurrencyEnum: string
 {
-    /** Türk Lirası */
+    /** Turkish Lira */
     case TRY = 'TRY';
-    /** Amerikan Doları */
+    /** American Dollar */
     case USD = 'USD';
     /** Euro */
     case EUR = 'EUR';
-    /** İngiliz Sterlini */
+    /** British Pound */
     case GBP = 'GBP';
 
     /**
-     * Para biriminin görsel temsili için renk kodunu döndürür
+     * Returns the color code for the currency's visual representation
      * 
-     * @return string RGB renk kodu
+     * @return string RGB color code
      */
     public function color(): string
     {
         return match($this) {
-            self::TRY => 'rgb(230, 25, 75)',  // Kırmızı
-            self::USD => 'rgb(60, 180, 75)',   // Yeşil
-            self::EUR => 'rgb(0, 130, 200)',   // Mavi
-            self::GBP => 'rgb(245, 130, 48)',  // Turuncu
+            self::TRY => 'rgb(230, 25, 75)',  // Red
+            self::USD => 'rgb(60, 180, 75)',   // Green
+            self::EUR => 'rgb(0, 130, 200)',   // Blue
+            self::GBP => 'rgb(245, 130, 48)',  // Orange
         };
     }
 
     /**
-     * Para biriminin sembolünü döndürür
+     * Returns the symbol for the currency
      * 
-     * @return string Para birimi sembolü
+     * @return string Currency symbol
      */
     public function symbol(): string
     {

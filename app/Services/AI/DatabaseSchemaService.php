@@ -9,17 +9,17 @@ use Illuminate\Support\Facades\Log;
 class DatabaseSchemaService
 {
     /**
-     * Cache anahtarı
+     * Cache key
      */
     protected const CACHE_KEY = 'database_schema_for_ai';
     
     /**
-     * Önbellek süresi (saniye) - 24 saat
+     * Cache TTL in seconds - 24 hours
      */
     protected const CACHE_TTL = 86400;
     
     /**
-     * Şema dosyasının yolu
+     * Path to schema file
      */
     protected $schemaFilePath;
     
@@ -32,7 +32,7 @@ class DatabaseSchemaService
     }
     
     /**
-     * Veritabanı şemasını al (önbellekten veya dosyadan)
+     * Get database schema (from cache or file)
      * 
      * @return array
      */
@@ -44,7 +44,7 @@ class DatabaseSchemaService
     }
     
     /**
-     * Dosyadan veritabanı şemasını çözümle
+     * Parse database schema from file
      * 
      * @return array
      */
@@ -65,13 +65,13 @@ class DatabaseSchemaService
                 'relationships' => []
             ];
             
-            // Tablo bölümlerini al
+            // Extract table sections
             preg_match_all('/### ([a-z_]+)\s*\n(- .+\n)+/', $content, $tableMatches);
             
             foreach ($tableMatches[0] as $index => $tableSection) {
                 $tableName = $tableMatches[1][$index];
                 
-                // Sütunları al
+                // Extract columns
                 preg_match_all('/- ([a-z_]+) \(([^)]+)\)/', $tableSection, $columnMatches);
                 
                 $columns = [];
@@ -79,9 +79,9 @@ class DatabaseSchemaService
                     $columnType = $columnMatches[2][$colIndex];
                     $columns[$columnName] = $columnType;
                     
-                    // İlişkileri tespit et (foreign key)
+                    // Detect relationships (foreign key)
                     if (strpos($columnType, 'foreign key') !== false) {
-                        // Hedef tabloyu tahmin et
+                        // Infer target table
                         $targetTable = str_replace('_id', '', $columnName);
                         
                         $schema['relationships'][] = [
@@ -114,7 +114,7 @@ class DatabaseSchemaService
     }
     
     /**
-     * Önbelleği temizle
+     * Clear cache
      */
     public function clearCache(): void
     {

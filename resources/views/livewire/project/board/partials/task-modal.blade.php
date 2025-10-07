@@ -5,7 +5,7 @@
         </h2>
 
         <div class="space-y-4">
-            {{-- Başlık ve Kısa Açıklama yan yana --}}
+            {{-- Title and Short Description --}}
             <div class="grid grid-cols-1 gap-4">
                 <x-form-elements.input 
                     wire:model="taskData.title" 
@@ -16,13 +16,13 @@
         
             </div>
 
-            {{-- İçerik Editörü --}}
+            {{-- Content Editor --}}
             <x-form-elements.rich-editor
                 wire:model="taskData.content"
                 label="Detaylı Açıklama"
             />
 
-            {{-- Öncelik ve Bitiş Tarihi yan yana --}}
+            {{-- Priority and Due Date --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <x-form-elements.select
                     wire:model="taskData.priority"
@@ -40,14 +40,14 @@
                 />
             </div>
 
-            {{-- Atanan Kişi --}}
+            {{-- Assigned Person --}}
             <x-form-elements.select
                 wire:model="taskData.assigned_to"
                 label="Atanan Kişi"
                 :options="$users->pluck('name', 'id')->prepend('Seçiniz...', '')"
             />
 
-            {{-- Checklist --}}
+            {{-- Checklist Items --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kontrol Listesi</label>
                 <div class="mt-2 space-y-2">

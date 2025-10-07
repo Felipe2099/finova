@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace App\DTOs\Supplier;
 
 /**
- * Tedarikçi Veri Transfer Nesnesi
+ * Supplier Data Transfer Object
  * 
- * Tedarikçi verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Tedarikçi oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert supplier data.
+ * Used for supplier creation, updating, and viewing.
  */
 class SupplierData
 {
     /**
-     * @param string $name Tedarikçi adı
-     * @param string|null $contact_name İletişim kişisi
-     * @param string|null $phone Telefon numarası
-     * @param string|null $email E-posta adresi
-     * @param string|null $address Adres
-     * @param string|null $notes Notlar
-     * @param bool $status Durum
+     * @param string $name Supplier name
+     * @param string|null $contact_name Contact name
+     * @param string|null $phone Phone number
+     * @param string|null $email Email address
+     * @param string|null $address Address
+     * @param string|null $notes Notes
+     * @param bool $status Status
      */
     public function __construct(
         public readonly string $name,
@@ -32,9 +32,9 @@ class SupplierData
     ) {}
 
     /**
-     * Dizi verisinden tedarikçi verisi oluşturur
+     * Create supplier data from array
      * 
-     * @param array $data Tedarikçi verileri dizisi
+     * @param array $data Supplier data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -51,7 +51,7 @@ class SupplierData
     }
 
     /**
-     * Tedarikçi verisini dizi formatına dönüştürür
+     * Convert supplier data to array
      * 
      * @return array
      */

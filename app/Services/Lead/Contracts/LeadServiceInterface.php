@@ -8,45 +8,45 @@ use App\Models\Lead;
 use App\DTOs\Lead\LeadData;
 
 /**
- * Lead servisi arayüzü
+ * Lead service interface
  * 
- * Potansiyel müşteri (lead) işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Lead kayıtlarının oluşturulması, güncellenmesi, silinmesi ve müşteriye dönüştürülmesi işlemlerini yapar.
+ * Defines the methods required for managing lead operations.
+ * Handles lead creation, updating, deletion, and conversion to customer.
  */
 interface LeadServiceInterface
 {
     /**
-     * Yeni bir lead kaydı oluşturur
+     * Create a new lead record.
      * 
-     * @param LeadData $data Lead verileri
-     * @return Lead Oluşturulan lead kaydı
+     * @param LeadData $data Lead data
+     * @return Lead Created lead record
      */
     public function create(LeadData $data): Lead;
 
     /**
-     * Mevcut bir lead kaydını günceller
+     * Update an existing lead record.
      * 
-     * @param Lead $lead Güncellenecek lead kaydı
-     * @param LeadData $data Yeni lead verileri
-     * @return Lead Güncellenmiş lead kaydı
+     * @param Lead $lead Lead record to update
+     * @param LeadData $data New lead data
+     * @return Lead Updated lead record
      */
     public function update(Lead $lead, LeadData $data): Lead;
 
     /**
-     * Lead kaydını siler
+     * Delete a lead record.
      * 
-     * @param Lead $lead Silinecek lead kaydı
+     * @param Lead $lead Lead record to delete
      */
     public function delete(Lead $lead): void;
 
     /**
-     * Lead'i müşteriye dönüştürür
+     * Convert a lead to a customer.
      * 
-     * Lead kaydını müşteri kaydına dönüştürür ve lead'in durumunu günceller.
-     * Dönüşüm sonrası bildirim gösterir.
+     * Converts a lead record to a customer record and updates the lead's status.
+     * Shows a notification after conversion.
      * 
-     * @param Lead $lead Dönüştürülecek lead kaydı
-     * @param array $data Müşteri verileri
+     * @param Lead $lead Lead record to convert
+     * @param array $data Customer data
      */
     public function convertToCustomer(Lead $lead, array $data): void;
 } 

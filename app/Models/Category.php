@@ -4,19 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Kategori modeli
+ * Category model
  * 
- * İşlemlerin kategorilerini temsil eder.
- * Her kategori bir kullanıcıya ait olup, belirli bir tipte olabilir.
+ * Represents categories for transactions.
+ * Each category belongs to a user and can have a specific type.
  */
 class Category extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -29,7 +30,7 @@ class Category extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -38,7 +39,7 @@ class Category extends Model
     ];
 
     /**
-     * Kategorinin sahibi olan kullanıcı
+     * The user who owns the category.
      * 
      * @return BelongsTo
      */

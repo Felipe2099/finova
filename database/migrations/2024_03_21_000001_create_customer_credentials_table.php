@@ -5,21 +5,21 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Müşteri Hassas Bilgileri Tablosu
+ * Customer Credentials Table
  * 
- * Bu tablo, müşterilere ait hassas bilgileri (domain, hosting, sunucu vb.) yönetir.
- * Özellikler:
- * - Hassas bilgileri şifreli olarak saklama
- * - Bilgi ekleme/düzenleme/silme
- * - Bilgi geçmişi takibi
- * - Kullanıcı bazlı yetkilendirme
+ * This table manages sensitive information for customers (domains, hosting, servers, etc.).
+ * Features:
+ * - Store sensitive information encrypted
+ * - Add/edit/delete information
+ * - Track information history
+ * - User-based authorization
  * 
  * @package Database\Migrations
  */
 return new class extends Migration
 {
     /**
-     * Tabloyu oluşturur
+     * Creates the table
      * 
      * @return void
      */
@@ -38,7 +38,7 @@ return new class extends Migration
     }
 
     /**
-     * Tabloyu siler
+     * Deletes the table
      * 
      * @return void
      */

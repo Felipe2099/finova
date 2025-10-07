@@ -8,34 +8,34 @@ use Spatie\Permission\Models\Role;
 use App\DTOs\Role\RoleData;
 
 /**
- * Rol servisi arayüzü
+ * Role service interface
  * 
- * Rol yönetimi için gerekli metodları tanımlar.
- * Rollerin oluşturulması, güncellenmesi ve silinmesi işlemlerini içerir.
+ * Defines the methods required for managing role operations.
+ * Handles role creation, updating, and deletion.
  */
 interface RoleServiceInterface
 {
     /**
-     * Yeni bir rol oluşturur
+     * Create a new role.
      * 
-     * @param RoleData $data Rol verileri
-     * @return Role Oluşturulan rol
+     * @param RoleData $data Role data
+     * @return Role Created role
      */
     public function create(RoleData $data): Role;
 
     /**
-     * Mevcut bir rolü günceller
+     * Update an existing role.
      * 
-     * @param Role $role Güncellenecek rol
-     * @param RoleData $data Güncellenecek veriler
-     * @return Role Güncellenmiş rol
+     * @param Role $role Role to update
+     * @param RoleData $data New role data
+     * @return Role Updated role
      */
     public function update(Role $role, RoleData $data): Role;
 
     /**
-     * Bir rolü siler
+     * Delete a role.
      * 
-     * @param Role $role Silinecek rol
+     * @param Role $role Role to delete
      */
     public function delete(Role $role): void;
 }

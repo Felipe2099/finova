@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace App\DTOs\CustomerGroup;
 
 /**
- * Müşteri Grubu Veri Transfer Nesnesi
+ * Customer Group Data Transfer Object
  * 
- * Müşteri grubu verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Müşteri grubu oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert customer group data.
+ * Used for customer group creation, updating, and viewing.
  */
 class CustomerGroupData
 {
     /**
-     * @param string $name Grup adı
-     * @param string|null $description Açıklama
-     * @param bool $status Durum
-     * @param int|null $user_id Kullanıcı ID
+     * @param string $name Name
+     * @param string|null $description Description
+     * @param bool $status Status
+     * @param int|null $user_id User ID
      */
     public function __construct(
         public readonly string $name,
@@ -26,9 +26,9 @@ class CustomerGroupData
     ) {}
 
     /**
-     * Dizi verisinden müşteri grubu verisi oluşturur
+     * Create customer group data from array
      * 
-     * @param array $data Müşteri grubu verileri dizisi
+     * @param array $data Customer group data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -42,7 +42,7 @@ class CustomerGroupData
     }
 
     /**
-     * Müşteri grubu verisini dizi formatına dönüştürür
+     * Convert customer group data to array
      * 
      * @return array
      */

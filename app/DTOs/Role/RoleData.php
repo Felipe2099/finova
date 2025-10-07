@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace App\DTOs\Role;
 
 /**
- * Rol Veri Transfer Nesnesi
+ * Role Data Transfer Object
  * 
- * Rol verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Rol oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
- * İzin yönetimi için gerekli bilgileri içerir.
+ * Used to transfer and convert role data.
+ * Used for role creation, updating, and viewing.
+ * Contains permissions for role management.
  */
 class RoleData
 {
     /**
-     * @param string $name Rol adı
-     * @param array|null $permissions İzinler dizisi
+     * @param string $name Role name
+     * @param array|null $permissions Permissions array
      */
     public function __construct(
         public readonly string $name,
@@ -23,9 +23,9 @@ class RoleData
     ) {}
 
     /**
-     * Dizi verisinden rol verisi oluşturur
+     * Create role data from array
      * 
-     * @param array $data Rol verileri dizisi
+     * @param array $data Role data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -37,7 +37,7 @@ class RoleData
     }
 
     /**
-     * Rol verisini dizi formatına dönüştürür
+     * Convert role data to array
      * 
      * @return array
      */

@@ -6,18 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Görev-Etiket İlişki modeli
- * 
- * Görevler ve etiketler arasındaki çoka-çok ilişkiyi temsil eder.
- * Pivot tablo olarak kullanılır.
+ * Task-Label Relationship model
+ *
+ * Represents the many-to-many relationship between tasks and labels.
+ * Used as a pivot table.
  */
 class TaskLabel extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
     protected $fillable = [
@@ -26,8 +26,8 @@ class TaskLabel extends Model
     ];
 
     /**
-     * İlişkili görev
-     * 
+     * Related task
+     *
      * @return BelongsTo
      */
     public function task()
@@ -36,8 +36,8 @@ class TaskLabel extends Model
     }
 
     /**
-     * İlişkili etiket
-     * 
+     * Related label
+     *
      * @return BelongsTo
      */
     public function label()

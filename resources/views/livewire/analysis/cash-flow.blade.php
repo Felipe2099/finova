@@ -7,11 +7,11 @@
         ['label' => 'Nakit Akışı Analizi']
     ]"
 >
-    <!-- Nakit Akışı Grafiği -->
-    <!-- Sayfa ilk yüklendiğinde otomatik yenileme için gizli buton -->
+    <!-- Cash Flow Chart -->
+    <!-- Hidden button for automatic refresh when the page is loaded -->
     <button type="button" id="autoRefreshButton" wire:click="updateChart" class="hidden">Yenile</button>
     
-    <!-- Hata mesajı gösterme alanı -->
+    <!-- Error message field -->
     @if($errorMessage)
     <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
         <div class="flex items-center">
@@ -24,10 +24,10 @@
     @endif
     
     <x-filament::section heading="Nakit Akışı Grafiği" class="mb-6">
-        <!-- Grafik Kontrolleri -->
+        <!-- Chart Controls -->
         <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200" wire:key="chart-controls">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <!-- Tarih Aralığı -->
+                <!-- Date Range -->
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                     <label class="text-sm font-medium text-gray-700">Tarih Aralığı:</label>
                     <div class="flex items-center space-x-2">
@@ -37,7 +37,7 @@
                     </div>
                 </div>
                 
-                <!-- Gruplama Türü -->
+                <!-- Grouping Type -->
                 <div class="flex items-center gap-2">
                     <label class="text-sm font-medium text-gray-700">Periyot:</label>
                     <select wire:model.live="chartPeriod" class="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 py-1 px-3">
@@ -81,7 +81,7 @@
             <canvas id="cash-flow-chart" class="h-full w-full"></canvas>
         </div>
 
-        <!-- Tablo Görünümü -->
+        <!-- Table View -->
         <div class="mt-6 overflow-x-auto">
             <table class="w-full text-sm text-left rtl:text-right">
                 <thead class="text-xs uppercase bg-gray-100 dark:bg-gray-700">
@@ -178,7 +178,7 @@
     
     <!-- Stats Overview Widget -->
     <div class="mt-8 mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">
-        <!-- Net Nakit Akışı -->
+        <!-- Net Cash Flow -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 {{ $netCashFlow >= 0 ? 'bg-green-600' : 'bg-red-600' }}">
                 <h3 class="text-sm font-medium text-white">Net Nakit Akışı</h3>
@@ -193,7 +193,7 @@
             </div>
         </div>
         
-        <!-- Toplam Gelir -->
+        <!-- Total Income -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 bg-blue-600">
                 <h3 class="text-sm font-medium text-white">Toplam Gelir</h3>
@@ -208,7 +208,7 @@
             </div>
         </div>
         
-        <!-- Toplam Gider -->
+        <!-- Total Expense -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 bg-orange-500">
                 <h3 class="text-sm font-medium text-white">Toplam Gider</h3>
@@ -224,7 +224,7 @@
         </div>
     </div>
     
-    <!-- Nakit Akışı Sağlığı -->
+    <!-- Cash Flow Health -->
     @if(isset($cashFlowSummary['health']))
     <div class="mb-8 bg-white rounded-lg shadow-sm overflow-hidden">
         @php
@@ -256,7 +256,7 @@
             }
         @endphp
         
-        <!-- Başlık -->
+        <!-- Title -->
         <div class="px-4 py-3 {{ $healthColor }}">
             <div class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -274,12 +274,12 @@
             </div>
         </div>
         
-        <!-- İçerik -->
+        <!-- Content -->
         <div class="p-6">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-xl font-bold {{ $healthTextColor }}">{{ $healthText }}</span>
                 
-                <!-- Sağlık Göstergesi -->
+                <!-- Health Indicator -->
                 <div class="flex space-x-1">
                     <div class="w-3 h-3 rounded-full {{ $cashFlowSummary['health'] == 'excellent' || $cashFlowSummary['health'] == 'good' || $cashFlowSummary['health'] == 'adequate' || $cashFlowSummary['health'] == 'warning' ? 'bg-green-500' : 'bg-gray-300' }}"></div>
                     <div class="w-3 h-3 rounded-full {{ $cashFlowSummary['health'] == 'excellent' || $cashFlowSummary['health'] == 'good' || $cashFlowSummary['health'] == 'adequate' ? 'bg-green-500' : 'bg-gray-300' }}"></div>
@@ -308,14 +308,7 @@
 </div>
 
 @push('scripts')
-    <!-- Hata ayıklama için -->
-    <script>
-        window.addEventListener('error', function(e) {
-            console.error('JavaScript hatası:', e.message, 'Dosya:', e.filename, 'Satır:', e.lineno);
-        });
-    </script>
-    
-    <!-- Yükleme göstergesi fonksiyonu -->
+    <!-- Loading indicator function -->
     <script>
         function toggleChartLoadingIndicator(show) {
             const indicator = document.getElementById('chart-loading-indicator');
@@ -331,10 +324,10 @@
         }
     </script>
     
-    <!-- Sayfa yükleme ve grafik oluşturma -->
+    <!-- Page load and chart creation -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sayfa yüklenince otomatik olarak grafik güncelleme butonu tıklanmasını tetikle
+            // Automatic refresh when the page is loaded
             setTimeout(() => {
                 const autoRefreshButton = document.getElementById('autoRefreshButton');
                 if (autoRefreshButton) {
@@ -345,7 +338,7 @@
                 }
             }, 500);
             
-            // Grafik tipi seçimi için metin güncelleme
+            // Update chart type text
             function updateChartTypeText(chartType) {
                 const chartTypeText = document.getElementById('current-chart-type');
                 if (chartTypeText) {
@@ -367,7 +360,7 @@
                 }
             }
             
-            // Tarih ve periyot değişikliklerini otomatik olarak izle
+            // Watch date and period changes automatically
             const chartStartDateInput = document.querySelector('input[wire\\:model="chartStartDate"]');
             const chartEndDateInput = document.querySelector('input[wire\\:model="chartEndDate"]');
             const chartPeriodSelect = document.querySelector('select[wire\\:model="chartPeriod"]');
@@ -399,11 +392,11 @@
                 });
             }
             
-            // Livewire olaylarını dinle
+            // Listen to Livewire events
             window.Livewire.on('cashFlowDataUpdated', (data) => {
                 console.log('Nakit akışı verileri güncellendi', data);
                 
-                // Veri yapısını kontrol et
+                // Check data structure
                 if (data && data.chartType && data.chartData) {
                     console.log('Grafik verileri:', data.chartData);
                     updateChartTypeText(data.chartType);
@@ -413,26 +406,25 @@
                 }
             });
             
-            // Grafik oluşturulduğunda yükleme göstergesini gizle
+            // Hide loading indicator when the chart is created
             document.addEventListener('chartRendered', () => {
                 console.log('Grafik oluşturuldu eventi alındı');
                 toggleChartLoadingIndicator(false);
             });
         });
         
-        // Grafik oluşturma fonksiyonu
+        // Chart creation function
         function renderChart(chartType, chartData) {
             toggleChartLoadingIndicator(true);
             
-            // Veri kontrolü
+            // Check data
             if (!chartData || typeof chartData !== 'object') {
                 console.error('Geçersiz grafik verisi:', chartData);
                 toggleChartLoadingIndicator(false);
                 return;
             }
             
-            // Grafik oluşturmadan önce kısa bir bekleme süresi ekleyelim
-            // Bu, DOM'un güncellenmesi için zaman tanır
+            // Add a short delay before creating the chart
             setTimeout(() => {
                 try {
                     const ctx = document.getElementById('cash-flow-chart');
@@ -442,15 +434,15 @@
                         return;
                     }
                     
-                    // Mevcut grafik varsa yok et
+                    // Destroy existing chart if it exists
                     if (window.cashFlowChart instanceof Chart) {
                         window.cashFlowChart.destroy();
                     }
                     
-                    // Grafik verilerini hazırla
+                    // Prepare chart data
                     const datasets = [];
                     
-                    // Veri kontrolü
+                    // Check data
                     const labels = chartData.labels || [];
                     const inflowData = chartData.inflowData || [];
                     const outflowData = chartData.outflowData || [];
@@ -463,7 +455,7 @@
                         netData: netData.length
                     });
                     
-                    // Gelir veri seti
+                    // Income data set
                     datasets.push({
                         label: 'Gelir',
                         data: inflowData,
@@ -473,7 +465,7 @@
                         tension: 0.1
                     });
                     
-                    // Gider veri seti
+                    // Expense data set
                     datasets.push({
                         label: 'Gider',
                         data: outflowData,
@@ -483,7 +475,7 @@
                         tension: 0.1
                     });
                     
-                    // Net nakit akışı veri seti
+                    // Net cash flow data set
                     datasets.push({
                         label: 'Net Nakit Akışı',
                         data: netData,
@@ -491,11 +483,11 @@
                         borderColor: 'rgb(59, 130, 246)',
                         borderWidth: 2,
                         tension: 0.1,
-                        // Çizgi grafik için her zaman çizgi olarak göster
+                        // For line chart, always show as line
                         type: chartType === 'stacked' ? 'line' : undefined
                     });
                     
-                    // Grafik konfigurasyonu
+                    // Chart configuration
                     const config = {
                         type: chartType === 'stacked' ? 'bar' : chartType,
                         data: {
@@ -542,21 +534,21 @@
                         }
                     };
                     
-                    // Yığılmış grafik için özel ayarlar
+                    // Special settings for stacked chart
                     if (chartType === 'stacked') {
                         config.options.scales.y.stacked = true;
                         config.options.scales.x.stacked = true;
                         
-                        // Yığılmış grafikte net nakit akışını çizgi olarak göster
+                        // Show net cash flow as line in stacked chart
                         datasets[2].type = 'line';
                         datasets[2].fill = false;
-                        datasets[2].order = 0; // Çizgiyi öne getir
+                        datasets[2].order = 0; // Bring line to the front
                     }
                     
-                    // Grafik oluştur
+                    // Create chart
                     window.cashFlowChart = new Chart(ctx, config);
                     
-                    // Grafik oluşturuldu eventi tetikle
+                    // Trigger chartRendered event
                     document.dispatchEvent(new CustomEvent('chartRendered'));
                 } catch (error) {
                     console.error('Grafik oluşturulurken hata:', error);

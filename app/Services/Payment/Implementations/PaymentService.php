@@ -13,19 +13,19 @@ use Carbon\Carbon;
 use App\Services\Payment\Contracts\PaymentServiceInterface;
 
 /**
- * Ödeme servisi implementasyonu
+ * Payment service implementation
  * 
- * Finansal işlemlerin yönetimi için gerekli metodları içerir.
- * Ödemelerin işlenmesi, doğrulanması, durumlarının kontrolü ve hesaplar arası transfer işlemlerini gerçekleştirir.
+ * Contains methods required to manage payment operations.
+ * Handles payment processing, validation, status checks, and transfer between accounts.
  */
 final class PaymentService implements PaymentServiceInterface
 {
     /**
-     * Ödeme işlemini gerçekleştirir
+     * Process a payment.
      * 
-     * @param mixed $entity Ödeme yapılacak varlık (Debt, Loan, Account, Transaction)
-     * @param array $data Ödeme verileri
-     * @param string $paymentMethod Ödeme yöntemi
+     * @param mixed $entity Entity to pay (Debt, Loan, Account, Transaction)
+     * @param array $data Payment data
+     * @param string $paymentMethod Payment method
      */
     public function processPayment($entity, array $data, string $paymentMethod): void
     {
@@ -65,9 +65,9 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * Borç durumunu günceller
+     * Update the debt status.
      * 
-     * @param Debt $debt Güncellenecek borç kaydı
+     * @param Debt $debt Debt to update
      */
     private function updateDebtStatus(Debt $debt): void
     {
@@ -77,9 +77,9 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * Kredi durumunu günceller
+     * Update the loan status.
      * 
-     * @param Loan $loan Güncellenecek kredi kaydı
+     * @param Loan $loan Loan to update
      */
     private function updateLoanStatus(Loan $loan): void
     {
@@ -89,28 +89,28 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * Kredi kartı bakiyesini günceller
+     * Update the credit card balance.
      * 
-     * @param Account $card Güncellenecek kredi kartı
-     * @param float $amount İşlem tutarı
-     * @param string $paymentMethod Ödeme yöntemi
+     * @param Account $card Credit card to update
+     * @param float $amount Transaction amount
+     * @param string $paymentMethod Payment method
      */
     private function updateCreditCardBalance(Account $card, float $amount, string $paymentMethod): void
     {
         $details = $card->details;
         if ($paymentMethod === 'payment') {
-            $card->balance -= $amount; // Ödeme yapıldığında borç azalır
+            $card->balance -= $amount; // When payment is made, the debt decreases
         } else {
-            $card->balance += $amount; // Harcama yapıldığında borç artar
+            $card->balance += $amount; // When expense is made, the debt increases
         }
         $card->save();
     }
 
     /**
-     * İşlem bakiyesini günceller
+     * Update the transaction balance.
      * 
-     * @param Transaction $transaction Güncellenecek işlem kaydı
-     * @param float $amount İşlem tutarı
+     * @param Transaction $transaction Transaction to update
+     * @param float $amount Transaction amount
      */
     private function updateTransactionBalance(Transaction $transaction, float $amount): void
     {
@@ -127,10 +127,10 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * İşlemin borç mu alacak mı olduğunu kontrol eder
+     * Check if the entity is a debit.
      * 
-     * @param mixed $entity Kontrol edilecek varlık
-     * @return bool İşlemin borç olup olmadığı
+     * @param mixed $entity Entity to check
+     * @return bool Whether the entity is a debit
      */
     private function isDebit($entity): bool
     {
@@ -141,10 +141,10 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * İşlem türünü belirler
+     * Determine the transaction type.
      * 
-     * @param mixed $entity İşlem türü belirlenecek varlık
-     * @return string İşlem türü
+     * @param mixed $entity Entity to determine the type
+     * @return string Transaction type
      */
     private function getTransactionType($entity): string
     {
@@ -163,12 +163,12 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * İşlem kaydı oluşturur
+     * Create a transaction record.
      * 
-     * @param mixed $entity İşlem yapılan varlık
-     * @param float $amount İşlem tutarı
-     * @param string $paymentMethod Ödeme yöntemi
-     * @param int|null $sourceAccountId Kaynak hesap ID'si
+     * @param mixed $entity Entity to record
+     * @param float $amount Transaction amount
+     * @param string $paymentMethod Payment method
+     * @param int|null $sourceAccountId Source account ID
      */
     private function recordTransaction($entity, float $amount, string $paymentMethod, ?int $sourceAccountId): void
     {
@@ -177,7 +177,7 @@ final class PaymentService implements PaymentServiceInterface
         $categoryId = $entity->category_id ?? null;
         $destinationAccountId = $entity instanceof Account ? $entity->id : null;
         
-        // Kredi taksit numarasını belirle
+        // Determine the installment number
         $installmentNumber = null;
         if ($entity instanceof Loan && str_contains($description, 'Taksit')) {
             preg_match('/Taksit (\d+)/', $description, $matches);
@@ -204,12 +204,12 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * Hesaplar arası transfer işlemi yapar
+     * Transfer between accounts.
      * 
-     * @param int $sourceAccountId Kaynak hesap ID'si
-     * @param int $targetAccountId Hedef hesap ID'si
-     * @param float $amount Transfer tutarı
-     * @param string|null $description Transfer açıklaması
+     * @param int $sourceAccountId Source account ID
+     * @param int $targetAccountId Target account ID
+     * @param float $amount Transfer amount
+     * @param string|null $description Transfer description
      */
     public function transferBetweenAccounts(int $sourceAccountId, int $targetAccountId, float $amount, ?string $description = null): void
     {
@@ -242,24 +242,24 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * Ödeme verilerinin geçerliliğini kontrol eder
+     * Validate payment data.
      * 
-     * @param array $data Kontrol edilecek ödeme verileri
-     * @return bool Verilerin geçerliliği
+     * @param array $data Payment data to validate
+     * @return bool Validity of the data
      */
     public function validatePayment(array $data): bool
     {
-        // Ödeme verilerinin geçerliliğini kontrol et
+        // Validate payment data
         if (empty($data['amount']) || !is_numeric($data['amount']) || $data['amount'] <= 0) {
             return false;
         }
 
-        // Ödeme yöntemi kontrolü
+        // Validate payment method
         if (empty($data['payment_method'])) {
             return false;
         }
 
-        // Hesap kontrolü
+        // Validate source account
         if (isset($data['source_account_id']) && !Account::find($data['source_account_id'])) {
             return false;
         }
@@ -272,10 +272,10 @@ final class PaymentService implements PaymentServiceInterface
     }
 
     /**
-     * Ödeme durumunu getirir
+     * Get payment status.
      * 
-     * @param string $paymentId Ödeme ID'si
-     * @return string Ödeme durumu
+     * @param string $paymentId Payment ID
+     * @return string Payment status
      */
     public function getPaymentStatus(string $paymentId): string
     {

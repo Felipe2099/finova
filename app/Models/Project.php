@@ -9,36 +9,42 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Proje modeli
+ * Project model
  * 
- * Proje yönetimi için kullanılan projeleri temsil eder.
- * Her proje bir kullanıcı tarafından oluşturulur ve bir veya daha fazla board içerebilir.
+ * Represents projects used for project management.
+ * Each project is created by a user and can contain one or more boards.
  */
 class Project extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
-    protected $fillable = ['name', 'description', 'status', 'created_by', 'view_type'];
+    protected $fillable = [
+        'name',
+        'description',
+        'status',
+        'created_by',
+        'view_type',
+    ];
 
     /**
-     * Model başlatıldığında çalışacak metodlar
-     * 
+     * Methods to run when the model is booted.
+     *
      * @return void
      */
     protected static function booted()
     {
         static::created(function ($project) {
-            $project->board()->create(['name' => 'Ana Board']);
+            $project->board()->create(['name' => 'Main Board']);
         });
     }
 
     /**
-     * Projeyi oluşturan kullanıcı
+     * The user who created the project.
      * 
      * @return BelongsTo
      */
@@ -48,7 +54,7 @@ class Project extends Model
     }
 
     /**
-     * Projeye ait boardlar
+     * Boards belonging to the project.
      * 
      * @return HasMany
      */
@@ -58,7 +64,7 @@ class Project extends Model
     }
 
     /**
-     * Projenin ana boardu
+     * The project's main board.
      * 
      * @return HasOne
      */

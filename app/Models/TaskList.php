@@ -10,25 +10,38 @@ use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
 /**
- * Görev Listesi modeli
+ * Task List model
  * 
- * Proje boardlarında bulunan görev listelerini temsil eder.
- * Her liste bir boarda ait olup, sıralanabilir görevler içerir.
+ * Represents task lists on project boards.
+ * Each list belongs to a board and contains sortable tasks.
  */
 class TaskList extends Model implements Sortable
 {
     use HasFactory, SortableTrait;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
-    protected $fillable = ['board_id', 'name', 'order'];
+    protected $fillable = [
+        'board_id',
+        'name',
+        'order',
+    ];
 
     /**
-     * Sıralama ayarları
-     * 
+     * Attribute casts
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'order' => 'integer',
+    ];
+
+    /**
+     * Sorting configuration
+     *
      * @var array<string, mixed>
      */
     public $sortable = [
@@ -37,7 +50,7 @@ class TaskList extends Model implements Sortable
     ];
 
     /**
-     * Listenin ait olduğu board
+     * The board that the list belongs to.
      * 
      * @return BelongsTo
      */
@@ -47,7 +60,7 @@ class TaskList extends Model implements Sortable
     }
 
     /**
-     * Listeye ait görevler
+     * Tasks belonging to the list.
      * 
      * @return HasMany
      */

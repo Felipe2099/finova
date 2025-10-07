@@ -9,7 +9,7 @@
         <livewire:transaction.widgets.transaction-stats-widget />
     </div>
 
-    {{-- İşlem Filtreleri --}}
+    {{-- Transaction Filters --}}
     <div class="mb-6">
         <div class="max-w-4xl mx-auto">
             <div class="bg-white dark:bg-gray-800 rounded-xl">
@@ -81,7 +81,7 @@
             </div>
         </div>
     </div>
-    {{-- / İşlem Filtreleri --}}
+    {{-- / Transaction Filters --}}
 
     {{ $this->table }}
 </x-table.table-layout> 

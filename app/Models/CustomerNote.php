@@ -4,19 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Müşteri Notu modeli
+ * Customer Note model
  * 
- * Müşterilerle ilgili notları ve aktiviteleri temsil eder.
- * Her not bir müşteriye ve kullanıcıya ait olup, belirli bir tipte olabilir.
+ * Represents notes and activities related to customers.
+ * Each note belongs to a customer and a user, and can have a specific type.
  */
 class CustomerNote extends Model implements Note
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -30,7 +31,7 @@ class CustomerNote extends Model implements Note
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -39,31 +40,31 @@ class CustomerNote extends Model implements Note
     ];
 
     /**
-     * Notun ait olduğu müşteri
-     * 
+     * The customer the note belongs to.
+     *
      * @return BelongsTo
      */
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
     /**
-     * Notu oluşturan kullanıcı
-     * 
+     * The user who created the note.
+     *
      * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
-     * Nota atanan kullanıcı
-     * 
+     * The user assigned to the note.
+     *
      * @return BelongsTo
      */
-    public function assignedUser()
+    public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
     }

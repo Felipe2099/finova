@@ -19,6 +19,16 @@ use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Recurring Transaction List Component
+ * 
+ * This component provides functionality to manage recurring transactions.
+ * Features:
+ * - List recurring transactions
+ * - Create recurring transactions
+ * - Edit recurring transactions
+ * - Delete recurring transactions
+ */
 class RecurringTransactionList extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;
@@ -27,16 +37,22 @@ class RecurringTransactionList extends Component implements HasForms, HasTable
     protected SubscriptionTransactionServiceInterface $subscriptionService;
 
     /**
-     * Bileşen başlatılırken servisleri enjekte eder
-     *
-     * @param SubscriptionTransactionServiceInterface $subscriptionService Abonelik servisi
+     * When the component is booted, the subscription service is injected
+     * 
+     * @param SubscriptionTransactionServiceInterface $subscriptionService Subscription service
      * @return void
      */
     public function boot(SubscriptionTransactionServiceInterface $subscriptionService): void
     {
         $this->subscriptionService = $subscriptionService;
     }
-    // Filament Action için Transaction nesnesini alır
+
+    /**
+     * For Filament Action, retrieve the Transaction object
+     * 
+     * @param Transaction $record Transaction object
+     * @return void
+     */
     public function endSubscriptionAction(Transaction $record): void
     {
         try {
@@ -55,20 +71,25 @@ class RecurringTransactionList extends Component implements HasForms, HasTable
         }
     }
 
-    // Filament Table tanımı
+    /**
+     * Filament Table definition
+     * 
+     * @param Tables\Table $table Filament table configuration
+     * @return Tables\Table
+     */
     public function table(Tables\Table $table): Tables\Table
     {
         return $table
             ->query(
                 Transaction::query()
                     // ->where('user_id', auth()->id()) 
-                    ->where('is_subscription', true) // Sadece devamlı işlemleri al
+                    ->where('is_subscription', true) // Only get recurring transactions
             )
             ->emptyStateHeading('Devamlı İşlem Bulunamadı')
             ->emptyStateDescription('Başlamak için yeni bir devamlı işlem oluşturun.')
             ->columns([
 
-                // İşlem Türü Sütunu
+                // Transaction Type Column
                 Tables\Columns\BadgeColumn::make('type')
                     ->label('İşlem Türü')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -100,18 +121,18 @@ class RecurringTransactionList extends Component implements HasForms, HasTable
                             return $diff . ' gün';
                         }
                     })
-                    ->color(function (Transaction $record): string { // Badge rengini hesapla
+                    ->color(function (Transaction $record): string { // Calculate badge color
                         if (!$record->next_payment_date) return 'secondary';
                         $nextPaymentDate = Carbon::parse($record->next_payment_date);
                         $now = Carbon::today();
                         if ($nextPaymentDate->isPast() && !$nextPaymentDate->isToday()) {
-                            return 'danger'; // Geçmiş
+                            return 'danger'; // Past
                         } elseif ($nextPaymentDate->isToday()) {
-                            return 'warning'; // Bugün
+                            return 'warning'; // Today
                         }
-                        return 'primary'; // Gelecek
+                        return 'primary'; // Future
                     })
-                    // Sıralamayı yine next_payment_date'e göre yap
+                    // Sort by next_payment_date
                     ->sortable(query: fn (Builder $query, string $direction) => $query->orderBy('next_payment_date', $direction)),
 
                 Tables\Columns\TextColumn::make('subscription_period')
@@ -190,9 +211,13 @@ class RecurringTransactionList extends Component implements HasForms, HasTable
             ->striped();
     }
 
+    /**
+     * Renders the component view
+     * 
+     * @return \Illuminate\Contracts\View\View
+     */
     public function render(): View
     {
-        // Filament tablosunu render et
         return view('livewire.transaction.recurring-transaction-list-container');
     }
 }

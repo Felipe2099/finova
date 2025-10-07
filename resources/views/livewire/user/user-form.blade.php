@@ -10,7 +10,7 @@
         ['label' => $isEdit ? 'Düzenle' : 'Oluştur']
     ]"
 >
-    {{-- Formun kendisi --}}
+    {{-- Form --}}
     {{ $this->form }}
 
     @if ($showRestoreModal && $deletedUser)
@@ -29,7 +29,7 @@
             aria-modal="true"
         >
             <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                {{-- Arka plan overlay --}}
+                {{-- Background overlay --}}
                 <div
                     x-show="open"
                     x-transition:enter="ease-out duration-300"
@@ -42,10 +42,10 @@
                     aria-hidden="true"
                 ></div>
 
-                {{-- Modal içeriği dikeyde ortalamak için --}}
+                {{-- Modal content to vertically center --}}
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                {{-- Modal paneli --}}
+                {{-- Modal panel --}}
                 <div
                     x-show="open"
                     x-transition:enter="ease-out duration-300"
@@ -90,7 +90,7 @@
         </div>
     @endif
 
-    {{-- İzinleri Görüntüleme Modalı --}}
+    {{-- Permissions Modal --}}
     @if ($showPermissionsModal)
         <div
             x-data="{ open: @entangle('showPermissionsModal') }"
@@ -107,7 +107,7 @@
             aria-modal="true"
         >
             <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                {{-- Arka plan overlay --}}
+                {{-- Background overlay --}}
                 <div
                     x-show="open"
                     x-transition:enter="ease-out duration-300"
@@ -120,10 +120,10 @@
                     aria-hidden="true"
                 ></div>
 
-                {{-- Modal içeriği dikeyde ortalamak için --}}
+                {{-- Modal content to vertically center --}}
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                {{-- Modal paneli --}}
+                {{-- Modal panel --}}
                 <div
                     x-show="open"
                     x-transition:enter="ease-out duration-300"

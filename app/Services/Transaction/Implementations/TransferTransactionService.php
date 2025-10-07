@@ -12,11 +12,10 @@ use App\Services\Transaction\Contracts\TransferTransactionServiceInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Transfer işlemleri servisi
+ * Transfer transactions service
  * 
- * Hesaplar arası para transferi işlemlerini yönetir.
- * Farklı para birimleri arasında transfer yapılabilir.
- * Transfer sırasında kur dönüşümü yapılır.
+ * Manages money transfers between accounts.
+ * Supports transfers across different currencies with exchange conversion.
  */
 final class TransferTransactionService implements TransferTransactionServiceInterface
 {
@@ -26,14 +25,14 @@ final class TransferTransactionService implements TransferTransactionServiceInte
     }
 
     /**
-     * Yeni bir transfer işlemi oluşturur
+     * Create a new transfer transaction.
      * 
-     * Kaynak ve hedef hesaplar arasında para transferi yapar.
-     * Farklı para birimleri arasında transfer yapılabilir.
+     * Transfers funds between source and destination accounts.
+     * Supports cross-currency transfers.
      * 
-     * @param TransactionData $data Transfer verileri
-     * @return Transaction Oluşturulan transfer işlemi
-     * @throws \InvalidArgumentException Geçersiz transfer verileri durumunda
+     * @param TransactionData $data Transfer data
+     * @return Transaction Created transfer transaction
+     * @throws \InvalidArgumentException When transfer data is invalid
      */
     public function create(TransactionData $data): Transaction
     {
@@ -47,12 +46,12 @@ final class TransferTransactionService implements TransferTransactionServiceInte
     }
 
     /**
-     * Kur hesaplamalarını yapar
+     * Calculate exchange rates.
      * 
-     * Kaynak ve hedef para birimleri farklıysa kur dönüşümü yapar.
+     * Performs conversion when source and destination currencies differ.
      * 
-     * @param TransactionData $data Transfer verileri
-     * @return array Kur bilgileri
+     * @param TransactionData $data Transfer data
+     * @return array Exchange rate info
      */
     private function calculateExchangeRates(TransactionData $data): array
     {
@@ -69,11 +68,11 @@ final class TransferTransactionService implements TransferTransactionServiceInte
     }
 
     /**
-     * Transfer kaydı oluşturur
+     * Create the transfer record.
      * 
-     * @param TransactionData $data Transfer verileri
-     * @param array $rates Kur bilgileri
-     * @return Transaction Oluşturulan transfer kaydı
+     * @param TransactionData $data Transfer data
+     * @param array $rates Exchange rate info
+     * @return Transaction Created transfer record
      */
     private function createTransferRecord(TransactionData $data, array $rates): Transaction
     {
@@ -87,10 +86,10 @@ final class TransferTransactionService implements TransferTransactionServiceInte
     }
 
     /**
-     * Transfer açıklaması oluşturur
+     * Generate a transfer description.
      * 
-     * @param TransactionData $data Transfer verileri
-     * @return string Oluşturulan açıklama
+     * @param TransactionData $data Transfer data
+     * @return string Generated description
      */
     private function generateTransferDescription(TransactionData $data): string
     {
@@ -105,12 +104,12 @@ final class TransferTransactionService implements TransferTransactionServiceInte
     }
 
     /**
-     * Transfer verilerini doğrular
+     * Validate transfer data.
      * 
-     * Kaynak ve hedef hesapların varlığını ve yeterli bakiyeyi kontrol eder.
+     * Ensures the existence of source and destination accounts and sufficient balance.
      * 
-     * @param TransactionData $data Doğrulanacak transfer verileri
-     * @throws \InvalidArgumentException Geçersiz veriler durumunda
+     * @param TransactionData $data Transfer data to validate
+     * @throws \InvalidArgumentException When data is invalid
      */
     private function validateTransferData(TransactionData $data): void
     {

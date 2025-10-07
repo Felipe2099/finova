@@ -5,45 +5,45 @@ declare(strict_types=1);
 namespace App\Services\Payment\Contracts;
 
 /**
- * Ödeme servisi arayüzü
+ * Payment service interface
  * 
- * Finansal işlemlerin yönetimi için gerekli metodları tanımlar.
- * Ödemelerin işlenmesi, doğrulanması, durumlarının kontrolü ve hesaplar arası transfer işlemlerini yapar.
+ * Defines the methods required for managing payment operations.
+ * Handles payment processing, validation, status checks, and transfer between accounts.
  */
 interface PaymentServiceInterface
 {
     /**
-     * Ödeme işlemini gerçekleştirir
+     * Process a payment.
      * 
-     * @param mixed $entity Ödeme yapılacak varlık (Debt, Loan, Account, Transaction)
-     * @param array $data Ödeme verileri
-     * @param string $paymentMethod Ödeme yöntemi
+     * @param mixed $entity Entity to pay (Debt, Loan, Account, Transaction)
+     * @param array $data Payment data
+     * @param string $paymentMethod Payment method
      */
     public function processPayment($entity, array $data, string $paymentMethod): void;
 
     /**
-     * Ödeme verilerinin geçerliliğini kontrol eder
+     * Validate payment data.
      * 
-     * @param array $data Kontrol edilecek ödeme verileri
-     * @return bool Verilerin geçerliliği
+     * @param array $data Payment data to validate
+     * @return bool Validity of the data
      */
     public function validatePayment(array $data): bool;
 
     /**
-     * Ödeme durumunu getirir
+     * Get payment status.
      * 
-     * @param string $paymentId Ödeme ID'si
-     * @return string Ödeme durumu
+     * @param string $paymentId Payment ID
+     * @return string Payment status
      */
     public function getPaymentStatus(string $paymentId): string;
 
     /**
-     * Hesaplar arası transfer işlemi yapar
+     * Transfer between accounts.
      * 
-     * @param int $sourceAccountId Kaynak hesap ID'si
-     * @param int $targetAccountId Hedef hesap ID'si
-     * @param float $amount Transfer tutarı
-     * @param string|null $description Transfer açıklaması
+     * @param int $sourceAccountId Source account ID
+     * @param int $targetAccountId Target account ID
+     * @param float $amount Transfer amount
+     * @param string|null $description Transfer description
      */
     public function transferBetweenAccounts(int $sourceAccountId, int $targetAccountId, float $amount, ?string $description = null): void;
 } 

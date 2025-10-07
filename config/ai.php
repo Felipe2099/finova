@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'default' => env('AI_SERVICE', 'gemini'), // gemini veya openai
+    'default' => env('AI_SERVICE', 'gemini'), // gemini or openai service
 
     'openai' => [
-        'model' => env('OPENAI_MODEL', 'gpt-4o-mini-2024-07-18'), // Varsayılan olarak ekonomik model
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini-2024-07-18'), // default economic model
         'max_tokens' => (int) env('OPENAI_MAX_TOKENS', 1000),
         'temperature' => (float) env('OPENAI_TEMPERATURE', 0.7),
         'api_key' => env('OPENAI_API_KEY'),
@@ -18,7 +18,7 @@ return [
         'temperature' => (float) env('GEMINI_TEMPERATURE', 0.7),
     ],
 
-    // Ortak sistem promptu - her iki servis için de kullanılacak
+    // Common system prompt - will be used for both services
     'system_prompt' => "Sen bir finansal asistansın. Kullanıcıların gelir ve gider verilerini analiz ederek sorularını yanıtlarsın. 
     Önemli kurallar:
     1. Sadece soru sahibinin verilerine erişebilirsin, diğer kullanıcıların verilerini göremezsin.

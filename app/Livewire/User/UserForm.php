@@ -20,63 +20,63 @@ use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
 /**
- * Kullanıcı oluşturma ve düzenleme formu bileşeni.
+ * User creation and editing form component.
  * 
- * Bu bileşen, kullanıcı bilgilerinin oluşturulması ve düzenlenmesi için
- * Filament Form API kullanarak bir form arayüzü sağlar. Kullanıcının temel
- * bilgileri, rol atamaları ve komisyon ayarları bu form üzerinden yönetilir.
+ * This component provides a form interface for creating and editing user information
+ * using the Filament Form API. Basic user information, role assignments, and commission settings
+ * are managed through this form.
  */
 class UserForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    /** @var User|null Düzenlenen kullanıcı */
+    /** @var User|null Edited user */
     public ?User $user = null;
     
-    /** @var bool Düzenleme modu */
+    /** @var bool Edit mode */
     public bool $isEdit = false;
     
-    /** @var array Kullanıcı rolleri */
+    /** @var array User roles */
     public array $roles = [];
     
-    /** @var bool Komisyon kullanımı */
+    /** @var bool Commission usage */
     public bool $hasCommission = false;
     
-    /** @var float|null Komisyon oranı */
+    /** @var float|null Commission rate */
     public ?float $commissionRate = null;
     
-    /** @var array Form verileri */
+    /** @var array Form data */
     public $data = [];
     
-    /** @var User|null Restore edilecek silinen kullanıcı */
+    /** @var User|null User to be restored */
     public ?User $deletedUser = null;
 
-    /** @var bool Geri yükleme modalını göster/gizle */
+    /** @var bool Show/hide restore modal */
     public bool $showRestoreModal = false;
 
     /**
-     * İzinleri bir modal içinde görüntüler
+     * Displays permissions in a modal
      */
     public $showPermissionsModal = false;
     public $selectedRoleId = null;
     public $permissionsList = [];
 
     /**
-     * Formu hazırlar ve varsa mevcut kullanıcı verilerini yükler
+     * Prepares the form and loads existing user data if available
      */
     public function mount($user = null): void
     {
-        // Düzenleme modu kontrolü
+        // Edit mode check
         $this->isEdit = $user !== null;
         
-        // Düzenleme ise kullanıcı ve rollerini yükle
+        // If edit mode, load user and roles
         if ($this->isEdit) {
             $this->user = User::with('roles')->find($user->id);
         } else {
             $this->user = new User();
         }
         
-        // Formları ayrı render et
+        // Render forms separately
         if ($this->isEdit) {
             $this->createEditForm();
         } else {
@@ -85,15 +85,15 @@ class UserForm extends Component implements HasForms
     }
     
     /**
-     * Düzenleme formu oluşturur (şifre OLMADAN)
+     * Creates the edit form (without password)
      */
     private function createEditForm(): void
     {
-        // Kullanıcı bilgilerini ve rol ID'sini al
+        // Get user information and role ID
         $role = $this->user->roles->first();
         $roleId = $role ? $role->id : null;
 
-        // Formu doldurmak için verileri hazırla
+        // Prepare data for form filling
         $formData = [
             'name' => $this->user->name,
             'email' => $this->user->email,
@@ -104,12 +104,12 @@ class UserForm extends Component implements HasForms
             'commission_rate' => $this->user->commission_rate,
         ];
 
-        // Formu hazır verilerle doldur
+        // Fill form with prepared data
         $this->form->fill($formData);
     }
     
     /**
-     * Yeni kullanıcı formu oluşturur (şifre İLE)
+     * Creates the new user form (with password)
      */
     private function createNewForm(): void
     {
@@ -117,7 +117,7 @@ class UserForm extends Component implements HasForms
             'name' => '',
             'email' => '',
             'phone' => '',
-            'password' => '', // Sadece yeni kullanıcı formunda şifre var
+            'password' => '', // Only in new user form
             'status' => 1,
             'roles' => null,
             'has_commission' => false,
@@ -126,11 +126,11 @@ class UserForm extends Component implements HasForms
     }
 
     /**
-     * Form şemasını tanımlar
+     * Defines the form schema
      */
     public function form(Form $form): Form
     {
-        // Temel alanlar - her iki formda da ortak
+        // Basic fields - common for both forms
         $schema = [
             Section::make('Kullanıcı Bilgileri')
                 ->columns(2)
@@ -200,12 +200,12 @@ class UserForm extends Component implements HasForms
     }
     
     /**
-     * Kullanıcı bilgileri alanlarını döndürür
-     * Edit ve Create moduna göre farklı alanlar içerir
+     * Returns the user information fields
+     * Contains different fields for edit and create mode
      */
     private function getUserFieldsSchema(): array
     {
-        // Temel alanlar (her iki formda da var)
+        // Basic fields (common for both forms)
         $fields = [
             TextInput::make('name')
                 ->label('Adı Soyadı')
@@ -230,7 +230,7 @@ class UserForm extends Component implements HasForms
                 ->maxLength(255),
         ];
         
-        // Sadece create modunda şifre alanı ekle
+        // Only add password field in create mode
         if (!$this->isEdit) {
             $fields[] = TextInput::make('password')
                 ->label('Şifre')
@@ -243,48 +243,48 @@ class UserForm extends Component implements HasForms
     }
     
     /**
-     * Form verilerini kaydeder
+     * Saves the form data
      */
     public function save(): void
     {
         try {
             $data = $this->form->getState();
             
-            // Rol verisini doğru formatta hazırla
+            // Prepare the role data in the correct format
             $roleId = $data['roles'] ?? null;
             
-            // Rolü doğru şekilde al - isimlerini kullan
+            // Get the role correctly - use names
             $roles = [];
             if ($roleId) {
-                // Role ID'sini kullanarak rol nesnesini bul
+                // Find the role object using the role ID
                 $role = Role::find($roleId);
                 if ($role) {
-                    $roles = [$role->name]; // İsim kullan - Spatie\Permission isim bekliyor
+                    $roles = [$role->name]; // Use name - Spatie\Permission expects name
                 }
             }
             
-            // Komisyon oranını ayarla - eğer komisyon kullanıcısı değilse 0 olmalı
+            // Set the commission rate - if the commission user is not set, it should be 0
             $commissionRate = $data['has_commission'] ? ($data['commission_rate'] ?? 0) : 0;
             
             $userService = app(UserServiceInterface::class);
             
-            // Yeni kayıtlarda, aynı email ile silinmiş kullanıcı var mı kontrol et
+            // Check if there is a deleted user with the same email in new records
             if (!$this->isEdit) {
-                // Aynı email ile silinmiş kullanıcıyı bul
+                // Find the deleted user with the same email
                 $this->deletedUser = User::onlyTrashed()->where('email', $data['email'])->first();
 
                 if ($this->deletedUser) {
-                    // Silinmiş kullanıcı varsa, modalı göster ve işlemi durdur
+                    // If the deleted user exists, show the modal and stop the operation
                     $this->showRestoreModal = true;
                     return;
                 }
                 
-                // Silinmiş kullanıcı yoksa, yeni kullanıcı oluştur
+                // If the deleted user does not exist, create a new user
                 $userData = new UserData(
                     name: $data['name'],
                     email: $data['email'],
                     phone: $data['phone'],
-                    password: $data['password'], // Create modunda şifre var
+                    password: $data['password'], // Create mode has password
                     status: $data['status'],
                     has_commission: $data['has_commission'],
                     commission_rate: $commissionRate,
@@ -298,12 +298,12 @@ class UserForm extends Component implements HasForms
                     ->success()
                     ->send();
             } else {
-                // Mevcut kullanıcıyı güncelle
+                // Update the existing user
                 $userData = new UserData(
                     name: $data['name'],
                     email: $data['email'],
                     phone: $data['phone'], 
-                    password: null, // Edit modunda şifre yok
+                    password: null, // Edit mode has no password
                     status: $data['status'],
                     has_commission: $data['has_commission'],
                     commission_rate: $commissionRate,
@@ -329,18 +329,18 @@ class UserForm extends Component implements HasForms
     }
     
     /**
-     * Kullanıcı geri yükleme işlemini onaylar ve gerçekleştirir.
+     * Confirms and performs the user restore operation.
      */
     public function confirmRestore(): void
     {
         if (!$this->deletedUser) {
-            return; // Geri yüklenecek kullanıcı yoksa çık
+            return; // If there is no user to restore, exit
         }
 
         try {
-            $data = $this->form->getState(); // Formdaki güncel verileri al
+            $data = $this->form->getState(); // Get the current data from the form
 
-            // Rol verisini doğru formatta hazırla
+            // Prepare the role data in the correct format
             $roleId = $data['roles'] ?? null;
             $roles = [];
             if ($roleId) {
@@ -355,26 +355,26 @@ class UserForm extends Component implements HasForms
 
             $userService = app(UserServiceInterface::class);
 
-            // 1. Kullanıcıyı geri yükle (Bildirim göndermeden)
+            // 1. Restore the user (without notification)
             $userService->restore($this->deletedUser, false);
 
-            // 2. Kullanıcıyı formdaki yeni bilgilerle güncelle
+            // 2. Update the user with the new information from the form
             $userData = new UserData(
                 name: $data['name'],
                 email: $data['email'],
                 phone: $data['phone'],
-                password: null, // Geri yüklerken şifre güncellenmez (istersen eklenebilir)
+                password: null, // When restoring, the password is not updated (can be added if needed)
                 status: $data['status'],
                 has_commission: $data['has_commission'],
                 commission_rate: $commissionRate,
                 roles: $roles
             );
-             // ÖNEMLİ: $this->deletedUser referansı restore'dan sonra değişebilir, ID ile tekrar bulalım
+             // IMPORTANT: $this->deletedUser reference can change after restore, find it again with ID
             $restoredUser = User::find($this->deletedUser->id);
             if ($restoredUser) {
                  $userService->update($restoredUser, $userData);
             } else {
-                 // Hata durumu - kullanıcı bulunamadı
+                 // Error state - user not found
                  throw new \Exception("Geri yüklenen kullanıcı bulunamadı.");
             }
 
@@ -384,8 +384,8 @@ class UserForm extends Component implements HasForms
                 ->success()
                 ->send();
 
-            $this->showRestoreModal = false; // Modalı kapat
-            $this->redirectRoute('admin.users.index', navigate: true); // Yönlendir
+            $this->showRestoreModal = false; // Close the modal
+            $this->redirectRoute('admin.users.index', navigate: true);
 
         } catch (\Exception $e) {
             Notification::make('user-restore-error')
@@ -393,21 +393,21 @@ class UserForm extends Component implements HasForms
                 ->body('Kullanıcı geri yüklenirken/güncellenirken bir hata oluştu: ' . $e->getMessage())
                 ->danger()
                 ->send();
-             $this->showRestoreModal = false; // Hata durumunda da modalı kapat
+             $this->showRestoreModal = false; // In case of error, close the modal
         }
     }
 
     /**
-     * Kullanıcı geri yükleme işlemini iptal eder ve modalı kapatır.
+     * Cancels the user restore operation and closes the modal.
      */
     public function cancelRestore(): void
     {
         $this->showRestoreModal = false;
-        $this->deletedUser = null; // İptal edildiğinde referansı temizle
+        $this->deletedUser = null; // When cancelled, clear the reference
     }
 
     /**
-     * İptal et ve kullanıcı listesine dön
+     * Cancel and return to the user list
      */
     public function cancel(): void
     {
@@ -415,7 +415,7 @@ class UserForm extends Component implements HasForms
     }
 
     /**
-     * İzinleri bir modal içinde görüntüler
+     * Displays permissions in a modal
      */
     public function showPermissions($roleId): void
     {
@@ -423,12 +423,12 @@ class UserForm extends Component implements HasForms
         
         $role = Role::with('permissions')->find($roleId);
         if ($role) {
-            // İzinleri Türkçe display_name ile hazırla
+            // Prepare the permissions with the display_name in Turkish
             $this->permissionsList = $role->permissions->map(function ($permission) {
                 return [
                     'id' => $permission->id,
                     'name' => $permission->name,
-                    'display_name' => $permission->display_name ?? $permission->name, // Doğrudan display_name kullan
+                    'display_name' => $permission->display_name ?? $permission->name, // Use display_name directly
                 ];
             })->sortBy('display_name')->values()->toArray();
         }
@@ -442,7 +442,7 @@ class UserForm extends Component implements HasForms
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      */
     public function render()
     {

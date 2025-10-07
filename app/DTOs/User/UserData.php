@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace App\DTOs\User;
 
 /**
- * Kullanıcı Veri Transfer Nesnesi
+ * User Data Transfer Object
  * 
- * Kullanıcı verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Kullanıcı oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert user data.
+ * Used for user creation, updating, and viewing.
  */
 class UserData
 {
     /**
-     * @param string $name Kullanıcı adı
-     * @param string $email E-posta adresi
-     * @param string|null $phone Telefon numarası
-     * @param string|null $password Şifre (yeni oluşturma veya güncelleme için)
-     * @param bool $status Durum
-     * @param bool $has_commission Komisyon hakkı var mı
-     * @param float|null $commission_rate Komisyon oranı
-     * @param array|null $roles Roller dizisi
+     * @param string $name User name
+     * @param string $email Email address
+     * @param string|null $phone Phone number
+     * @param string|null $password Password (for creation and updating)
+     * @param bool $status Status
+     * @param bool $has_commission Has commission?
+     * @param float|null $commission_rate Commission rate
+     * @param array|null $roles Roles array
      */
     public function __construct(
         public readonly string $name,
@@ -34,9 +34,9 @@ class UserData
     ) {}
 
     /**
-     * Dizi verisinden kullanıcı verisi oluşturur
+     * Create user data from array
      * 
-     * @param array $data Kullanıcı verileri dizisi
+     * @param array $data User data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -54,7 +54,7 @@ class UserData
     }
 
     /**
-     * Kullanıcı verisini dizi formatına dönüştürür
+     * Convert user data to array
      * 
      * @return array
      */
@@ -73,8 +73,8 @@ class UserData
     }
 
     /**
-     * Kullanıcının Model oluşturma/güncelleme için kullanılacak verileri döndürür
-     * Şifre null ise dışarıda bırakılır (güncelleme durumunda)
+     * Return the data for the user's model creation/update
+     * If password is null, it is left outside (in update mode)
      * 
      * @return array
      */

@@ -7,7 +7,7 @@
         ['label' => 'Kategori Analizi']
     ]"
 >
-    <!-- Hata mesajı gösterme alanı -->
+    <!-- Error message field -->
     @if($errorMessage)
     <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
         <div class="flex items-center">
@@ -19,7 +19,7 @@
     </div>
     @endif
 
-    <!-- Filtreler -->
+    <!-- Filters -->
     <x-filament::section heading="Filtreler" class="mb-6">
         <div wire:key="filters">
             {{ $this->form }}
@@ -28,7 +28,7 @@
 
     <!-- Stats Overview Widget -->
     <div class="mt-8 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Toplam Tutar -->
+        <!-- Total Amount -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 bg-blue-600">
                 <h3 class="text-sm font-medium text-white">Toplam Tutar</h3>
@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <!-- Ortalama Tutar -->
+        <!-- Average Amount -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 bg-green-600">
                 <h3 class="text-sm font-medium text-white">Ortalama Tutar</h3>
@@ -58,7 +58,7 @@
             </div>
         </div>
 
-        <!-- Kategori Sayısı -->
+        <!-- Category Count -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 bg-purple-600">
                 <h3 class="text-sm font-medium text-white">Kategori Sayısı</h3>
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <!-- İşlem Sayısı -->
+        <!-- Transaction Count -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="px-4 py-3 bg-orange-500">
                 <h3 class="text-sm font-medium text-white">Toplam İşlem</h3>
@@ -89,7 +89,7 @@
         </div>
     </div>
 
-    <!-- Kategori Analizi -->
+    <!-- Category Analysis -->
     <x-filament::section 
         heading="{{ $analysisType === 'income' ? 'Gelir' : 'Gider' }} Kategorileri" 
         description="Kategorilerin detaylı analizi ve karşılaştırması"

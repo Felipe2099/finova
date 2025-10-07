@@ -24,14 +24,14 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Notifications\Notification;
 
 /**
- * Kullanıcı Komisyon Geçmişi Bileşeni
+ * User Commission History Component
  * 
- * Bu bileşen, kullanıcıların komisyon geçmişini görüntüler ve yönetir.
- * Özellikler:
- * - Komisyon listesi görüntüleme
- * - Komisyon istatistikleri
- * - Komisyon ödemesi oluşturma
- * - Tarih bazlı filtreleme
+ * This component displays and manages the commission history of users.
+ * Features:
+ * - Commission list view
+ * - Commission statistics
+ * - Commission payment creation
+ * - Date-based filtering
  */
 class UserCommissionHistory extends Component implements HasForms, HasTable
 {
@@ -40,11 +40,11 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
 
     public User $user;
 
-    // Tablo seçimi için property
+    // Table selection property
     public string $activeTable = 'commissions';
 
     /**
-     * Bileşen mount edildiğinde çalışır
+     * When the component is mounted, it runs
      */
     public function mount(User $user): void
     {
@@ -52,7 +52,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
     }
 
     /**
-     * Komisyonlar tablosu
+     * Commissions table
      */
     public function commissionsTable(Table $table): Table
     {
@@ -119,7 +119,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
     }
 
     /**
-     * Ödeme oluşturma action'ını döndürür
+     * Returns the create payout action
      */
     protected function getCreatePayoutAction(): CreateAction
     {
@@ -151,7 +151,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
                     'payment_date' => $data['payment_date'],
                 ]);
 
-                // Bildirim göster
+                // Show notification
                 Notification::make()
                     ->title('Ödeme oluşturuldu')
                     ->success()
@@ -163,7 +163,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
     }
 
     /**
-     * Ödemeler tablosu
+     * Payouts table
      */
     public function payoutsTable(Table $table): Table
     {
@@ -212,7 +212,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
                             ->displayFormat('d.m.Y'),
                     ])
                     ->mutateFormDataUsing(function (array $data): array {
-                        // Virgüllü sayıları noktalı forma dönüştür
+                        // Convert comma-separated numbers to dot-separated numbers
                         $data['amount'] = (float) str_replace(',', '.', $data['amount']);
                         return $data;
                     })
@@ -222,7 +222,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
                             'payment_date' => $data['payment_date'],
                         ]);
                         
-                        // İstatistikleri güncelle
+                        // Update statistics
                         $this->dispatch('commission-stats-updated');
                         
                         return $record;
@@ -266,7 +266,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
     }
 
     /**
-     * Ana tablo yapılandırması
+     * Main table configuration
      */
     public function table(Table $table): Table
     {
@@ -278,7 +278,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo değiştirme metodu
+     * Table change method
      */
     public function switchTable(string $table): void
     {
@@ -287,7 +287,7 @@ class UserCommissionHistory extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      */
     public function render(): View
     {

@@ -3,23 +3,23 @@
 namespace App\Models;
 
 /**
- * Not arayüzü
- * 
- * Not modellerinin uygulaması gereken temel metotları tanımlar.
- * Her not bir müşteriye ve kullanıcıya ait olmalıdır.
+ * Note interface
+ *
+ * Defines the basic methods that note models must implement.
+ * Each note must belong to a customer and a user.
  */
 interface Note
 {
     /**
-     * Notun ait olduğu müşteri
-     * 
+     * The customer that the note belongs to.
+     *
      * @return BelongsTo
      */
     public function customer();
 
     /**
-     * Notu oluşturan kullanıcı
-     * 
+     * The user who created the note.
+     *
      * @return BelongsTo
      */
     public function user();

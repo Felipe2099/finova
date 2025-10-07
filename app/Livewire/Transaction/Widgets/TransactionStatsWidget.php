@@ -8,24 +8,25 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * İşlem İstatistikleri Widget Bileşeni
+ * Transaction Stats Widget Component
  * 
- * Bu bileşen, finansal işlemlerin istatistiklerini görüntülemek için kullanılır.
- * Özellikler:
- * - Günlük gelir ve gider istatistikleri
- * - Aylık gelir ve gider istatistikleri
- * - Önceki dönemlere göre artış/azalış oranları
- * - Otomatik yenileme desteği
- * - Hata yönetimi ve loglama
+ * This component provides functionality to display transaction statistics.
+ * Features:
+ * - Daily income and expense statistics
+ * - Monthly income and expense statistics
+ * - Increment/decrement rates compared to previous periods
+ * - Automatic refresh support
+ * - Error management and logging
  * 
  * @package App\Livewire\Transaction\Widgets
  */
+
 class TransactionStatsWidget extends BaseWidget
 {
-    /** @var string Widget görünüm dosyası */
+    /** @var string Widget view file */
     protected static string $view = 'livewire.transaction.widgets.transaction-stats-widget';
 
-    /** @var array Dinleyici olayları */
+    /** @var array Listeners */
     protected $listeners = [
         'transactionCreated' => '$refresh',
         'transactionUpdated' => '$refresh',
@@ -33,9 +34,9 @@ class TransactionStatsWidget extends BaseWidget
     ];
 
     /**
-     * İstatistik verilerini döndürür
+     * Returns the statistics data
      * 
-     * @return array İstatistik verileri
+     * @return array Statistics data
      */
     public function getStats(): array
     {
@@ -114,9 +115,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Bugünkü gelir toplamını döndürür
+     * Returns the today's income total
      * 
-     * @return float Bugünkü gelir toplamı
+     * @return float Today's income total
      */
     private function getTodayIncome(): float
     {
@@ -132,9 +133,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Bugünkü gider toplamını döndürür
+     * Returns the today's expense total
      * 
-     * @return float Bugünkü gider toplamı
+     * @return float Today's expense total
      */
     private function getTodayExpense(): float
     {
@@ -150,9 +151,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Bu ayki gelir toplamını döndürür
+     * Returns the current month's income total
      * 
-     * @return float Bu ayki gelir toplamı
+     * @return float Current month's income total
      */
     private function getCurrentMonthIncome(): float
     {
@@ -169,9 +170,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Bu ayki gider toplamını döndürür
+     * Returns the current month's expense total
      * 
-     * @return float Bu ayki gider toplamı
+     * @return float Current month's expense total
      */
     private function getCurrentMonthExpense(): float
     {
@@ -188,10 +189,10 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Bugünkü artış/azalış oranını hesaplar
+     * Calculates the today's increment/decrement rate
      * 
-     * @param string $type İşlem tipi (income/expense)
-     * @return string Artış/azalış oranı ve yönü
+     * @param string $type Transaction type (income/expense)
+     * @return string Increment/decrement rate and direction
      */
     private function getTodayIncrement($type): string
     {
@@ -217,10 +218,10 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Bu ayki artış/azalış oranını hesaplar
+     * Calculates the current month's increment/decrement rate
      * 
-     * @param string $type İşlem tipi (income/expense)
-     * @return string Artış/azalış oranı ve yönü
+     * @param string $type Transaction type (income/expense)
+     * @return string Increment/decrement rate and direction
      */
     private function getCurrentMonthIncrement($type): string
     {
@@ -246,9 +247,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Dünkü gelir toplamını döndürür
+     * Returns the yesterday's income total
      * 
-     * @return float Dünkü gelir toplamı
+     * @return float Yesterday's income total
      */
     private function getYesterdayIncome(): float
     {
@@ -264,9 +265,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Dünkü gider toplamını döndürür
+     * Returns the yesterday's expense total
      * 
-     * @return float Dünkü gider toplamı
+     * @return float Yesterday's expense total
      */
     private function getYesterdayExpense(): float
     {
@@ -282,9 +283,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Geçen ayki gelir toplamını döndürür
+     * Returns the last month's income total
      * 
-     * @return float Geçen ayki gelir toplamı
+     * @return float Last month's income total
      */
     private function getLastMonthIncome(): float
     {
@@ -301,9 +302,9 @@ class TransactionStatsWidget extends BaseWidget
     }
 
     /**
-     * Geçen ayki gider toplamını döndürür
+     * Returns the last month's expense total
      * 
-     * @return float Geçen ayki gider toplamı
+     * @return float Last month's expense total
      */
     private function getLastMonthExpense(): float
     {

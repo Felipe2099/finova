@@ -1,7 +1,7 @@
 <div class="grid gap-6 mb-8 md:grid-cols-4">
     @foreach($this->getStats() as $stat)
         <div class="relative overflow-hidden bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            {{-- Üst Kısım --}}
+            {{-- Top --}}
             <div class="p-5">
                 <div class="flex items-center">
                     <div class="inline-flex items-center justify-center p-3 rounded-full 
@@ -22,7 +22,6 @@
                 </div>
             </div>
 
-            {{-- Dekoratif Çizgi --}}
             <div class="absolute bottom-0 left-0 w-full h-1 
                 {{ match($stat['color']) {
                     'success' => 'bg-green-500',

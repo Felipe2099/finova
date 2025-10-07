@@ -9,30 +9,51 @@ use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\On;
 
+/**
+ * Commission Stats Widget
+ * 
+ * Widget to display commission statistics.
+ */
 class CommissionStats extends Widget
 {
     protected static string $view = 'livewire.commission.widgets.commission-stats';
 
     public $user;
 
+    /**
+     * Mount the component
+     * 
+     * @param $user User object
+     * @return void
+     */
     public function mount($user)
     {
         $this->user = $user;
     }
 
+    /**
+     * Refresh the component
+     * 
+     * @return void
+     */
     #[On('commission-stats-updated')]
     public function refresh(): void
     {
         $this->dispatch('refresh');
     }
 
+    /**
+     * Get the stats
+     * 
+     * @return array Stats array
+     */
     public function getStats(): array
     {
         $now = Carbon::now();
         $currentMonth = $now->format('Y-m');
         $lastMonth = $now->copy()->subMonth()->format('Y-m');
 
-        // Bu ay kazanılan komisyon - işlem tarihine göre
+        // This month earned commission - by transaction date
         $currentMonthCommission = Commission::query()
             ->where('user_id', $this->user->id)
             ->whereHas('transaction', function ($query) use ($now) {
@@ -41,17 +62,17 @@ class CommissionStats extends Widget
             })
             ->sum('commission_amount');
 
-        // Bu ay yapılan ödeme
+        // This month paid commission
         $currentMonthPayout = CommissionPayout::query()
             ->where('user_id', $this->user->id)
             ->whereYear('payment_date', $now->year)
             ->whereMonth('payment_date', $now->month)
             ->sum('amount');
 
-        // Bu ay kalan ödeme
+        // This month remaining commission
         $currentMonthRemaining = $currentMonthCommission - $currentMonthPayout;
 
-        // Geçen ay kazanılan komisyon - işlem tarihine göre
+        // Last month earned commission - by transaction date
         $lastMonthCommission = Commission::query()
             ->where('user_id', $this->user->id)
             ->whereHas('transaction', function ($query) use ($now) {
@@ -60,31 +81,31 @@ class CommissionStats extends Widget
             })
             ->sum('commission_amount');
 
-        // Geçen ay yapılan ödeme
+        // Last month paid commission
         $lastMonthPayout = CommissionPayout::query()
             ->where('user_id', $this->user->id)
             ->whereYear('payment_date', $now->copy()->subMonth()->year)
             ->whereMonth('payment_date', $now->copy()->subMonth()->month)
             ->sum('amount');
 
-        // Geçen ay kalan ödeme
+        // Last month remaining commission
         $lastMonthRemaining = $lastMonthCommission - $lastMonthPayout;
 
-        // Toplam kazanılan komisyon
+        // Total earned commission
         $totalCommission = Commission::query()
             ->where('user_id', $this->user->id)
             ->sum('commission_amount');
 
-        // Toplam yapılan ödeme
+        // Total paid commission
         $totalPayout = CommissionPayout::query()
             ->where('user_id', $this->user->id)
             ->sum('amount');
 
-        // Toplam kalan ödeme
+        // Total remaining commission
         $totalRemaining = $totalCommission - $totalPayout;
 
         return [
-            // Bu ay istatistikleri
+            // This month statistics
             [
                 'label' => 'Bu Ay Kazanılan',
                 'value' => number_format($currentMonthCommission, 2, ',', '.') . ' ₺',
@@ -104,7 +125,7 @@ class CommissionStats extends Widget
                 'color' => 'success'
             ],
             
-            // Geçen ay istatistikleri
+            // Last month statistics
             [
                 'label' => 'Geçen Ay Kazanılan',
                 'value' => number_format($lastMonthCommission, 2, ',', '.') . ' ₺',
@@ -124,7 +145,7 @@ class CommissionStats extends Widget
                 'color' => 'warning'
             ],
             
-            // Toplam istatistikler
+            // Total statistics
             [
                 'label' => 'Toplam Kazanılan',
                 'value' => number_format($totalCommission, 2, ',', '.') . ' ₺',

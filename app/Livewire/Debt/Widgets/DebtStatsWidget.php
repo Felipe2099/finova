@@ -11,31 +11,32 @@ use App\Services\Debt\Contracts\DebtServiceInterface;
 use App\Models\Transaction;
 
 /**
- * Borç/Alacak İstatistikleri Widget'ı
+ * Debt/Receivable Stats Widget
  * 
- * Bu widget, borç ve alacak istatistiklerini görüntüler.
- * Özellikler:
- * - Toplam borç tutarı
- * - Toplam alacak tutarı
- * - Geciken borç tutarı
- * - Geciken alacak tutarı
- * - Aylık tahsilat tutarı
- * - Otomatik durum güncelleme
+ * This widget displays debt and receivable statistics.
+ * Features:
+ * - Total debt amount
+ * - Total receivable amount
+ * - Overdue debt amount
+ * - Overdue receivable amount
+ * - Monthly collections amount
+ * - Automatic status updates
  * 
  * @package App\Livewire\Debt\Widgets
  */
+
 final class DebtStatsWidget extends BaseWidget
 {
-    /** @var string Widget görünüm dosyası */
+    /** @var string Widget view file */
     protected static string $view = 'livewire.debt.widgets.debt-stats-widget';
 
-    /** @var DebtServiceInterface Borç/alacak servisi */
+    /** @var DebtServiceInterface Debt/receivable service */
     private DebtServiceInterface $debtService;
 
     /**
-     * Widget başlatılırken borç/alacak servisini enjekte eder
+     * When the widget is booted, the debt/receivable service is injected
      * 
-     * @param DebtServiceInterface $debtService Borç/alacak servisi
+     * @param DebtServiceInterface $debtService Debt/receivable service
      * @return void
      */
     public function boot(DebtServiceInterface $debtService): void
@@ -44,9 +45,9 @@ final class DebtStatsWidget extends BaseWidget
     }
 
     /**
-     * Widget dinleyicilerini döndürür
+     * Widget listeners
      * 
-     * @return array Dinleyici olayları
+     * @return array Widget listeners
      */
     protected function getListeners(): array
     {
@@ -58,9 +59,9 @@ final class DebtStatsWidget extends BaseWidget
     }
 
     /**
-     * İstatistik verilerini döndürür
+     * Get statistics data
      * 
-     * @return array İstatistik verileri
+     * @return array Statistics data
      */
     public function getStats(): array
     {
@@ -111,9 +112,9 @@ final class DebtStatsWidget extends BaseWidget
     }
 
     /**
-     * Geciken borç tutarını hesaplar
+     * Get overdue debt amount
      * 
-     * @return float Geciken borç tutarı
+     * @return float Overdue debt amount
      */
     private function getOverduePayable(): float
     {
@@ -124,9 +125,9 @@ final class DebtStatsWidget extends BaseWidget
     }
     
     /**
-     * Geciken alacak tutarını hesaplar
+     * Get overdue receivable amount
      * 
-     * @return float Geciken alacak tutarı
+     * @return float Overdue receivable amount
      */
     private function getOverdueReceivable(): float
     {
@@ -137,9 +138,9 @@ final class DebtStatsWidget extends BaseWidget
     }
 
     /**
-     * Aylık tahsilat tutarını hesaplar
+     * Get current month collections amount
      * 
-     * @return float Aylık tahsilat tutarı
+     * @return float Current month collections amount
      */
     private function getCurrentMonthCollections(): float
     {
@@ -151,9 +152,9 @@ final class DebtStatsWidget extends BaseWidget
     }
 
     /**
-     * Toplam borç tutarını hesaplar
+     * Get total debt amount
      * 
-     * @return float Toplam borç tutarı
+     * @return float Total debt amount
      */
     private function getTotalDebts(): float
     {
@@ -163,9 +164,9 @@ final class DebtStatsWidget extends BaseWidget
     }
 
     /**
-     * Toplam alacak tutarını hesaplar
+     * Get total receivable amount
      * 
-     * @return float Toplam alacak tutarı
+     * @return float Total receivable amount
      */
     private function getTotalReceivables(): float
     {

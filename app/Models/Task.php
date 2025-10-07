@@ -10,18 +10,18 @@ use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
 /**
- * Görev modeli
+ * Task model
  * 
- * Proje yönetiminde kullanılan görevleri temsil eder.
- * Her görev bir görev listesine ait olup, öncelik ve son tarih bilgisi içerebilir.
- * Görevler sıralanabilir ve etiketlenebilir özelliktedir.
+ * Represents tasks used in project management.
+ * Each task belongs to a task list and can include priority and due date details.
+ * Tasks are sortable and can be labeled.
  */
 class Task extends Model implements Sortable
 {
     use HasFactory, SortableTrait;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -37,8 +37,8 @@ class Task extends Model implements Sortable
     ];
 
     /**
-     * Veri tipleri dönüşümleri
-     * 
+     * Attribute casts
+     *
      * @var array<string, string>
      */
     protected $casts = [
@@ -46,10 +46,11 @@ class Task extends Model implements Sortable
         'checklist' => 'array',
         'due_date' => 'datetime',
         'completed' => 'boolean',
+        'order' => 'integer',
     ];
 
     /**
-     * Sıralama ayarları
+     * Sorting configuration
      * 
      * @var array<string, mixed>
      */
@@ -59,7 +60,7 @@ class Task extends Model implements Sortable
     ];
 
     /**
-     * Görevin ait olduğu görev listesi
+     * The task list to which the task belongs.
      * 
      * @return BelongsTo
      */
@@ -69,7 +70,7 @@ class Task extends Model implements Sortable
     }
 
     /**
-     * Göreve atanan kullanıcı
+     * The user assigned to the task.
      * 
      * @return BelongsTo
      */
@@ -79,7 +80,7 @@ class Task extends Model implements Sortable
     }
 
     /**
-     * Göreve atanan etiketler
+     * Labels assigned to the task.
      * 
      * @return BelongsToMany
      */
@@ -89,7 +90,7 @@ class Task extends Model implements Sortable
     }
 
     /**
-     * Görev doğrulama kuralları
+     * Task validation rules.
      * 
      * @return array<string, array<string>>
      */

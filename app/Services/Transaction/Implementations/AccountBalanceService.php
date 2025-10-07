@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
- * Hesap bakiyesi servisi
+ * Account balance service
  * 
- * İşlemler sonrası hesap bakiyelerini günceller.
- * Gelir, gider, transfer ve taksitli ödeme işlemleri için bakiye güncellemelerini yapar.
+ * Updates account balances after transactions.
+ * Handles balance updates for income, expense, transfer, and installment transactions.
  */
 final class AccountBalanceService implements AccountBalanceServiceInterface
 {
@@ -28,11 +28,11 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Gelir işlemi için hesap bakiyesini günceller
+     * Update balance for an income transaction.
      * 
-     * Hedef hesabın bakiyesini artırır.
+     * Increases the destination account's balance.
      * 
-     * @param Transaction $transaction İşlenecek gelir işlemi
+     * @param Transaction $transaction Income transaction to process
      */
     public function updateForIncome(Transaction $transaction): void
     {
@@ -47,23 +47,23 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Gider işlemi için hesap bakiyesini günceller
+     * Update balance for an expense transaction.
      * 
-     * Kaynak hesabın bakiyesini azaltır.
-     * Kredi kartı işlemleri için özel mantık uygular.
+     * Decreases the source account's balance.
+     * Applies special logic for credit card transactions.
      * 
-     * @param Transaction $transaction İşlenecek gider işlemi
+     * @param Transaction $transaction Expense transaction to process
      */
     public function updateForExpense(Transaction $transaction): void
     {
         if ($transaction->sourceAccount) {
             $amount = 0.0;
-            // Kredi kartı ile ödeme yapılıyorsa borç artar
+            // If paid by credit card, the debt increases
             if ($transaction->sourceAccount->type === Account::TYPE_CREDIT_CARD) {
-                $amount = (float) $transaction->amount; // Borç artar (pozitif işaret)
+                $amount = (float) $transaction->amount; // Debt increases (positive)
             } else {
-                // Normal hesap ile ödeme yapılıyorsa bakiye azalır
-                $amount = -(float) $transaction->amount; // Bakiye azalır (eksi işaret)
+                // If paid by a normal account, the balance decreases
+                $amount = -(float) $transaction->amount; // Balance decreases (negative)
             }
 
             if ($amount != 0) {
@@ -78,12 +78,12 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Transfer işlemi için hesap bakiyelerini günceller
+     * Update balances for a transfer transaction.
      * 
-     * Kaynak hesabın bakiyesini azaltır ve hedef hesabın bakiyesini artırır.
-     * Farklı para birimleri arasında transfer yapılabilir.
+     * Decreases the source account and increases the destination account.
+     * Supports cross-currency transfers.
      * 
-     * @param Transaction $transaction İşlenecek transfer işlemi
+     * @param Transaction $transaction Transfer transaction to process
      */
     public function updateForTransfer(Transaction $transaction): void
     {
@@ -107,16 +107,16 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Taksitli ödeme işlemi için hesap bakiyesini günceller
+     * Update balance for an installment transaction.
      * 
-     * Hesap bakiyesini günceller (Mevcut implementasyon bakiyeyi azaltıyor).
+     * Updates the balance (current implementation decreases the balance).
      * 
-     * @param Transaction $transaction İşlenecek taksitli ödeme işlemi
+     * @param Transaction $transaction Installment transaction to process
      */
     public function updateForInstallment(Transaction $transaction): void
     {
         if ($transaction->sourceAccount) {
-             // Mevcut implementasyona göre bakiye azaltılır.
+            // According to the current implementation, the balance decreases.
             $this->updateBalance(
                 $transaction->sourceAccount,
                 -(float) $transaction->amount, 
@@ -127,18 +127,18 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Kredi Ödemesi işlemi için hesap bakiyesini günceller
-     * Kredi kartı ile ödeme yapılıyorsa borç artar.
+     * Update balance for a loan payment transaction.
+     * If paid via credit card, the debt increases.
      */
     public function updateForLoanPayment(Transaction $transaction): void
     {
         if ($transaction->sourceAccount) {
             $amount = 0.0;
-            // Kredi kartı ise BORÇ ARTAR (+ amount)
+            // If credit card, debt INCREASES (+ amount)
             if ($transaction->sourceAccount->type === Account::TYPE_CREDIT_CARD) {
                 $amount = (float) $transaction->amount;
             } else {
-                // Normal hesap ise BAKİYE AZALIR (- amount)
+                // If a normal account, balance DECREASES (- amount)
                 $amount = -(float) $transaction->amount;
             }
             if ($amount != 0) {
@@ -153,12 +153,12 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * İşlemi geri alır
+     * Revert a transaction.
      * 
-     * İşlem tipine göre hesap bakiyelerini eski haline getirir.
-     * Orijinal işlem detaylarını kullanarak geri alma işlemini yapar.
+     * Restores account balances based on the original transaction type.
+     * Uses original transaction details to perform the revert.
      * 
-     * @param Transaction $transaction Geri alınacak işlem
+     * @param Transaction $transaction Transaction to revert
      */
     public function revertTransaction(Transaction $transaction): void
     {
@@ -183,7 +183,7 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Gider işlemini geri alır
+     * Revert an expense transaction.
      *
      * @param int|null $oldSourceAccountId
      * @param float $originalAmount
@@ -196,11 +196,11 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
             $oldSourceAccount = Account::find($oldSourceAccountId);
             if ($oldSourceAccount) {
                 $revertAmount = 0.0;
-                // Kredi kartı işlemi ise borç azalt (negatif ekle)
+                // If a credit card transaction, decrease debt (negative)
                 if ($oldSourceAccount->type === Account::TYPE_CREDIT_CARD) {
                     $revertAmount = -$originalAmount; 
                 } else {
-                    // Normal hesap ise bakiye artır (pozitif ekle)
+                    // If a normal account, increase balance (positive)
                     $revertAmount = $originalAmount;
                 }
 
@@ -217,7 +217,7 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Gelir işlemini geri alır
+     * Revert an income transaction.
      *
      * @param int|null $oldDestinationAccountId
      * @param float $originalAmount
@@ -242,7 +242,7 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Transfer işlemini geri alır
+     * Revert a transfer transaction.
      *
      * @param int|null $oldSourceAccountId
      * @param int|null $oldDestinationAccountId
@@ -280,7 +280,7 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Taksit işlemini geri alır
+     * Revert an installment transaction.
      *
      * @param int|null $oldSourceAccountId
      * @param float $originalAmount
@@ -305,7 +305,7 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Abonelik işlemini geri alır (Gider gibi davranır)
+     * Revert a subscription transaction (behaves like an expense).
      *
      * @param int|null $oldSourceAccountId
      * @param float $originalAmount
@@ -318,7 +318,7 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Kredi ödemesi işlemini geri alır
+     * Revert a loan payment transaction.
      *
      * @param int|null $oldSourceAccountId
      * @param float $originalAmount
@@ -331,11 +331,11 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
             $oldSourceAccount = Account::find($oldSourceAccountId);
             if ($oldSourceAccount) {
                 $revertAmount = 0.0;
-                // Kredi kartı işlemi ise borç azalt (negatif ekle)
+                // If a credit card transaction, decrease debt (negative)
                 if ($oldSourceAccount->type === Account::TYPE_CREDIT_CARD) {
                     $revertAmount = -$originalAmount; 
                 } else {
-                    // Normal hesap ise bakiye artır (pozitif ekle)
+                    // If a normal account, increase balance (positive)
                     $revertAmount = $originalAmount;
                 }
 
@@ -352,12 +352,12 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Hesap bakiyesini günceller ve para birimi dönüşümünü yapar
+     * Update the account balance and perform currency conversion.
      *
-     * @param Account $account Güncellenecek hesap
-     * @param float $amount Eklenecek/Çıkarılacak tutar (işareti önemlidir)
-     * @param string $transactionCurrency İşlemin yapıldığı para birimi
-     * @param Carbon $date İşlem tarihi (kur dönüşümü için)
+     * @param Account $account Account to update
+     * @param float $amount Amount to add/subtract (sign matters)
+     * @param string $transactionCurrency Currency of the transaction
+     * @param Carbon $date Transaction date (for conversion)
      */
     private function updateBalance(Account $account, float $amount, string $transactionCurrency, Carbon $date): void
     {
@@ -367,11 +367,11 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
 
         $adjustmentAmount = 0.0;
 
-        // Hesap para birimi ile işlem para birimi aynıysa direkt amount kullan
+        // If account currency equals transaction currency, use the amount directly
         if ($account->currency === $transactionCurrency) {
             $adjustmentAmount = $amount;
         } else {
-            // Farklı para birimlerinde convert kullan (tutarın işareti korunur)
+            // Otherwise convert between currencies (preserving sign)
             $convertedAmount = $this->currencyService->convert(
                 $amount,
                 $transactionCurrency,
@@ -381,34 +381,34 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
             $adjustmentAmount = (float) $convertedAmount;
         }
 
-        // Bakiyeye ayarlama miktarını ekle/çıkar
+        // Apply the adjustment amount to the balance
         $account->balance += $adjustmentAmount;
 
-        // Bakiyeyi 2 ondalık basamağa yuvarla ve kaydet
+        // Round to 2 decimals and save
         $account->balance = round($account->balance, 2);
         $account->save();
     }
 
     /**
-     * Hesabın yeterli bakiyeye sahip olup olmadığını kontrol eder
+     * Check whether the account has enough balance.
      * 
-     * @param Account $account Kontrol edilecek hesap
-     * @param float $amount Gerekli tutar
-     * @param string $currency İşlem para birimi
-     * @return bool Yeterli bakiye varsa true
+     * @param Account $account Account to check
+     * @param float $amount Required amount
+     * @param string $currency Transaction currency
+     * @return bool True if there is sufficient balance
      */
     public function hasEnoughBalance(Account $account, float $amount, string $currency): bool
     {
-        // Hesap para birimi ile işlem para birimi aynıysa direkt karşılaştır
+        // If account currency equals transaction currency, compare directly
         if ($account->currency === $currency) {
             return $account->balance >= $amount;
         }
 
-        // Farklı para birimlerinde try_equivalent kullan
+        // For different currencies, convert to TRY for comparison
         $accountBalanceInTRY = $this->currencyService->convertToTRY($account->balance, $account->currency);
         $amountInTRY = $this->currencyService->convertToTRY($amount, $currency);
 
-        // Bakiyeleri 2 ondalık basamağa yuvarla
+        // Round both amounts to 2 decimals
         $accountBalanceInTRY = round($accountBalanceInTRY, 2);
         $amountInTRY = round($amountInTRY, 2);
 
@@ -416,20 +416,20 @@ final class AccountBalanceService implements AccountBalanceServiceInterface
     }
 
     /**
-     * Hesabın mevcut bakiyesini belirtilen para biriminde döndürür
+     * Get the account's current balance in the requested currency.
      * 
-     * @param Account $account Hesap
-     * @param string $currency İstenen para birimi
-     * @return float Hesap bakiyesi
+     * @param Account $account Account
+     * @param string $currency Desired currency
+     * @return float Account balance
      */
     public function getAvailableBalance(Account $account, string $currency): float
     {
-        // Hesap para birimi ile işlem para birimi aynıysa direkt bakiyeyi döndür
+        // If account currency equals transaction currency, return balance directly
         if ($account->currency === $currency) {
             return round($account->balance, 2);
         }
 
-        // Farklı para birimlerinde try_equivalent kullan
+        // For different currencies, convert to TRY
         $balanceInTRY = $this->currencyService->convertToTRY($account->balance, $account->currency);
         return round($balanceInTRY, 2);
     }

@@ -15,16 +15,16 @@ use App\Services\Supplier\Contracts\SupplierServiceInterface;
 use App\DTOs\Supplier\SupplierData;
 
 /**
- * Tedarikçi Yönetimi Bileşeni
+ * Supplier Manager Component
  * 
- * Bu bileşen, tedarikçilerin yönetimini sağlar.
- * Özellikler:
- * - Tedarikçi listesi görüntüleme
- * - Yeni tedarikçi oluşturma
- * - Tedarikçi düzenleme
- * - Tedarikçi silme
- * - Tedarikçi durumu takibi
- * - Tedarikçi filtreleme
+ * This component provides functionality to manage suppliers.
+ * Features:
+ * - Supplier list view
+ * - New supplier creation
+ * - Supplier editing
+ * - Supplier deletion
+ * - Supplier status tracking
+ * - Supplier filtering
  * 
  * @package App\Livewire\Supplier
  */
@@ -33,13 +33,13 @@ class SupplierManager extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
-    /** @var SupplierServiceInterface Tedarikçi servisi */
+    /** @var SupplierServiceInterface Supplier service */
     private SupplierServiceInterface $supplierService;
 
     /**
-     * Bileşen başlatılırken tedarikçi servisini enjekte eder
+     * When the component is booted, the supplier service is injected
      * 
-     * @param SupplierServiceInterface $supplierService Tedarikçi servisi
+     * @param SupplierServiceInterface $supplierService Supplier service
      * @return void
      */
     public function boot(SupplierServiceInterface $supplierService): void
@@ -48,10 +48,10 @@ class SupplierManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -120,9 +120,9 @@ class SupplierManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tedarikçi form yapılandırmasını oluşturur
+     * Creates the supplier form configuration
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getSupplierForm(): array
     {
@@ -155,7 +155,7 @@ class SupplierManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

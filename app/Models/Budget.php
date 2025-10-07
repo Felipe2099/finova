@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
- * Bütçe modeli
+ * Budget model
  * 
- * Kullanıcıların bütçe planlarını temsil eder.
- * Her bütçe bir kategoriye ait olup, belirli bir dönem için planlanır.
+ * Represents users' budget plans.
+ * Each budget belongs to a category and is planned for a specific period.
  */
 class Budget extends Model
 {
     use HasFactory, SoftDeletes;
     
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -35,7 +35,7 @@ class Budget extends Model
     ];
     
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -47,7 +47,7 @@ class Budget extends Model
     ];
     
     /**
-     * Bütçenin sahibi olan kullanıcı
+     * The user who owns the budget.
      * 
      * @return BelongsTo
      */
@@ -57,7 +57,7 @@ class Budget extends Model
     }
     
     /**
-     * Bütçenin ait olduğu kategori
+     * The category the budget belongs to.
      * 
      * @return BelongsTo
      */

@@ -1,18 +1,18 @@
     /**
-     * Kullanıcı mesajını analiz edip SQL sorgusu üretir
+     * Analyze user message and generate an SQL query if needed.
      */
     public function generateSqlQuery($user, string $message, array $databaseSchema): array
     {
-        // Token kullanımı için cache
+        // Cache for token usage
         $cacheKey = 'sql_query_' . md5($message . json_encode($databaseSchema));
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
         
-        // Şemayı okunaklı formata çevir
+        // Convert schema to a readable format
         $schemaDescription = $this->formatSchemaForPrompt($databaseSchema);
         
-        // Sistem prompt'u hazırla
+        // Prepare system prompt
         $systemPrompt = <<<EOT
 Sen bir veritabanı sorguları oluşturan AI asistanısın. Görevin, kullanıcının doğal dil sorgusunu analiz etmek ve eğer gerekiyorsa uygun bir SQL sorgusu oluşturmaktır. 
 Sadece SELECT sorgularını oluşturabilirsin.
@@ -37,26 +37,26 @@ Yanıtın şu formatta olmalıdır:
 }
 EOT;
 
-        // Mesajları hazırla
+        // Prepare messages
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
             ['role' => 'user', 'content' => $message]
         ];
         
         try {
-            // API'ye istek gönder
+            // Send request to API
             $response = $this->client->chat()->create([
                 'model' => $this->model,
                 'messages' => $messages,
-                'temperature' => 0.2, // Daha deterministik sonuçlar için düşük sıcaklık
-                'response_format' => ['type' => 'json_object'] // JSON formatında yanıt iste
+                'temperature' => 0.2, // Lower temperature for determinism
+                'response_format' => ['type' => 'json_object'] // Request JSON response
             ]);
             
-            // JSON yanıtı parse et
+            // Parse JSON response
             $content = $response->choices[0]->message->content;
             $result = json_decode($content, true);
             
-            // Eksik alanlar varsa doldur
+            // Fill missing fields if needed
             if (!isset($result['requires_sql'])) {
                 $result['requires_sql'] = false;
             }
@@ -69,7 +69,7 @@ EOT;
                 $result['explanation'] = 'Analiz sonucu bulunamadı.';
             }
             
-            // Sonucu cache'le (2 saat)
+            // Cache result (2 hours)
             Cache::put($cacheKey, $result, 7200);
             
             return $result;
@@ -80,7 +80,7 @@ EOT;
                 'message' => $message
             ]);
             
-            // Hata durumunda varsayılan yanıt
+            // Default response on error
             return [
                 'requires_sql' => false,
                 'query' => '',
@@ -90,20 +90,20 @@ EOT;
     }
     
     /**
-     * SQL sonuçlarını kullanarak yanıt oluşturur
+     * Create a response using SQL results.
      */
     public function queryWithSqlResults($user, string $message, string $sqlQuery, array $sqlResults, string $conversationId = null): string
     {
-        // Token kullanımı için cache
+        // Cache for token usage
         $cacheKey = 'sql_answer_' . md5($message . $sqlQuery . json_encode($sqlResults) . ($conversationId ?? ''));
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
         
-        // Sonuçları okunaklı formata çevir
+        // Convert results to a readable format
         $resultsText = $this->formatSqlResultsForPrompt($sqlResults);
         
-        // Sistem promptu hazırla
+        // Prepare system prompt
         $systemPrompt = <<<EOT
 Sen bir finansal veri analistine yardımcı olan AI asistanısın. Kullanıcının sorusuna yanıt vermek için bir SQL sorgusu çalıştırıldı.
 Görevin, SQL sorgu sonuçlarını inceleyerek ve kullanıcının orijinal sorusunu dikkate alarak anlamlı, açıklayıcı bir yanıt oluşturmaktır.
@@ -119,7 +119,7 @@ Kullanıcıya çıplak SQL sorgusu veya teknik jargon gösterme. Sonuçları anl
 Mevcut konuşma geçmişini ve kullanıcının ilgi alanlarını dikkate al. Yanıtın uzunluğu sorunun karmaşıklığına uygun olmalıdır.
 EOT;
 
-        // Mesajları hazırla
+        // Build messages
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
             ['role' => 'user', 'content' => $message],
@@ -128,16 +128,16 @@ EOT;
         ];
         
         try {
-            // API'ye istek gönder
+            // Send request to API
             $response = $this->client->chat()->create([
                 'model' => $this->model,
                 'messages' => $messages,
-                'temperature' => 0.7, // Daha yaratıcı açıklamalar için sıcaklığı arttır
+                'temperature' => 0.7, // Higher temperature for more creative explanations
             ]);
             
             $content = $response->choices[0]->message->content;
             
-            // Sonucu cache'le (2 saat)
+            // Cache result (2 hours)
             Cache::put($cacheKey, $content, 7200);
             
             return $content;
@@ -149,13 +149,13 @@ EOT;
                 'sql_query' => $sqlQuery
             ]);
             
-            // Hata durumunda varsayılan yanıt
+            // Default response on error
             return "Üzgünüm, veritabanı sonuçlarını analiz ederken bir hata oluştu. Lütfen daha sonra tekrar deneyin.";
         }
     }
     
     /**
-     * Veritabanı şemasını prompt için formatla
+     * Format the database schema for the prompt.
      */
     protected function formatSchemaForPrompt(array $schema): string
     {
@@ -191,7 +191,7 @@ EOT;
         
         $output = "";
         
-        // İlk 20 satır (veya daha az)
+        // First 20 rows (or less)
         $limit = min(count($results), 20);
         
         for ($i = 0; $i < $limit; $i++) {
@@ -199,11 +199,11 @@ EOT;
             $output .= "Satır " . ($i + 1) . ":\n";
             
             foreach ($row as $key => $value) {
-                // null değerler için özel işlem
+                // Special handling for null values
                 if ($value === null) {
                     $value = "NULL";
                 }
-                // Diziler ve nesneler için
+                // For arrays and objects
                 elseif (is_array($value) || is_object($value)) {
                     $value = json_encode($value);
                 }
@@ -214,7 +214,7 @@ EOT;
             $output .= "\n";
         }
         
-        // Eğer daha fazla sonuç varsa, bunu belirt
+        // If there are more results, indicate that
         if (count($results) > $limit) {
             $remaining = count($results) - $limit;
             $output .= "... ve {$remaining} satır daha (toplam " . count($results) . " satır)";

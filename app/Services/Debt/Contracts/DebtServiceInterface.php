@@ -8,58 +8,58 @@ use App\Models\Debt;
 use App\DTOs\Debt\DebtData;
 
 /**
- * Borç/Alacak servisi arayüzü
+ * Debt service interface
  * 
- * Borç ve alacak işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Borç/alacak kayıtlarının oluşturulması, güncellenmesi ve silinmesi işlemlerini yapar.
+ * Defines the methods required for managing debt operations.
+ * Handles debt creation, updating, deletion, and status updates.
  */
 interface DebtServiceInterface
 {
     /**
-     * Yeni bir borç/alacak kaydı oluşturur
+     * Create a new debt/credit record.
      * 
-     * @param DebtData $data Borç/Alacak verileri
-     * @return Debt Oluşturulan borç/alacak kaydı
+     * @param DebtData $data Debt/credit data
+     * @return Debt Created debt/credit record
      */
     public function create(DebtData $data): Debt;
 
     /**
-     * Mevcut bir borç/alacak kaydını günceller
+     * Update an existing debt/credit record.
      * 
-     * @param Debt $debt Güncellenecek borç/alacak kaydı
-     * @param DebtData $data Yeni borç/alacak verileri
-     * @return Debt Güncellenmiş borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to update
+     * @param DebtData $data New debt/credit data
+     * @return Debt Updated debt/credit record
      */
     public function update(Debt $debt, DebtData $data): Debt;
 
     /**
-     * Borç/Alacak kaydını siler
+     * Delete a debt/credit record.
      * 
-     * @param Debt $debt Silinecek borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to delete
      */
     public function delete(Debt $debt): void;
 
     /**
-     * Borç/Alacak kaydının durumunu günceller
+     * Update the status of a debt/credit record.
      * 
-     * @param Debt $debt Güncellenecek borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to update
      */
     public function updateStatus(Debt $debt): void;
 
     /**
-     * Borç/Alacak kayıtlarını sıralı şekilde getirir
+     * Get sorted debt/credit records.
      * 
-     * @param string $sortBy Sıralama alanı
-     * @param string $direction Sıralama yönü
-     * @return \Illuminate\Database\Eloquent\Collection Sıralanmış borç/alacak kayıtları
+     * @param string $sortBy Sorting field
+     * @param string $direction Sorting direction
+     * @return \Illuminate\Database\Eloquent\Collection Sorted debt/credit records
      */
     public function getSortedDebts(string $sortBy = 'due_date', string $direction = 'asc'): \Illuminate\Database\Eloquent\Collection;
 
     /*
-     * Borç/Alacak kaydına ödeme ekler
+     * Add a payment to a debt/credit record.
      * 
-     * @param Debt $debt Ödeme eklenecek borç/alacak kaydı
-     * @param array $data Ödeme verileri
+     * @param Debt $debt Debt/credit record to add payment to
+     * @param array $data Payment data
      */
     // public function addPayment(Debt $debt, array $data): void;
 }

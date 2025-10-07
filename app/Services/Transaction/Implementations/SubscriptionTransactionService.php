@@ -13,10 +13,10 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Abonelik işlemleri servisi
+ * Subscription transactions service
  * 
- * Abonelik işlemlerini yönetir.
- * Abonelik ödemelerini ve yenilemelerini takip eder.
+ * Manages subscription transactions.
+ * Tracks subscription payments and renewals.
  */
 final class SubscriptionTransactionService implements SubscriptionTransactionServiceInterface
 {
@@ -26,12 +26,12 @@ final class SubscriptionTransactionService implements SubscriptionTransactionSer
     }
 
     /**
-     * Yeni bir abonelik işlemi oluşturur
+     * Create a new subscription transaction.
      * 
-     * Abonelik işlemini kaydeder ve ilgili hesap bakiyesini günceller.
+     * Persists the subscription transaction and updates related account balance.
      * 
-     * @param TransactionData $data Abonelik işlemi verileri
-     * @return Transaction Oluşturulan abonelik işlemi
+     * @param TransactionData $data Subscription transaction data
+     * @return Transaction Created subscription transaction
      */
     public function create(TransactionData $data): Transaction
     {
@@ -48,12 +48,12 @@ final class SubscriptionTransactionService implements SubscriptionTransactionSer
     }
 
     /**
-     * Abonelikten yeni bir işlem oluşturur
+     * Create a new transaction from a subscription.
      * 
-     * Abonelik ödemesini işler ve bir sonraki ödeme tarihini günceller.
+     * Processes the subscription payment and updates the next payment date.
      * 
-     * @param Transaction $subscription Abonelik işlemi
-     * @return Transaction Oluşturulan yeni işlem
+     * @param Transaction $subscription Subscription transaction
+     * @return Transaction Newly created transaction
      */
     public function createFromSubscription(Transaction $subscription): Transaction
     {
@@ -79,7 +79,7 @@ final class SubscriptionTransactionService implements SubscriptionTransactionSer
 
             $newTransaction = Transaction::create($data->toArray());
             
-            // Bir sonraki ödeme tarihini güncelle
+            // Update next payment date
             $subscription->next_payment_date = $this->calculateNextPaymentDate($subscription);
             $subscription->save();
 
@@ -88,11 +88,11 @@ final class SubscriptionTransactionService implements SubscriptionTransactionSer
     }
 
     /**
-     * Aboneliği sonlandırır
+     * End the subscription.
      *
-     * İşlemin 'is_subscription' flag'ini false yapar.
+     * Sets the transaction's 'is_subscription' flag to false.
      *
-     * @param Transaction $subscription Sonlandırılacak abonelik
+     * @param Transaction $subscription Subscription to end
      */
     public function endSubscription(Transaction $subscription): void
     {
@@ -101,10 +101,10 @@ final class SubscriptionTransactionService implements SubscriptionTransactionSer
     }
 
     /**
-     * Aktif devamlı işlemleri getirir
+     * Get active recurring transactions.
      *
-     * 'is_subscription' true olan tüm işlemleri getirir,
-     * en yakın ödeme tarihine göre sıralar.
+     * Returns all transactions where 'is_subscription' is true,
+     * ordered by the next payment date.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -116,28 +116,28 @@ final class SubscriptionTransactionService implements SubscriptionTransactionSer
     }
 
     /**
-     * Bir sonraki ödeme tarihini hesaplar
+     * Calculate the next payment date.
      * 
-     * @param Transaction|TransactionData $transaction Abonelik işlemi
-     * @return Carbon Bir sonraki ödeme tarihi
+     * @param Transaction|TransactionData $transaction Subscription transaction
+     * @return Carbon Next payment date
      */
     public function calculateNextPaymentDate(Transaction|TransactionData $transaction): Carbon
     {
-        // Başlangıç tarihini belirle: Eğer Transaction modeli ise mevcut next_payment_date'i,
-        // yoksa işlem tarihini kullan. TransactionData ise onun tarihini kullan.
+        // Determine the base date: if a Transaction model, use its current next_payment_date
+        // or transaction date; if TransactionData, use its date.
         $currentDate = $transaction instanceof Transaction
             ? Carbon::parse($transaction->next_payment_date ?? $transaction->date)
             : Carbon::parse($transaction->date);
 
-        // Periyoda göre tarihi ileri al
+        // Advance the date based on the subscription period
         return match ($transaction->subscription_period) {
-            'daily' => $currentDate->addDay(), // Günlük eklendi
+            'daily' => $currentDate->addDay(), // Daily
             'weekly' => $currentDate->addWeek(),
-            'monthly' => $currentDate->addMonth(), // addMonth() kullanıldı
+            'monthly' => $currentDate->addMonth(), // addMonth() used
             'quarterly' => $currentDate->addMonths(3),
             'biannually' => $currentDate->addMonths(6),
-            'annually' => $currentDate->addYear(), // addYear() kullanıldı
-            default => $currentDate->addMonth(), // Varsayılan olarak 1 ay ekle (daha güvenli)
+            'annually' => $currentDate->addYear(), // addYear() used
+            default => $currentDate->addMonth(), // Default to 1 month (safer)
         };
     }
 } 

@@ -21,16 +21,16 @@ use Filament\Forms\Form;
 use Filament\Forms\Components\Actions\Action;
 
 /**
- * Rol Yönetimi Bileşeni
+ * Role Manager Component
  * 
- * Bu bileşen, kullanıcı rollerinin yönetimini sağlar.
- * Özellikler:
- * - Rol listesi görüntüleme
- * - Yeni rol oluşturma
- * - Rol düzenleme
- * - Rol silme
- * - İzin yönetimi
- * - Toplu işlem desteği
+ * This component provides functionality to manage roles.
+ * Features:
+ * - Role list view
+ * - New role creation
+ * - Role editing
+ * - Role deletion
+ * - Permission management
+ * - Bulk operation support
  * 
  * @package App\Livewire\Role
  */
@@ -39,13 +39,13 @@ class RoleManager extends Component implements Tables\Contracts\HasTable, Forms\
     use Tables\Concerns\InteractsWithTable;
     use Forms\Concerns\InteractsWithForms;
 
-    /** @var RoleServiceInterface Rol servisi */
+    /** @var RoleServiceInterface Role service */
     private RoleServiceInterface $roleService;
 
     /**
-     * Bileşen başlatılırken rol servisini enjekte eder
+     * When the component is booted, the role service is injected
      * 
-     * @param RoleServiceInterface $roleService Rol servisi
+     * @param RoleServiceInterface $roleService Role service
      * @return void
      */
     public function boot(RoleServiceInterface $roleService): void
@@ -55,7 +55,10 @@ class RoleManager extends Component implements Tables\Contracts\HasTable, Forms\
 
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
+     * 
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -145,7 +148,7 @@ class RoleManager extends Component implements Tables\Contracts\HasTable, Forms\
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('labels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('color', 7)->default('#000000'); // HEX renk kodu
+            $table->string('color', 7)->default('#000000');
             $table->timestamps();
         });
     }

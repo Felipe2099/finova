@@ -11,21 +11,34 @@ use Filament\Notifications\Notification;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 
+/**
+ * Telegram Settings Component
+ * 
+ * This component provides functionality to manage telegram settings.
+ * Features:
+ * - Telegram settings management
+ */
 final class TelegramSettings extends Component implements Forms\Contracts\HasForms
 {
     use Forms\Concerns\InteractsWithForms;
 
+    /** @var array Form data */
     public ?array $data = [];
 
+    /**
+     * When the component is mounted, the settings are loaded
+     * 
+     * @return void
+     */
     public function mount(): void
     {
         $settings = Setting::where('group', 'telegram')
                            ->pluck('value', 'key')
                            ->toArray();
 
-        // Varsayılan değeri ayarla (eğer veritabanında yoksa)
+        // Set default if not present in database
         if (!isset($settings['telegram_enabled'])) {
-             $settings['telegram_enabled'] = false; // Varsayılan olarak 'Hayır'
+             $settings['telegram_enabled'] = false; // Default to 'No'
         } else {
              $settings['telegram_enabled'] = filter_var($settings['telegram_enabled'], FILTER_VALIDATE_BOOLEAN);
         }
@@ -33,6 +46,12 @@ final class TelegramSettings extends Component implements Forms\Contracts\HasFor
         $this->form->fill(['data' => $settings]);
     }
 
+    /**
+     * Creates the form configuration
+     * 
+     * @param Forms\Form $form Form object
+     * @return Forms\Form Configured form
+     */
     public function form(Form $form): Form
     {
         return $form
@@ -54,7 +73,7 @@ final class TelegramSettings extends Component implements Forms\Contracts\HasFor
                             ->required(fn (Forms\Get $get): bool => (bool) $get('data.telegram_enabled'))
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('data.telegram_enabled')),
                         Forms\Components\TextInput::make('data.telegram_chat_id')
-                            ->label('Chat ID') // Etiket zaten Türkçeye yakın
+                            ->label('Chat ID') // Label is already near Turkish usage
                             ->required(fn (Forms\Get $get): bool => (bool) $get('data.telegram_enabled'))
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('data.telegram_enabled')),
                     ])->columns(1), // Tek sütunlu görünüm
@@ -62,11 +81,16 @@ final class TelegramSettings extends Component implements Forms\Contracts\HasFor
             ->statePath('data');
     }
 
+    /**
+     * Saves the form data
+     * 
+     * @return void
+     */
     public function save(): void
     {
         $data = $this->form->getState()['data'];
 
-        // Select'ten gelen 'telegram_enabled' değerini boolean'a çevir
+        // Convert 'telegram_enabled' from select to boolean
         if (isset($data['telegram_enabled'])) {
             $data['telegram_enabled'] = filter_var($data['telegram_enabled'], FILTER_VALIDATE_BOOLEAN);
         }
@@ -88,6 +112,11 @@ final class TelegramSettings extends Component implements Forms\Contracts\HasFor
             ->send();
     }
 
+    /**
+     * Renders the component view
+     * 
+     * @return \Illuminate\Contracts\View\View
+     */
     public function render(): View
     {
         return view('livewire.settings.generic-settings-view');

@@ -8,7 +8,7 @@
 >
     <div class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {{-- İletişim Bilgileri --}}
+            {{-- Contact Information --}}
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h3 class="text-base font-semibold mb-4">İletişim Bilgileri</h3>
                 <dl class="space-y-4">
@@ -33,7 +33,7 @@
                 </dl>
             </div>
 
-            {{-- Vergi Bilgileri --}}
+            {{-- Tax Information --}}
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h3 class="text-base font-semibold mb-4">Vergi Bilgileri</h3>
                 <dl class="space-y-4">
@@ -55,7 +55,7 @@
                 </dl>
             </div>
 
-            {{-- Diğer Bilgiler --}}
+            {{-- Other Information --}}
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h3 class="text-base font-semibold mb-4">Diğer Bilgiler</h3>
                 <dl class="space-y-4">
@@ -79,7 +79,7 @@
             </div>
         </div>
 
-        {{-- Sekmeler --}}
+        {{-- Tabs --}}
         <div class="bg-white rounded-lg shadow-sm" x-data="{ activeTab: 'notes' }">
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
@@ -127,7 +127,7 @@
                         </x-filament::button>
                     </div>
 
-                    {{-- Modal --}}
+                    {{-- Modal Note --}}
                     <div x-show="$wire.showNoteModal" 
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0"
@@ -213,7 +213,7 @@
                         </div>
                     </div>
 
-                    {{-- Notların listesi --}}
+                    {{-- Notes List --}}
                     <div class="space-y-4">
                         @forelse($customer->notes as $note)
                             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
@@ -345,7 +345,7 @@
                     </div>
                 </div>
 
-                {{-- Anlaşmalar Sekmesi --}}
+                {{-- Agreements Tab --}}
                 <div x-show="activeTab === 'agreements'" x-cloak>
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium">Anlaşmalar</h3>
@@ -354,7 +354,7 @@
                         </x-filament::button>
                     </div>
 
-                    {{-- Anlaşma Listesi --}}
+                    {{-- Agreements List --}}
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -434,7 +434,7 @@
                         </table>
                     </div>
 
-                    {{-- Anlaşma Ekleme/Düzenleme Modalı --}}
+                    {{-- Agreement Add/Edit Modal --}}
                     <div x-show="$wire.showAgreementModal" 
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0"
@@ -531,7 +531,7 @@
                     </div>
                 </div>
 
-                {{-- Hassas Bilgiler Sekmesi --}}
+                {{-- Sensitive Information Tab --}}
                 <div x-show="activeTab === 'credentials'" x-cloak>
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium">Hassas Bilgiler</h3>
@@ -540,7 +540,7 @@
                         </x-filament::button>
                     </div>
 
-                    {{-- Hassas Bilgiler Listesi --}}
+                    {{-- Sensitive Information List --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @forelse($customer->credentials()->latest()->get() as $credential)
                             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
@@ -573,7 +573,7 @@
                         @endforelse
                     </div>
 
-                    {{-- Hassas Bilgi Ekleme Modalı --}}
+                    {{-- Sensitive Information Add/Edit Modal --}}
                     <div x-show="$wire.showCredentialModal" 
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0"

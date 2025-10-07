@@ -7,7 +7,7 @@ yarn-error.log
 bootstrap/compiled.php
 app/storage/
 
-# Laravel 5 & Lumen specific
+# Laravel & Lumen specific
 public/storage
 public/hot
 
@@ -46,9 +46,6 @@ Thumbs.db
 *.swp
 *~
 
-# Documentation
-/docs/
-
 # New additions
 .env.backup
 docker-compose.override.yml
@@ -73,15 +70,5 @@ dev-debug.log
 *.sln
 *.sw?
 # OS specific
-# Task files
-tasks.json
-tasks/ 
-
-#scripts
-scripts/
-
 #docs
 docs/
-
-README-task-master.md
-CLAUDE.md

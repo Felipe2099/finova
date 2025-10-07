@@ -7,13 +7,26 @@ namespace App\Livewire\Settings;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 
+/**
+ * Settings Index Component
+ * 
+ * This component provides functionality to manage settings.
+ * Features:
+ * - Settings management
+ */
 final class SettingsIndex extends Component
 {
+    /** @var string Active tab */
     public string $activeTab = 'site'; // Varsayılan sekme
 
-    // Kullanıcının istediği yeni sekmeler
+    /** @var array Tabs */
     public array $tabs = [];
 
+    /**
+     * When the component is mounted, the settings are loaded
+     * 
+     * @return void
+     */
     public function mount()
     {
         $availableTabs = [
@@ -38,7 +51,12 @@ final class SettingsIndex extends Component
         }
     }
 
-    // Aktif sekmeyi değiştiren metot
+    /**
+     * Sets the active tab
+     * 
+     * @param string $tab Tab name
+     * @return void
+     */
     public function setActiveTab(string $tab): void
     {
         if (array_key_exists($tab, $this->tabs)) {
@@ -46,17 +64,26 @@ final class SettingsIndex extends Component
         }
     }
 
-    // İlgili Livewire bileşeninin adını döndürür
+    /**
+     * Gets the active component
+     * 
+     * @return string Active component name
+     */
     public function getActiveComponent(): string
     {
-        // Özel durum: 'telegram' için 'telegram-settings' bileşenini kullan
+        // Special case: use 'telegram-settings' component for 'telegram' tab
         if ($this->activeTab === 'telegram') {
             return 'settings.telegram-settings';
         }
-        // Diğerleri için standart formatı kullan ('site' -> 'site-settings', 'notification' -> 'notification-settings')
+        // For other tabs, use the standard format ('site' -> 'site-settings', 'notification' -> 'notification-settings')
         return 'settings.' . str_replace('_', '-', $this->activeTab) . '-settings';
     }
 
+    /**
+     * Renders the component view
+     * 
+     * @return \Illuminate\Contracts\View\View
+     */
     public function render(): View
     {
         return view('livewire.settings.index');

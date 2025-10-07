@@ -12,19 +12,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 /**
- * İşlem analiz servisi
+ * Transaction analytics service
  * 
- * İşlemlerin analizi ve raporlanması için gerekli metodları içerir.
- * Gelir-gider özetleri, nakit akışı, kategori bazlı harcamalar ve diğer analizleri sağlar.
+ * Contains methods for analyzing and reporting transactions.
+ * Provides income-expense summaries, cash flow, spending by category, and other analyses.
  */
 class TransactionAnalyticsService
 {
     /**
-     * Belirli bir dönem için gelir-gider özetini getirir
+     * Get the income-expense summary for a specific period.
      * 
-     * @param string $period Dönem tipi (day, week, month, quarter, year)
-     * @param Carbon|null $date Referans tarih
-     * @return array Gelir-gider özeti ve değişim yüzdeleri
+     * @param string $period Period type (day, week, month, quarter, year)
+     * @param Carbon|null $date Reference date
+     * @return array Income-expense summary and change percentages
      */
     public function getSummary(string $period = 'month', ?Carbon $date = null): array
     {
@@ -79,12 +79,12 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir ay için aylık bakiye bilgilerini getirir
+     * Get the monthly balance information for a specific month.
      * 
-     * @param int $year Yıl
-     * @param int $month Ay
-     * @param int|null $userId Kullanıcı ID'si
-     * @return array Aylık gelir, gider ve transfer bilgileri
+     * @param int $year Year
+     * @param int $month Month
+     * @param int|null $userId User ID
+     * @return array Monthly income, expenses and transfer information
      */
     public function getMonthlyBalance(int $year, int $month, ?int $userId = null): array
     {
@@ -118,12 +118,12 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir dönem için nakit akışı verilerini getirir
+     * Get the cash flow data for a specific period.
      * 
-     * @param int|null $userId Kullanıcı ID'si
-     * @param Carbon|null $startDate Başlangıç tarihi
-     * @param Carbon|null $endDate Bitiş tarihi
-     * @return array Aylık nakit akışı verileri
+     * @param int|null $userId User ID
+     * @param Carbon|null $startDate Start date
+     * @param Carbon|null $endDate End date
+     * @return array Monthly cash flow data
      */
     public function getCashFlow(?int $userId = null, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
@@ -163,11 +163,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir tarih aralığı için işlem toplamlarını getirir
+     * Get the transaction totals for a specific date range.
      * 
-     * @param Carbon $startDate Başlangıç tarihi
-     * @param Carbon $endDate Bitiş tarihi
-     * @return array İşlem tiplerine göre toplamlar
+     * @param Carbon $startDate Start date
+     * @param Carbon $endDate End date
+     * @return array Transaction totals by type
      */
     private function getTransactionTotals(Carbon $startDate, Carbon $endDate): array
     {
@@ -182,11 +182,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * İki değer arasındaki yüzdelik değişimi hesaplar
+     * Calculate the percentage change between two values.
      * 
-     * @param float $oldValue Eski değer
-     * @param float $newValue Yeni değer
-     * @return float Yüzdelik değişim
+     * @param float $oldValue Old value
+     * @param float $newValue New value
+     * @return float Percentage change
      */
     private function calculatePercentageChange(float $oldValue, float $newValue): float
     {
@@ -198,11 +198,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir dönem için başlangıç tarihini hesaplar
+     * Calculate the start date for a specific period.
      * 
-     * @param Carbon $date Referans tarih
-     * @param string $period Dönem tipi
-     * @return Carbon Başlangıç tarihi
+     * @param Carbon $date Reference date
+     * @param string $period Period type
+     * @return Carbon Start date
      */
     private function getPeriodStartDate(Carbon $date, string $period): Carbon
     {
@@ -223,11 +223,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir dönem için bitiş tarihini hesaplar
+     * Calculate the end date for a specific period.
      * 
-     * @param Carbon $date Referans tarih
-     * @param string $period Dönem tipi
-     * @return Carbon Bitiş tarihi
+     * @param Carbon $date Reference date
+     * @param string $period Period type
+     * @return Carbon End date
      */
     private function getPeriodEndDate(Carbon $date, string $period): Carbon
     {
@@ -248,11 +248,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Önceki dönemin başlangıç tarihini hesaplar
+     * Calculate the start date for the previous period.
      * 
-     * @param Carbon $date Referans tarih
-     * @param string $period Dönem tipi
-     * @return Carbon Önceki dönem başlangıç tarihi
+     * @param Carbon $date Reference date
+     * @param string $period Period type
+     * @return Carbon Previous period start date
      */
     private function getPreviousPeriodStartDate(Carbon $date, string $period): Carbon
     {
@@ -273,11 +273,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Önceki dönemin bitiş tarihini hesaplar
+     * Calculate the end date for the previous period.
      * 
-     * @param Carbon $date Referans tarih
-     * @param string $period Dönem tipi
-     * @return Carbon Önceki dönem bitiş tarihi
+     * @param Carbon $date Reference date
+     * @param string $period Period type
+     * @return Carbon Previous period end date
      */
     private function getPreviousPeriodEndDate(Carbon $date, string $period): Carbon
     {
@@ -298,11 +298,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir dönem için kategori bazlı harcamaları getirir
+     * Get the spending by category for a specific period.
      * 
-     * @param string $period Dönem tipi
-     * @param Carbon|null $date Referans tarih
-     * @return Collection Kategori bazlı harcama verileri
+     * @param string $period Period type
+     * @param Carbon|null $date Reference date
+     * @return Collection Spending by category data
      */
     public function getSpendingByCategory(string $period = 'month', ?Carbon $date = null): Collection
     {
@@ -326,11 +326,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir dönem için kategori bazlı gelirleri getirir
+     * Get the income by category for a specific period.
      * 
-     * @param string $period Dönem tipi
-     * @param Carbon|null $date Referans tarih
-     * @return Collection Kategori bazlı gelir verileri
+     * @param string $period Period type
+     * @param Carbon|null $date Reference date
+     * @return Collection Income by category data
      */
     public function getIncomeByCategory(string $period = 'month', ?Carbon $date = null): Collection
     {
@@ -354,12 +354,12 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Etiket bazlı harcama raporunu getirir
+     * Get the spending by tags for a specific period.
      * 
-     * @param array $tags Etiketler
-     * @param string $period Dönem tipi
-     * @param Carbon|null $date Referans tarih
-     * @return Collection Etiket bazlı harcama verileri
+     * @param array $tags Tags
+     * @param string $period Period type
+     * @param Carbon|null $date Reference date
+     * @return Collection Spending by tags data
      */
     public function getSpendingByTags(array $tags, string $period = 'month', ?Carbon $date = null): Collection
     {
@@ -383,10 +383,10 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Bir yıl boyunca aylık işlem trendlerini getirir
+     * Get the monthly trends for a specific year.
      * 
-     * @param int|null $year Yıl
-     * @return array Aylık gelir-gider trendleri
+     * @param int|null $year Year
+     * @return array Monthly income-expense trends
      */
     public function getMonthlyTrends(int $year = null): array
     {
@@ -414,10 +414,10 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Tüm hesaplar için hesap bazlı aktivite bilgilerini getirir
+     * Get the account activity for all accounts.
      * 
-     * @param string $period Dönem tipi
-     * @return Collection Hesap bazlı aktivite verileri
+     * @param string $period Period type
+     * @return Collection Account activity data
      */
     public function getAccountActivity(string $period = 'month'): Collection
     {
@@ -447,11 +447,11 @@ class TransactionAnalyticsService
     }
     
     /**
-     * Belirli bir hesap için bakiye geçmişini getirir
+     * Get the balance history for a specific account.
      * 
-     * @param int $accountId Hesap ID'si
-     * @param int $months Ay sayısı
-     * @return array Günlük bakiye geçmişi
+     * @param int $accountId Account ID
+     * @param int $months Month count
+     * @return array Daily balance history
      */
     public function getAccountBalanceHistory(int $accountId, int $months = 6): array
     {
@@ -460,7 +460,7 @@ class TransactionAnalyticsService
         
         $account = BankAccount::findOrFail($accountId);
         
-        // Get all transactions affecting this account
+        // Get all transactions affecting this account (income, expense, transfer)
         $incomeTransactions = Transaction::join('income_transactions', 'transactions.id', '=', 'income_transactions.transaction_id')
             ->where('income_transactions.bank_account_id', $accountId)
             ->whereBetween('transactions.date', [$startDate, $endDate])

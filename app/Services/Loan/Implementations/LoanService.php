@@ -15,17 +15,17 @@ use App\Services\Payment\Implementations\PaymentService;
 use App\Enums\PaymentMethodEnum;
 
 /**
- * Kredi servisi implementasyonu
+ * Loan service implementation
  * 
- * Kredi işlemlerinin yönetimi için gerekli metodları içerir.
- * Kredi kayıtlarının oluşturulması, güncellenmesi, silinmesi ve ödeme işlemlerini gerçekleştirir.
+ * Contains methods required to manage loan operations.
+ * Handles creating, updating, deleting, and processing payments for loan records.
  */
 final class LoanService implements LoanServiceInterface
 {
     private PaymentService $paymentService;
 
     /**
-     * @param PaymentService $paymentService Ödeme servisi
+     * @param PaymentService $paymentService Payment service
      */
     public function __construct(PaymentService $paymentService)
     {
@@ -33,10 +33,10 @@ final class LoanService implements LoanServiceInterface
     }
 
     /**
-     * Yeni bir kredi kaydı oluşturur
+     * Create a new loan record.
      * 
-     * @param array $data Kredi verileri
-     * @return Loan Oluşturulan kredi kaydı
+     * @param array $data Loan data
+     * @return Loan Created loan record
      */
     public function createLoan(array $data): Loan
     {
@@ -67,11 +67,11 @@ final class LoanService implements LoanServiceInterface
     }
 
     /**
-     * Mevcut bir kredi kaydını günceller
+     * Update an existing loan record.
      * 
-     * @param Loan $loan Güncellenecek kredi kaydı
-     * @param LoanData $data Yeni kredi verileri
-     * @return Loan Güncellenmiş kredi kaydı
+     * @param Loan $loan Loan record to update
+     * @param LoanData $data New loan data
+     * @return Loan Updated loan record
      */
     public function update(Loan $loan, LoanData $data): Loan
     {
@@ -101,10 +101,10 @@ final class LoanService implements LoanServiceInterface
     }
 
     /**
-     * Kredi kaydına ödeme ekler
+     * Add a payment to a loan record.
      * 
-     * @param Loan $loan Ödeme eklenecek kredi kaydı
-     * @param array $data Ödeme verileri
+     * @param Loan $loan Loan record to add payment to
+     * @param array $data Payment data
      */
     public function addPayment(Loan $loan, array $data): void
     {
@@ -112,34 +112,34 @@ final class LoanService implements LoanServiceInterface
             throw new \Exception('Ödeme tutarı gereklidir ve geçerli bir sayı olmalıdır.');
         }
         
-        // Kredi tamamen ödenmiş mi kontrol et
+        // Check if the loan is fully paid
         if ($loan->status === 'paid' || $loan->remaining_installments <= 0) {
             throw new \Exception('Bu kredi zaten tamamen ödenmiş durumda.');
         }
         
-        // Taksit numarasını belirle
+        // Determine the installment number
         $installmentNumber = $loan->installments - $loan->remaining_installments + 1;
         
-        // Kredi türünü Türkçeleştir
+        // Translate the loan type
         $loanTypeText = $loan->loan_type === 'business' ? 'Ticari' : 'Bireysel';
         
-        // Açıklama oluştur
+        // Create description
         $data['description'] = $loan->bank_name . " " . $loanTypeText . " Kredi Ödemesi - Taksit " . $installmentNumber . "/" . $loan->installments;
         $data['installment_number'] = $installmentNumber;
         
-        // Ödeme yöntemine göre işlem yap
+        // Process payment based on payment method
         if (in_array($data['payment_method'], [PaymentMethodEnum::BANK->value, PaymentMethodEnum::CREDIT_CARD->value]) && empty($data['account_id'])) {
             $accountType = $data['payment_method'] === PaymentMethodEnum::BANK->value ? 'Banka hesabı' : 'Kredi kartı';
             throw new \Exception($accountType . ' seçilmelidir.');
         }
         
-        // Ödeme işlemini gerçekleştir
+        // Process payment
         $transaction = Transaction::create([
             'user_id' => $loan->user_id,
             'amount' => $data['amount'],
             'type' => 'loan_payment',
-            'currency' => 'TRY', // Kredi ödemeleri sadece TL
-            'try_equivalent' => $data['amount'], // TRY para birimi kullanıldığından amount ile aynı
+            'currency' => 'TRY', // Loan payments are only in TRY
+            'try_equivalent' => $data['amount'], 
             'description' => $data['description'],
             'date' => $data['payment_date'] ?? now()->format('Y-m-d'),
             'transaction_date' => $data['payment_date'] ?? now()->format('Y-m-d'),
@@ -150,34 +150,34 @@ final class LoanService implements LoanServiceInterface
             'related_type' => Loan::class,
         ]);
         
-        // Hesap bakiyesini güncelle
+        // Update account balance
         if (!empty($data['account_id'])) {
             $account = Account::findOrFail($data['account_id']);
             
-            // Ödeme yöntemine göre bakiyeyi güncelle
+            // Update account balance based on payment method
             if ($account->type === Account::TYPE_CREDIT_CARD) {
-                // Kredi kartı ile ödeme yapılıyorsa borç artar (bakiye artar, positive amount)
+                // If payment is made with credit card, the debt increases (balance increases, positive amount)
                 $account->balance += (float)$data['amount'];
             } else {
-                // Normal banka hesabı ise bakiye azalır (negative amount)
+                // If payment is made with bank account, the balance decreases (negative amount)
                 $account->balance -= (float)$data['amount'];
             }
             
             $account->save();
         }
         
-        // Kalan taksit sayısını güncelle
+        // Update remaining installments
         $loan->remaining_installments -= 1;
         
-        // Sonraki ödeme tarihini güncelle
+        // Update next payment date
         if ($loan->remaining_installments > 0) {
             $loan->next_payment_date = Carbon::parse($loan->next_payment_date)->addMonth()->format('Y-m-d');
         }
         
-        // Kalan tutarı güncelle
+        // Update remaining amount
         $loan->remaining_amount = $loan->monthly_payment * $loan->remaining_installments;
         
-        // Kredi durumunu güncelle
+        // Update loan status
         if ($loan->remaining_installments <= 0) {
             $loan->status = 'paid';
             $loan->remaining_amount = 0;
@@ -189,16 +189,16 @@ final class LoanService implements LoanServiceInterface
     }
 
     /**
-     * Kredi kaydını siler
+     * Delete a loan record.
      * 
-     * @param Loan $loan Silinecek kredi kaydı
-     * @return array İşlem sonucu ve mesaj
+     * @param Loan $loan Loan record to delete
+     * @return array Result and message
      */
     public function delete(Loan $loan): array
     {
         try {
             DB::transaction(function () use ($loan) {
-                // İlişkili işlemleri manuel olarak bul ve sil
+                // Find and delete associated transactions manually
                 $transactions = Transaction::where('description', 'like', '%Kredi Ödemesi%')
                     ->where(function ($query) use ($loan) {
                         $query->where('description', 'like', '%' . $loan->bank_name . '%')
@@ -211,7 +211,7 @@ final class LoanService implements LoanServiceInterface
                     $transaction->delete();
                 }
                 
-                // Krediyi sil
+                // Delete loan
                 $loan->delete();
             });
             
@@ -220,7 +220,7 @@ final class LoanService implements LoanServiceInterface
                 'message' => 'Kredi başarıyla silindi.'
             ];
         } catch (\Exception $e) {
-            // Ödeme yapılmış krediler silinemez, bilgilendirme mesajı döndür
+            // Paid loans cannot be deleted, return a notification message
             return [
                 'success' => false,
                 'message' => 'Ödeme yapılmış krediler silinemez. Lütfen önce ödemeleri silin.'
@@ -229,10 +229,10 @@ final class LoanService implements LoanServiceInterface
     }
 
     /**
-     * Kalan tutarı hesaplar
+     * Calculate remaining amount.
      * 
-     * @param Loan $loan Hesaplanacak kredi kaydı
-     * @return float Kalan tutar
+     * @param Loan $loan Loan record to calculate remaining amount
+     * @return float Remaining amount
      */
     private function calculateRemainingAmount(Loan $loan): float
     {
@@ -240,10 +240,10 @@ final class LoanService implements LoanServiceInterface
     }
     
     /**
-     * Durum metnini getirir
+     * Get status text.
      * 
-     * @param string $status Durum kodu
-     * @return string Durum metni
+     * @param string $status Status code
+     * @return string Status text
      */
     private function getStatusText(string $status): string
     {

@@ -15,16 +15,16 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Notifications\Notification;
 
 /**
- * Kategori Yönetimi Bileşeni
+ * Category Management Component
  * 
- * Bu bileşen, gelir ve gider kategorilerinin yönetimini sağlar.
- * Özellikler:
- * - Kategori listesi görüntüleme
- * - Yeni kategori ekleme
- * - Kategori düzenleme
- * - Kategori silme
- * - Kategori filtreleme (gelir/gider)
- * - Kategori durumu yönetimi
+ * This component manages the categories of income and expense.
+ * Features:
+ * - Category list view
+ * - Create new category
+ * - Edit category
+ * - Delete category
+ * - Category filtering (income/expense)
+ * - Category status management
  * 
  * @package App\Livewire\Categories
  */
@@ -34,10 +34,10 @@ final class CategoryManager extends Component implements HasForms, HasTable
     use InteractsWithTable;
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -151,7 +151,7 @@ final class CategoryManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

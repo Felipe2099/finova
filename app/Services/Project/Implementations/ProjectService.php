@@ -15,18 +15,18 @@ use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 
 /**
- * Proje servisi implementasyonu
+ * Project service implementation
  * 
- * Proje yönetimi için gerekli metodları içerir.
- * Projelerin, boardların, görev listelerinin ve görevlerin yönetimini gerçekleştirir.
+ * Contains methods required to manage project operations.
+ * Handles creating, updating, and deleting projects, boards, task lists, and tasks.
  */
 final class ProjectService implements ProjectServiceInterface
 {
     /**
-     * Yeni bir proje oluşturur
+     * Create a new project.
      * 
-     * @param ProjectData $data Proje verileri
-     * @return Project Oluşturulan proje
+     * @param ProjectData $data Project data
+     * @return Project Created project
      */
     public function create(ProjectData $data): Project
     {
@@ -36,11 +36,11 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Mevcut bir projeyi günceller
+     * Update an existing project.
      * 
-     * @param Project $project Güncellenecek proje
-     * @param ProjectData $data Güncellenecek veriler
-     * @return Project Güncellenmiş proje
+     * @param Project $project Project to update
+     * @param ProjectData $data New project data
+     * @return Project Updated project
      */
     public function update(Project $project, ProjectData $data): Project
     {
@@ -55,9 +55,9 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Bir projeyi siler
+     * Delete a project.
      * 
-     * @param Project $project Silinecek proje
+     * @param Project $project Project to delete
      */
     public function delete(Project $project): void
     {
@@ -67,10 +67,10 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Yeni bir board oluşturur
+     * Create a new board.
      * 
-     * @param BoardData $data Board verileri
-     * @return Board Oluşturulan board
+     * @param BoardData $data Board data
+     * @return Board Created board
      */
     public function createBoard(BoardData $data): Board
     {
@@ -80,10 +80,10 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Projenin varsayılan boardunu getirir veya oluşturur
+     * Get the default board of a project or create it if it doesn't exist.
      * 
-     * @param Project $project Proje
-     * @return Board Varsayılan board
+     * @param Project $project Project
+     * @return Board Default board
      */
     public function getOrCreateDefaultBoard(Project $project): Board
     {
@@ -94,11 +94,11 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Yeni bir görev listesi oluşturur
+     * Create a new task list.
      * 
      * @param Board $board Board
-     * @param array $data Görev listesi verileri
-     * @return TaskList Oluşturulan görev listesi
+     * @param array $data Task list data
+     * @return TaskList Created task list
      */
     public function createTaskList(Board $board, array $data): TaskList
     {
@@ -113,11 +113,11 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Mevcut bir görev listesini günceller
+     * Update an existing task list.
      * 
-     * @param TaskList $list Güncellenecek görev listesi
-     * @param array $data Güncellenecek veriler
-     * @return TaskList Güncellenmiş görev listesi
+     * @param TaskList $list Task list to update
+     * @param array $data New task list data
+     * @return TaskList Updated task list
      */
     public function updateTaskList(TaskList $list, array $data): TaskList
     {
@@ -130,9 +130,9 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Görev listelerinin sırasını günceller
+     * Update the order of task lists.
      * 
-     * @param array $lists Sıralanacak görev listeleri
+     * @param array $lists Task lists to update
      */
     public function reorderTaskLists(array $lists): void
     {
@@ -149,11 +149,11 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Yeni bir görev oluşturur
+     * Create a new task.
      * 
-     * @param TaskList $list Görev listesi
-     * @param array $data Görev verileri
-     * @return Task Oluşturulan görev
+     * @param TaskList $list Task list
+     * @param array $data Task data
+     * @return Task Created task
      */
     public function createTask(TaskList $list, array $data): Task
     {
@@ -174,11 +174,11 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Mevcut bir görevi günceller
+     * Update an existing task.
      * 
-     * @param Task $task Güncellenecek görev
-     * @param array $data Güncellenecek veriler
-     * @return Task Güncellenmiş görev
+     * @param Task $task Task to update
+     * @param array $data New task data
+     * @return Task Updated task
      */
     public function updateTask(Task $task, array $data): Task
     {
@@ -195,9 +195,9 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Bir görevi siler
+     * Delete a task.
      * 
-     * @param Task $task Silinecek görev
+     * @param Task $task Task to delete
      */
     public function deleteTask(Task $task): void
     {
@@ -207,10 +207,10 @@ final class ProjectService implements ProjectServiceInterface
     }
 
     /**
-     * Görevlerin sırasını günceller
+     * Update the order of tasks.
      * 
-     * @param array $tasks Sıralanacak görevler
-     * @param string|null $targetListId Hedef liste ID'si
+     * @param array $tasks Tasks to update
+     * @param string|null $targetListId Target list ID
      */
     public function reorderTasks(array $tasks, ?string $targetListId = null): void
     {

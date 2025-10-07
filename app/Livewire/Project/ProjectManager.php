@@ -15,17 +15,17 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 
 /**
- * Proje Yönetimi Bileşeni
+ * Project Manager Component
  * 
- * Bu bileşen, projelerin yönetimini sağlar.
- * Özellikler:
- * - Proje listesi görüntüleme
- * - Yeni proje oluşturma
- * - Proje düzenleme
- * - Proje silme
- * - Proje durumu takibi
- * - Proje filtreleme
- * - Proje panosu yönetimi
+ * This component provides functionality to manage projects.
+ * Features:
+ * - Project list view
+ * - New project creation
+ * - Project editing
+ * - Project deletion
+ * - Project status tracking
+ * - Project filtering
+ * - Project board management   
  * 
  * @package App\Livewire\Project
  */
@@ -34,13 +34,13 @@ class ProjectManager extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
-    /** @var ProjectServiceInterface Proje servisi */
+    /** @var ProjectServiceInterface Project service */
     private ProjectServiceInterface $projectService;
 
     /**
-     * Bileşen başlatılırken proje servisini enjekte eder
+     * When the component is booted, the project service is injected
      * 
-     * @param ProjectServiceInterface $projectService Proje servisi
+     * @param ProjectServiceInterface $projectService Project service
      * @return void
      */
     public function boot(ProjectServiceInterface $projectService): void 
@@ -49,10 +49,10 @@ class ProjectManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -160,7 +160,7 @@ class ProjectManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

@@ -20,7 +20,7 @@
     @if (auth()->user()->hasRole('admin'))
         {{-- Admin Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {{-- Toplam Lead Widget --}}
+            {{-- Total Lead Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            {{-- Potansiyel Lead Widget --}}
+            {{-- Potential Lead Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
@@ -54,7 +54,7 @@
                 </div>
             </div>
 
-            {{-- Görüşülen Lead Widget --}}
+            {{-- Negotiated Lead Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
@@ -71,7 +71,7 @@
                 </div>
             </div>
 
-            {{-- Toplam Komisyon Widget --}}
+            {{-- Total Commission Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
@@ -88,7 +88,7 @@
                 </div>
             </div>
 
-            {{-- Yapılan Ödeme Widget --}}
+            {{-- Paid Commission Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
@@ -105,7 +105,7 @@
                 </div>
             </div>
 
-            {{-- Bekleyen Ödeme Widget --}}
+            {{-- Pending Commission Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center">
@@ -123,9 +123,9 @@
             </div>
         </div>
 
-        {{-- Grafikler --}}
+        {{-- Charts --}}
         <div id="dashboard-charts" class="grid grid-cols-1 lg:grid-cols-2 gap-6" wire:ignore>
-            {{-- Gelir/Gider Grafiği --}}
+            {{-- Income/Expense Chart --}}
             <div class="bg-white rounded-xl shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Gelir/Gider Analizi</h3>
                 <div class="relative h-[300px]">
@@ -133,7 +133,7 @@
                 </div>
             </div>
 
-            {{-- Müşteri Büyüme Grafiği --}}
+            {{-- Customer Growth Chart --}}
             <div class="bg-white rounded-xl shadow-sm p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Müşteri Büyüme Analizi</h3>
                 <div class="relative h-[300px]">
@@ -143,9 +143,9 @@
         </div>
 
     @else
-        {{-- Çalışan Dashboard --}}
+        {{-- Employee Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {{-- Bekleyen Aktiviteler Widget --}}
+            {{-- Pending Activities Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center">
                     <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-4">
@@ -160,7 +160,7 @@
                 </div>
             </div>
 
-            {{-- Bu Ay Kazanılan Komisyon Widget --}}
+            {{-- Earned Commission Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center">
                     <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mr-4">
@@ -175,7 +175,7 @@
                 </div>
             </div>
 
-            {{-- Bu Ay Ödenen Komisyon Widget --}}
+            {{-- Paid Commission Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center">
                     <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mr-4">
@@ -190,7 +190,7 @@
                 </div>
             </div>
 
-            {{-- Toplam Komisyon Widget --}}
+            {{-- Total Commission Widget --}}
             <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
                 <div class="flex items-center">
                     <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center mr-4">
@@ -206,7 +206,7 @@
             </div>
         </div>
 
-        {{-- Son Notlar --}}
+        {{-- Last Notes --}}
         <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Son Notlar</h3>
             <div class="space-y-4">
@@ -271,7 +271,7 @@
         </div>
 
         @if(auth()->user()->has_commission)
-        {{-- Komisyon Grafiği --}}
+        {{-- Commission Chart --}}
         <div class="bg-white rounded-xl shadow-sm p-6" wire:ignore>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Komisyon Analizi</h3>
             <div class="relative h-[300px]">
@@ -284,7 +284,7 @@
 
 @push('scripts')
 <script>
-    // Chart.js'in yüklenmesini bekle
+    // Wait for Chart.js to load
     function waitForChart(callback, maxAttempts = 10) {
         let attempts = 0;
         const checkChart = setInterval(() => {
@@ -299,7 +299,7 @@
         }, 100);
     }
 
-    // Grafik değişkenlerini global scope'ta tanımla
+    // Define chart variables in global scope
     window.dashboardCharts = {
         incomeExpense: null,
         customerGrowth: null,
@@ -308,14 +308,14 @@
     };
 
     function destroyDashboardCharts() {
-        // Önce mevcut grafikleri temizle
+        // First clear existing charts
         Object.values(window.dashboardCharts).forEach(chart => {
             if (chart instanceof window.Chart) {
                 chart.destroy();
             }
         });
 
-        // Grafik referanslarını sıfırla
+        // Reset chart references
         window.dashboardCharts = {
             incomeExpense: null,
             customerGrowth: null,
@@ -330,14 +330,14 @@
             return;
         }
 
-        // Önce tüm grafikleri temizle
+        // First clear all charts
         destroyDashboardCharts();
 
         const commissionCtx = document.getElementById('commission-chart');
         const customerGrowthCtx = document.getElementById('customer-growth-chart');
         const incomeExpenseCtx = document.getElementById('income-expense-chart');
 
-        // Ortak grafik seçenekleri
+        // Common chart options
         const commonOptions = {
             responsive: true,
             maintainAspectRatio: false,
@@ -356,7 +356,7 @@
             }
         };
 
-        // Admin grafikleri
+        // Admin charts
         if (incomeExpenseCtx && customerGrowthCtx) {
             const data = @json($chartData);
             const customerData = @json($customerGrowthData);
@@ -442,7 +442,7 @@
             });
         }
 
-        // Komisyon grafiği (çalışan için)
+        // Commission chart (employee)
         if (commissionCtx) {
             const data = @json($commissionData ?? []);
             window.dashboardCharts.commission = new window.Chart(commissionCtx, {
@@ -494,12 +494,12 @@
         }
     }
 
-    // Sayfa yüklendiğinde ve Livewire navigasyonlarında grafikleri başlat
+    // When page loads and Livewire navigations, initialize charts
     document.addEventListener('livewire:navigated', () => {
         waitForChart(initDashboardCharts);
     });
 
-    // İlk yükleme
+    // First load
     waitForChart(initDashboardCharts);
 </script>
 @endpush 

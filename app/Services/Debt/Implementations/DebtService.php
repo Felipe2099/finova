@@ -12,17 +12,17 @@ use Illuminate\Support\Carbon;
 use App\Services\Payment\Implementations\PaymentService;
 
 /**
- * Borç/Alacak servisi implementasyonu
+ * Debt/credit service implementation
  * 
- * Borç ve alacak işlemlerinin yönetimi için gerekli metodları içerir.
- * Borç/alacak kayıtlarının oluşturulması, güncellenmesi ve silinmesi işlemlerini gerçekleştirir.
+ * Contains methods required to manage debt/credit operations.
+ * Handles creating, updating, and deleting debt/credit records.
  */
 final class DebtService implements DebtServiceInterface
 {
     private PaymentService $paymentService;
 
     /**
-     * @param PaymentService $paymentService Ödeme servisi
+     * @param PaymentService $paymentService Payment service
      */
     public function __construct(PaymentService $paymentService)
     {
@@ -30,10 +30,10 @@ final class DebtService implements DebtServiceInterface
     }
 
     /**
-     * Yeni bir borç/alacak kaydı oluşturur
+     * Create a new debt/credit record.
      * 
-     * @param DebtData $data Borç/Alacak verileri
-     * @return Debt Oluşturulan borç/alacak kaydı
+     * @param DebtData $data Debt/credit data
+     * @return Debt Created debt/credit record
      */
     public function create(DebtData $data): Debt
     {
@@ -60,11 +60,11 @@ final class DebtService implements DebtServiceInterface
     }
 
     /**
-     * Mevcut bir borç/alacak kaydını günceller
+     * Update an existing debt/credit record.
      * 
-     * @param Debt $debt Güncellenecek borç/alacak kaydı
-     * @param DebtData $data Yeni borç/alacak verileri
-     * @return Debt Güncellenmiş borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to update
+     * @param DebtData $data New debt/credit data
+     * @return Debt Updated debt/credit record
      */
     public function update(Debt $debt, DebtData $data): Debt
     {
@@ -90,9 +90,9 @@ final class DebtService implements DebtServiceInterface
     }
 
     /**
-     * Borç/Alacak kaydını siler
+     * Delete a debt/credit record.
      * 
-     * @param Debt $debt Silinecek borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to delete
      */
     public function delete(Debt $debt): void
     {
@@ -102,11 +102,11 @@ final class DebtService implements DebtServiceInterface
     }
 
     /**
-     * Borç/Alacak kaydının durumunu günceller
+     * Update the status of a debt/credit record.
      * 
-     * Vade tarihi geçmiş kayıtların durumunu 'overdue' olarak günceller.
+     * Updates the status of a debt/credit record to 'overdue' if the due date has passed.
      * 
-     * @param Debt $debt Güncellenecek borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to update
      */
     public function updateStatus(Debt $debt): void
     {
@@ -116,11 +116,11 @@ final class DebtService implements DebtServiceInterface
     }
 
     /**
-     * Borç/Alacak kayıtları için hatırlatma planlar
+     * Schedule reminders for debt/credit records.
      * 
-     * Vade tarihinden 3 gün önce hatırlatma bildirimi gönderir.
+     * Sends a reminder notification 3 days before the due date.
      * 
-     * @param Debt $debt Hatırlatma eklenecek borç/alacak kaydı
+     * @param Debt $debt Debt/credit record to add reminder to
      */
     private function scheduleReminder(Debt $debt): void
     {
@@ -136,11 +136,11 @@ final class DebtService implements DebtServiceInterface
     }
 
     /**
-     * Borç/Alacak kayıtlarını sıralı şekilde getirir
+     * Get sorted debt/credit records.
      * 
-     * @param string $sortBy Sıralama alanı
-     * @param string $direction Sıralama yönü
-     * @return \Illuminate\Database\Eloquent\Collection Sıralanmış borç/alacak kayıtları
+     * @param string $sortBy Sorting field
+     * @param string $direction Sorting direction
+     * @return \Illuminate\Database\Eloquent\Collection Sorted debt/credit records
      */
     public function getSortedDebts(string $sortBy = 'due_date', string $direction = 'asc'): \Illuminate\Database\Eloquent\Collection
     {
@@ -150,23 +150,23 @@ final class DebtService implements DebtServiceInterface
     }
 
     /*
-     * Borç/Alacak kaydına ödeme ekler
+     * Add a payment to a debt/credit record.
      * 
-     * Kıymetli madenler için gram bazında, diğerleri için birim bazında kar/zarar hesaplar.
+     * Calculates profit/loss for precious metals in grams, and for other currencies in units.
      * 
-     * @param Debt $debt Ödeme eklenecek borç/alacak kaydı
-     * @param array $data Ödeme verileri
+     * @param Debt $debt Debt/credit record to add payment to
+     * @param array $data Payment data
      */
     /*
     public function addPayment(Debt $debt, array $data): void
     {
         DB::transaction(function () use ($debt, $data) {
-            // Satış fiyatı ve kar/zarar hesaplaması
+            // Calculate sell price and profit/loss.
             $sellPrice = $data['sell_price'] ?? null;
             $profitLoss = null;
 
             if ($sellPrice && $debt->buy_price) {
-                // Kıymetli madenler için gram bazında, diğerleri için birim bazında kar/zarar hesaplama
+                // Calculate profit/loss for precious metals in grams, and for other currencies in units.
                 if (in_array($debt->currency, ['XAU', 'XAG'])) {
                     $profitLoss = ($sellPrice - $debt->buy_price) * $debt->amount; // Gram başına kar/zarar
                 } else {
@@ -174,14 +174,14 @@ final class DebtService implements DebtServiceInterface
                 }
             }
 
-            // Borç/alacak kaydını güncelle
+            // Update the debt/credit record
             $debt->update([
                 'sell_price' => $sellPrice,
                 'profit_loss' => $profitLoss,
                 'status' => 'completed',
             ]);
 
-            // Ödeme işlemini gerçekleştir
+            // Process the payment
             $this->paymentService->processPayment($debt, $data, $data['payment_method']);
         });
     }

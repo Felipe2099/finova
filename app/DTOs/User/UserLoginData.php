@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace App\DTOs\User;
 
 /**
- * Kullanıcı Giriş Veri Transfer Nesnesi
+ * User Login Data Transfer Object
  * 
- * Kullanıcı giriş işlemleri sırasında veri taşımak için kullanılır.
+ * Used to transfer and convert user login data.
+ * Used for user login operations.
  */
 class UserLoginData
 {
     /**
-     * @param string $email E-posta adresi
-     * @param string $password Şifre
-     * @param bool $remember_me Beni hatırla seçeneği
+     * @param string $email Email address
+     * @param string $password Password
+     * @param bool $remember_me Remember me option
      */
     public function __construct(
         public readonly string $email,
@@ -23,9 +24,9 @@ class UserLoginData
     ) {}
 
     /**
-     * Dizi verisinden login verisi oluşturur
+     * Create user login data from array
      * 
-     * @param array $data Login verileri dizisi
+     * @param array $data Login data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -38,7 +39,7 @@ class UserLoginData
     }
 
     /**
-     * Login verisini dizi formatına dönüştürür
+     * Convert user login data to array
      * 
      * @return array
      */
@@ -52,7 +53,7 @@ class UserLoginData
     }
 
     /**
-     * Kimlik doğrulama için gerekli alanları döndürür
+     * Return the data for the user's login credentials
      * 
      * @return array
      */

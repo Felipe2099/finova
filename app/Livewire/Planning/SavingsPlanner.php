@@ -22,17 +22,17 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Services\Planning\Contracts\PlanningServiceInterface;
 
 /**
- * Tasarruf Planı Yönetimi Bileşeni
+ * Savings Planner Component
  * 
- * Bu bileşen, tasarruf planlarının yönetimini sağlar.
- * Özellikler:
- * - Tasarruf planı listesi görüntüleme
- * - Yeni tasarruf planı oluşturma
- * - Tasarruf planı düzenleme
- * - Tasarruf planı silme
- * - Tasarruf durumu takibi
- * - Tasarruf filtreleme
- * - Toplu işlem desteği
+ * This component provides functionality to manage savings plans.
+ * Features:
+ * - Savings plan list view
+ * - New savings plan creation
+ * - Savings plan editing
+ * - Savings plan deletion
+ * - Savings status tracking
+ * - Savings filtering
+ * - Bulk action support
  * 
  * @package App\Livewire\Planning
  */
@@ -41,13 +41,13 @@ final class SavingsPlanner extends Component implements Tables\Contracts\HasTabl
     use InteractsWithTable;
     use InteractsWithForms;
 
-    /** @var PlanningServiceInterface Planlama servisi */
+    /** @var PlanningServiceInterface Planning service */
     private PlanningServiceInterface $planningService;
 
     /**
-     * Bileşen başlatılırken planlama servisini enjekte eder
+     * When the component is booted, the planning service is injected
      * 
-     * @param PlanningServiceInterface $planningService Planlama servisi
+     * @param PlanningServiceInterface $planningService Planning service
      * @return void
      */
     public function boot(PlanningServiceInterface $planningService): void
@@ -56,10 +56,10 @@ final class SavingsPlanner extends Component implements Tables\Contracts\HasTabl
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -197,7 +197,7 @@ final class SavingsPlanner extends Component implements Tables\Contracts\HasTabl
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

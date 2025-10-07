@@ -11,10 +11,10 @@ use App\Services\Transaction\Contracts\IncomeTransactionServiceInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Gelir işlemleri servisi
+ * Income transactions service
  * 
- * Gelir işlemlerini yönetir.
- * Gelir işlemlerinin kaydedilmesi ve hesap bakiyelerinin güncellenmesi işlemlerini yapar.
+ * Manages income transactions.
+ * Handles recording income and updating account balances.
  */
 final class IncomeTransactionService implements IncomeTransactionServiceInterface
 {
@@ -24,12 +24,12 @@ final class IncomeTransactionService implements IncomeTransactionServiceInterfac
     }
 
     /**
-     * Yeni bir gelir işlemi oluşturur
+     * Create a new income transaction.
      * 
-     * Gelir işlemini kaydeder ve ilgili hesap bakiyesini günceller.
+     * Persists the transaction and updates the related account balance.
      * 
-     * @param TransactionData $data Gelir işlemi verileri
-     * @return Transaction Oluşturulan gelir işlemi
+     * @param TransactionData $data Income transaction data
+     * @return Transaction Created income transaction
      */
     public function create(TransactionData $data): Transaction
     {

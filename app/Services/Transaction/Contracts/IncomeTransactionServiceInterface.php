@@ -8,20 +8,19 @@ use App\DTOs\Transaction\TransactionData;
 use App\Models\Transaction;
 
 /**
- * Gelir işlemleri servisi arayüzü
+ * Income transactions service interface
  * 
- * Gelir işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Gelir işlemlerinin oluşturulması ve yönetilmesi işlemlerini yapar.
+ * Defines methods required to manage income transactions.
  */
 interface IncomeTransactionServiceInterface
 {
     /**
-     * Yeni bir gelir işlemi oluşturur
+     * Create a new income transaction.
      * 
-     * Gelir işlemini kaydeder ve ilgili hesap bakiyesini günceller.
+     * Persists the transaction and updates related account balance.
      * 
-     * @param TransactionData $data Gelir işlemi verileri
-     * @return Transaction Oluşturulan gelir işlemi
+     * @param TransactionData $data Income transaction data
+     * @return Transaction Created income transaction
      */
     public function create(TransactionData $data): Transaction;
 } 

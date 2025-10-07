@@ -10,18 +10,18 @@ use App\Services\Planning\Contracts\PlanningServiceInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Planlama servisi implementasyonu
+ * Planning service implementation
  * 
- * Tasarruf ve yatırım planlarının yönetimi için gerekli metodları içerir.
- * Planların oluşturulması, güncellenmesi ve silinmesi işlemlerini gerçekleştirir.
+ * Contains methods required to manage planning operations.
+ * Handles creating, updating, and deleting savings and investment plans.
  */
 final class PlanningService implements PlanningServiceInterface
 {
     /**
-     * Yeni bir tasarruf planı oluşturur
+     * Create a new savings plan.
      * 
-     * @param array $data Tasarruf planı verileri
-     * @return SavingsPlan Oluşturulan tasarruf planı
+     * @param array $data Savings plan data
+     * @return SavingsPlan Created savings plan
      */
     public function createSavingsPlan(array $data): SavingsPlan
     {
@@ -32,11 +32,11 @@ final class PlanningService implements PlanningServiceInterface
     }
 
     /**
-     * Mevcut bir tasarruf planını günceller
+     * Update an existing savings plan.
      * 
-     * @param SavingsPlan $plan Güncellenecek tasarruf planı
-     * @param array $data Güncellenecek veriler
-     * @return SavingsPlan Güncellenmiş tasarruf planı
+     * @param SavingsPlan $plan Savings plan to update
+     * @param array $data New savings plan data
+     * @return SavingsPlan Updated savings plan
      */
     public function updateSavingsPlan(SavingsPlan $plan, array $data): SavingsPlan
     {
@@ -47,9 +47,9 @@ final class PlanningService implements PlanningServiceInterface
     }
 
     /**
-     * Bir tasarruf planını siler
+     * Delete a savings plan.
      * 
-     * @param SavingsPlan $plan Silinecek tasarruf planı
+     * @param SavingsPlan $plan Savings plan to delete
      */
     public function deleteSavingsPlan(SavingsPlan $plan): void
     {
@@ -59,10 +59,10 @@ final class PlanningService implements PlanningServiceInterface
     }
 
     /**
-     * Yeni bir yatırım planı oluşturur
+     * Create a new investment plan.
      * 
-     * @param array $data Yatırım planı verileri
-     * @return InvestmentPlan Oluşturulan yatırım planı
+     * @param array $data Investment plan data
+     * @return InvestmentPlan Created investment plan
      */
     public function createInvestmentPlan(array $data): InvestmentPlan
     {
@@ -73,11 +73,11 @@ final class PlanningService implements PlanningServiceInterface
     }
 
     /**
-     * Mevcut bir yatırım planını günceller
+     * Update an existing investment plan.
      * 
-     * @param InvestmentPlan $plan Güncellenecek yatırım planı
-     * @param array $data Güncellenecek veriler
-     * @return InvestmentPlan Güncellenmiş yatırım planı
+     * @param InvestmentPlan $plan Investment plan to update
+     * @param array $data New investment plan data
+     * @return InvestmentPlan Updated investment plan
      */
     public function updateInvestmentPlan(InvestmentPlan $plan, array $data): InvestmentPlan
     {
@@ -88,9 +88,9 @@ final class PlanningService implements PlanningServiceInterface
     }
 
     /**
-     * Bir yatırım planını siler
+     * Delete an existing investment plan.
      * 
-     * @param InvestmentPlan $plan Silinecek yatırım planı
+     * @param InvestmentPlan $plan Investment plan to delete
      */
     public function deleteInvestmentPlan(InvestmentPlan $plan): void
     {

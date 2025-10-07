@@ -11,13 +11,42 @@ use App\Enums\TransactionTypeEnum;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+/**
+ * Gemini Assistant
+ *
+ * Implements the AI assistant interface using the Gemini API.
+ *
+ * @return void
+*/
 class GeminiAssistant implements AIAssistantInterface
 {
+    /**
+     * Constructor
+     *
+     * @param DateRangeAnalyzer $dateAnalyzer The date range analyzer.
+     */
     private string $apiKey;
+    /**
+     * The model to use.
+     */
     private string $model;
+    /**
+     * The configuration for the Gemini API.
+     */
     private array $config;
+    /**
+     * The date range analyzer.
+     */
     private DateRangeAnalyzer $dateAnalyzer;
 
+    /**
+     * Constructor
+     *
+     * @param string $apiKey The API key.
+     * @param string $model The model to use.
+     * @param array $config The configuration for the Gemini API.
+     * @param DateRangeAnalyzer $dateAnalyzer The date range analyzer.
+     */
     public function __construct(DateRangeAnalyzer $dateAnalyzer)
     {
         $this->apiKey = config('ai.gemini.api_key');
@@ -32,25 +61,25 @@ class GeminiAssistant implements AIAssistantInterface
     public function query(User $user, string $question, ?string $conversationId = null): string
     {
         try {
-            // Soru içeriğine göre tarih aralığı belirle
+            // Determine date range based on question content
             $dateRange = $this->dateAnalyzer->analyze($question);
             
-            // Kategori bazlı istatistikleri veritabanı seviyesinde hesapla
+            // Calculate category-based statistics at the database level
             $stats = $this->calculateAggregatedStats($user, $dateRange);
             
-            // Detaylı işlem verilerini al
+            // Retrieve detailed transaction data
             $transactions = $this->getFilteredTransactions($user, $dateRange);
             
-            // Hassas verileri maskele ve veriyi hazırla
+            // Mask sensitive data and prepare the payload
             $sanitizedData = $this->sanitizeData($transactions);
             
-            // Sohbet geçmişini al
+            // Retrieve conversation history
             $history = $this->getConversationHistory($conversationId);
             
-            // Gemini prompt'unu hazırla
+            // Build the Gemini prompt
             $prompt = $this->buildPrompt($question, $sanitizedData, $stats, $dateRange, $history);
 
-            // Gemini API çağrısı
+            // Gemini API call
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'x-goog-api-key' => $this->apiKey,
@@ -85,12 +114,12 @@ class GeminiAssistant implements AIAssistantInterface
     }
 
     /**
-     * Belirtilen sohbet ID'sine ait mesajları token limitini aşmamaya
-     * çalışarak veritabanından alır.
+     * Retrieve conversation messages for the given conversation ID from the database
+     * while attempting to stay within a token budget.
      *
      * @param string|null $conversationId
-     * @param int $maxTokenEstimate Maksimum token tahmini limiti
-     * @return array Geçmiş mesajlar dizisi (role, content).
+     * @param int $maxTokenEstimate Maximum estimated token limit
+     * @return array Array of past messages (role, content).
      */
     private function getConversationHistory(?string $conversationId, int $maxTokenEstimate = 2000): array
     {
@@ -98,34 +127,34 @@ class GeminiAssistant implements AIAssistantInterface
             return [];
         }
 
-        // Sohbete ait son 10 mesajı al (bağlam için yeterli olacaktır)
+        // Fetch the last 10 messages for the conversation (sufficient for context)
         $allMessages = DB::table('ai_messages')
             ->where('conversation_id', $conversationId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get(['id', 'role', 'content', 'created_at']);
         
-        // Eğer mesaj yoksa boş dizi döndür
+        // If there are no messages, return an empty array
         if ($allMessages->isEmpty()) {
             return [];
         }
         
         $result = [];
         $estimatedTokens = 0;
-        $tokenPerCharEstimate = 0.25; // Ortalama karakter başına token tahmini
+        $tokenPerCharEstimate = 0.25; // Rough token estimate per character
 
-        // En son mesajdan başlayarak mesajları ekle, token limitini aşmamaya çalış
+        // Add messages starting from the latest, avoiding token budget overflow
         foreach ($allMessages as $message) {
-            // Basit token tahmini (daha doğru tahmin için tokenizer kullanılabilir)
+            // Simple token estimate (a tokenizer would be more accurate)
             $contentLength = mb_strlen($message->content);
             $estimatedMessageTokens = (int)($contentLength * $tokenPerCharEstimate);
             
-            // Token limitini aşacaksa döngüden çık
+            // Stop if adding this message would exceed the token budget
             if ($estimatedTokens + $estimatedMessageTokens > $maxTokenEstimate) {
                 break;
             }
             
-            // Mesajı sonuç dizisinin başına ekle (eskiden yeniye doğru sıralamak için)
+            // Prepend message to preserve chronological order (old to new)
             array_unshift($result, [
                 'role' => $message->role === 'ai' ? 'assistant' : $message->role,
                 'content' => $message->content
@@ -134,7 +163,7 @@ class GeminiAssistant implements AIAssistantInterface
             $estimatedTokens += $estimatedMessageTokens;
         }
         
-        // En azından son mesajı her zaman ekle (önemli bağlam için)
+        // Ensure at least the last message is included for essential context
         if (empty($result) && !$allMessages->isEmpty()) {
             $lastMessage = $allMessages->first();
             $result[] = [
@@ -147,18 +176,18 @@ class GeminiAssistant implements AIAssistantInterface
     }
 
     /**
-     * Gemini API için contents formatını hazırlar.
+     * Build the contents payload for the Gemini API.
      * 
-     * @param string $systemPrompt Sistem prompt'u
-     * @param string $userPrompt Kullanıcı prompt'u
-     * @param array $history Geçmiş mesajlar
-     * @return array Gemini API'si için contents dizisi
+     * @param string $systemPrompt System prompt
+     * @param string $userPrompt User prompt
+     * @param array $history Conversation history
+     * @return array Contents array for the Gemini API
      */
     private function formatContents(string $systemPrompt, string $userPrompt, array $history = []): array
     {
         $contents = [];
         
-        // Sistem prompt'u ve kullanıcı prompt'unu ekle
+        // Add system prompt
         $contents[] = [
             'role' => 'user',
             'parts' => [
@@ -166,7 +195,7 @@ class GeminiAssistant implements AIAssistantInterface
             ]
         ];
         
-        // Eğer sohbet geçmişi varsa ekle
+        // Append conversation history if available
         if (!empty($history)) {
             foreach ($history as $message) {
                 if (!empty($message['role']) && !empty($message['content'])) {
@@ -181,7 +210,7 @@ class GeminiAssistant implements AIAssistantInterface
             }
         }
         
-        // Son kullanıcı sorusunu ekle
+        // Add the final user question
         $contents[] = [
             'role' => 'user',
             'parts' => [
@@ -247,7 +276,7 @@ class GeminiAssistant implements AIAssistantInterface
     }
 
     /**
-     * Para birimini formatla
+     * Format currency string.
      */
     private function formatCurrency(?float $amount): string
     {
@@ -270,15 +299,15 @@ class GeminiAssistant implements AIAssistantInterface
     private function sanitizeData($transactions): array
     {
         return $transactions->map(function ($transaction) {
-            // Type değeri string veya enum olabilir, güvenli şekilde değeri al
+            // Type may be string or enum; read the value safely
             $type = is_object($transaction->type) && method_exists($transaction->type, 'value') 
                 ? $transaction->type->value 
                 : (string) $transaction->type;
                 
-            // Tutarlılık için try_equivalent kullan
+            // Use try_equivalent for consistency
             $amount = $transaction->try_equivalent ?? $transaction->amount;
             
-            // String tarihi Carbon'a çevir ve formatla
+            // Convert string date to Carbon and format
             $date = $transaction->date instanceof Carbon 
                 ? $transaction->date 
                 : Carbon::parse($transaction->date);

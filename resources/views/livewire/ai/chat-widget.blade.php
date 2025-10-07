@@ -103,7 +103,7 @@ if (!function_exists('formatChatMessage')) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
                     </button>
-                    <!-- Gizli yenileme butonu, sayfa ilk açıldığında UI'yi yenilemek için -->
+                    <!-- Hidden refresh button, to refresh the UI when the page is first loaded -->
                     <button id="autoRefreshButton" wire:click="$refresh" class="hidden"></button>
                 </div>
             </div>
@@ -115,20 +115,20 @@ if (!function_exists('formatChatMessage')) {
                         <div class="max-w-[85%] {{ $message->role === 'user' ? 'bg-primary-50 text-primary-900' : 'bg-gray-100 text-gray-900' }} rounded-lg px-3 py-1.5 shadow-sm">
                             <div class="chat-message" id="message-{{ $message->id }}">
                                 <?php
-                                    // Markdown sembollerini temizle
+                                    // Clean up markdown symbols
                                     $content = $message->content;
                                     
-                                    // Başlıkları temizle (### Başlık)
+                                    // Clean up headers (### Header)
                                     $content = preg_replace('/^#{1,6}\s+/m', '', $content);
                                     
-                                    // Kalın (**metin**) ve italik (*metin*) temizle
+                                    // Clean up bold (**text**) and italic (*text*)
                                     $content = preg_replace('/\*\*(.*?)\*\*/s', '$1', $content);
                                     $content = preg_replace('/\*(.*?)\*/s', '$1', $content);
                                     
-                                    // Güvenli çıktı
+                                    // Safe output
                                     $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
                                     
-                                    // Satır sonlarını <br> yap
+                                    // Convert newlines to <br>
                                     $content = nl2br($content);
                                 ?>
                                 {!! $content !!}
@@ -186,7 +186,7 @@ if (!function_exists('formatChatMessage')) {
     </div>
 
     <script>
-        // Tüm sayfalarda Alpine store'un kullanılabilmesi için global değişken tanımlıyoruz
+        // Define global variable for Alpine store to be used on all pages
         window.chatWidget = {
             initialized: false,
             livewireInitialized: false
@@ -212,7 +212,7 @@ if (!function_exists('formatChatMessage')) {
             // Scroll on page load and after updates
             scrollToBottom();
             
-            // Livewire bileşeni hazır olduğunda
+            // Livewire component is ready
             document.addEventListener('livewire:initialized', () => {
                 scrollToBottom();
                 window.chatWidget.livewireInitialized = true;
@@ -223,13 +223,13 @@ if (!function_exists('formatChatMessage')) {
                 scrollToBottom();
             });
             
-            // Livewire sayfa geçişleri için önemli event
+            // Livewire page navigation event
             document.addEventListener('livewire:navigated', () => {
-                // Sayfa geçişi sonrası bileşenlerin yüklenmesini bekleyelim
+                // Wait for components to load after page navigation
                 setTimeout(() => {
                     scrollToBottom();
                     
-                    // Livewire bağlamını kontrol ediyoruz
+                    // Check if Livewire context is ready
                     if (window.Livewire) {
                         window.chatWidget.livewireInitialized = true;
                         console.log('Livewire navigated, context updated');
@@ -240,28 +240,28 @@ if (!function_exists('formatChatMessage')) {
             // processAIQuery event listener - daha güvenli bir yöntemle
             if (window.Livewire) {
                 Livewire.on('processAIQuery', function(data) {
-                    // Yanıt işleme
+                    // Process response
                     setTimeout(function() {
-                        // Livewire ve bileşen hazır mı kontrol et
+                        // Check if Livewire and component are ready
                         if (window.Livewire && window.chatWidget.livewireInitialized) {
                             try {
-                                // Livewire 3 syntax - doğru format: dispatch(eventName, {key: value})
-                                // messageText'i object içinde gönder
+                                // Livewire 3 syntax - correct format: dispatch(eventName, {key: value})
+                                // send messageText in object
                                 Livewire.dispatch('processAIResponseAsync', { messageText: data.messageText });
                                 console.log('AI response dispatched with proper Livewire 3 format');
                             } catch (e) {
                                 console.error('Error dispatching event:', e);
-                                // Alternatif yöntem - manuel Livewire bulma
+                                // Alternative method - manual Livewire find
                                 try {
-                                    // Komponente doğrudan erişim
+                                    // Direct component access
                                     const el = document.querySelector('[wire\\:id]');
                                     if (el) {
-                                        // Livewire 3'te $wire kullanabilir veya direkt wire:id ile erişim yapabiliriz
+                                        // Livewire 3 - $wire can be used or direct wire:id access
                                         if (typeof Livewire.find === 'function') {
                                             Livewire.find(el.getAttribute('wire:id')).call('processAIResponse', data.messageText);
                                             console.log('Direct method call succeeded');
                                         } else {
-                                            // Tamamen manuel olarak form gönderimi
+                                            // Completely manual form submission
                                             const form = document.createElement('form');
                                             form.style.display = 'none';
                                             form.innerHTML = `<input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
@@ -305,11 +305,11 @@ if (!function_exists('formatChatMessage')) {
         }
     </style>
     
-    <!-- Sayfa yüklendiğinde otomatik yenileme için script -->
+    <!-- Script for automatic refresh when the page is loaded -->
     <script>
-        // Sayfa tamamen yüklendiğinde gerekli işlemleri yap
+        // Perform necessary actions when the page is loaded
         window.addEventListener('load', function() {
-            // Sayfa yüklendiğinde otomatik güncelleme
+            // Automatic refresh when the page is loaded
             setTimeout(function() {
                 document.getElementById('autoRefreshButton')?.click();
             }, 500);

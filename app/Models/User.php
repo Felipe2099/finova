@@ -9,19 +9,19 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
- * Kullanıcı modeli
+ * User model
  * 
- * Sistemdeki kullanıcıları temsil eder.
- * Her kullanıcı için kimlik doğrulama ve yetkilendirme özellikleri sağlanır.
- * Spatie/Permission paketi ile rol tabanlı yetkilendirme desteklenir.
- * Yumuşak silme (soft delete) özelliği ve komisyon yönetimi desteği bulunur.
+ * Represents users in the system.
+ * Provides authentication and authorization features for each user.
+ * Supports role-based authorization via the Spatie/Permission package.
+ * Includes soft delete capability and commission management support.
  */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -36,7 +36,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Gizlenecek alanlar
+     * Hidden attributes
      * 
      * @var array<string>
      */
@@ -46,7 +46,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -58,7 +58,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Kullanıcının komisyona uygun olup olmadığını kontrol eder
+     * Determine whether the user is eligible for commission.
      *
      * @return bool
      */
@@ -69,6 +69,8 @@ class User extends Authenticatable
 
     /**
      * Get the AI conversations for the user.
+     *
+     * @return HasMany
      */
     public function aiConversations()
     {
@@ -77,6 +79,8 @@ class User extends Authenticatable
 
     /**
      * Get the transactions for the user.
+     *
+     * @return HasMany
      */
     public function transactions()
     {

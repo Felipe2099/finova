@@ -7,54 +7,54 @@ namespace App\Services\Transaction\Contracts;
 use App\Models\Transaction;
 
 /**
- * Hesap bakiyesi servisi arayüzü
+ * Account balance service interface
  * 
- * Hesap bakiyelerinin güncellenmesi ve yönetilmesi için gerekli metodları tanımlar.
- * Farklı işlem tipleri için bakiye güncellemelerini yönetir.
+ * Defines methods for updating and managing account balances.
+ * Handles balance updates for different transaction types.
  */
 interface AccountBalanceServiceInterface
 {
     /**
-     * Gelir işlemi için hesap bakiyesini günceller
+     * Update account balance for an income transaction.
      * 
-     * @param Transaction $transaction İşlenecek gelir işlemi
+     * @param Transaction $transaction Income transaction to process
      */
     public function updateForIncome(Transaction $transaction): void;
 
     /**
-     * Gider işlemi için hesap bakiyesini günceller
+     * Update account balance for an expense transaction.
      * 
-     * @param Transaction $transaction İşlenecek gider işlemi
+     * @param Transaction $transaction Expense transaction to process
      */
     public function updateForExpense(Transaction $transaction): void;
 
     /**
-     * Transfer işlemi için hesap bakiyelerini günceller
+     * Update account balances for a transfer transaction.
      * 
-     * @param Transaction $transaction İşlenecek transfer işlemi
+     * @param Transaction $transaction Transfer transaction to process
      */
     public function updateForTransfer(Transaction $transaction): void;
 
     /**
-     * Taksitli ödeme işlemi için hesap bakiyesini günceller
+     * Update account balance for an installment transaction.
      * 
-     * @param Transaction $transaction İşlenecek taksitli ödeme işlemi
+     * @param Transaction $transaction Installment transaction to process
      */
     public function updateForInstallment(Transaction $transaction): void;
 
     /**
-     * Kredi ödemesi işlemi için hesap bakiyesini günceller
+     * Update account balance for a loan payment transaction.
      * 
-     * @param Transaction $transaction İşlenecek kredi ödemesi işlemi
+     * @param Transaction $transaction Loan payment transaction to process
      */
     public function updateForLoanPayment(Transaction $transaction): void;
 
     /**
-     * İşlemi geri alır
+     * Revert a transaction.
      * 
-     * İşlem tipine göre hesap bakiyelerini eski haline getirir.
+     * Restores account balances based on the transaction type.
      * 
-     * @param Transaction $transaction Geri alınacak işlem
+     * @param Transaction $transaction Transaction to revert
      */
     public function revertTransaction(Transaction $transaction): void;
 } 

@@ -10,30 +10,30 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 
 /**
- * İşlem Tablosu Bileşeni
+ * Transactions Table Component
  * 
- * Belirli bir hesabın işlem geçmişini görüntüleyen Livewire bileşeni.
- * İşlem detaylarını tablo formatında listeler ve filtreler.
+ * Livewire component to display the transaction history of a specific account.
+ * Lists and filters the transaction details in table format.
  * 
- * Özellikler:
- * - İşlem geçmişi tablosu
- * - Tarih filtreleme
- * - İşlem detayları görüntüleme
- * - Taksit bilgisi gösterimi
- * - TRY karşılığı hesaplama
+ * Features:
+ * - Transactions table
+ * - Date filtering
+ * - Transaction details view
+ * - Installment information display
+ * - TRY equivalent calculation
  */
 class TransactionsTable extends Component implements Tables\Contracts\HasTable, Forms\Contracts\HasForms
 {
     use Tables\Concerns\InteractsWithTable;
     use Forms\Concerns\InteractsWithForms;
 
-    /** @var int|null İşlem geçmişi görüntülenecek hesap ID'si */
-    public ?int $accountId = null; // Kredi kartı ID'si
+    /** @var int|null The account ID to display the transaction history */
+    public ?int $accountId = null; // Credit card ID
 
     /**
-     * İşlem geçmişi tablosunu yapılandırır
+     * Configure the transactions table
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -92,7 +92,7 @@ class TransactionsTable extends Component implements Tables\Contracts\HasTable, 
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view
      * 
      * @return View
      */

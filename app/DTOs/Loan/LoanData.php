@@ -5,28 +5,28 @@ declare(strict_types=1);
 namespace App\DTOs\Loan;
 
 /**
- * Kredi Veri Transfer Nesnesi
+ * Loan Data Transfer Object
  * 
- * Kredi verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Kredi oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
- * Taksitli ödemeler ve kredi takibi için gerekli bilgileri içerir.
+ * Used to transfer and convert loan data.
+ * Used for loan creation, updating, and viewing.
+ * Contains installment payments and loan tracking information.
  */
 final class LoanData
 {
     /**
-     * @param int|null $user_id Kullanıcı ID
-     * @param string $bank_name Banka adı
-     * @param string $loan_type Kredi türü
-     * @param float $amount Kredi tutarı
-     * @param float $monthly_payment Aylık taksit tutarı
-     * @param int $installments Toplam taksit sayısı
-     * @param int $remaining_installments Kalan taksit sayısı
-     * @param string $start_date Başlangıç tarihi
-     * @param string $next_payment_date Bir sonraki ödeme tarihi
-     * @param string|null $due_date Vade tarihi
-     * @param float $remaining_amount Kalan kredi tutarı
-     * @param string $status Kredi durumu
-     * @param string|null $notes Notlar
+     * @param int|null $user_id User ID
+     * @param string $bank_name Bank name
+     * @param string $loan_type Loan type
+     * @param float $amount Loan amount
+     * @param float $monthly_payment Monthly installment amount
+     * @param int $installments Total installment count
+     * @param int $remaining_installments Remaining installment count
+     * @param string $start_date Start date
+     * @param string $next_payment_date Next payment date
+     * @param string|null $due_date Due date
+     * @param float $remaining_amount Remaining loan amount
+     * @param string $status Loan status
+     * @param string|null $notes Notes
      */
     public function __construct(
         public readonly ?int $user_id,
@@ -45,9 +45,9 @@ final class LoanData
     ) {}
 
     /**
-     * Dizi verisinden kredi verisi oluşturur
+     * Create loan data from array
      * 
-     * @param array $data Kredi verileri dizisi
+     * @param array $data Loan data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -70,7 +70,7 @@ final class LoanData
     }
 
     /**
-     * Kredi verisini dizi formatına dönüştürür
+     * Convert loan data to array
      * 
      * @return array
      */

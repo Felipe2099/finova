@@ -5,30 +5,30 @@ declare(strict_types=1);
 namespace App\Enums;
 
 /**
- * İşlem Türü Enum Sınıfı
+ * Transaction Type Enum Class
  * 
- * Sistemde desteklenen finansal işlem türlerini tanımlar.
- * Her işlem türü için Türkçe etiket içerir.
+ * Defines the supported financial transaction types.
+ * Contains the Turkish label for each transaction type.
  */
 enum TransactionTypeEnum: string
 {
-    /** Gelir */
+    /** Income */
     case INCOME = 'income';
-    /** Gider */
+    /** Expense */
     case EXPENSE = 'expense';
     /** Transfer */
     case TRANSFER = 'transfer';
-    /** Taksitli Ödeme */
+    /** Installment */
     case INSTALLMENT = 'installment';
     /** Abonelik */
     case SUBSCRIPTION = 'subscription';
-    /** Kredi Ödemesi */
+    /** Loan Payment */
     case LOAN_PAYMENT = 'loan_payment';
 
     /**
-     * İşlem türünün Türkçe etiketini döndürür
+     * Returns the Turkish label for the transaction type
      * 
-     * @return string Türkçe etiket
+     * @return string Turkish label
      */
     public function label(): string
     {

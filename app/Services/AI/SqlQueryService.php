@@ -10,12 +10,12 @@ use App\Services\AI\Exceptions\UnsafeSqlException;
 class SqlQueryService
 {
     /**
-     * İzin verilen SQL komutlar
+     * Allowed SQL commands
      */
     protected const ALLOWED_COMMANDS = ['SELECT'];
     
     /**
-     * Yasaklanmış SQL anahtar kelimeleri
+     * Forbidden SQL keywords
      */
     protected const FORBIDDEN_KEYWORDS = [
         'INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'TRUNCATE', 
@@ -26,7 +26,7 @@ class SqlQueryService
     ];
     
     /**
-     * SQL sorgusunu doğrula
+     * Validate the SQL query.
      * 
      * @param string $query
      * @return bool
@@ -36,7 +36,7 @@ class SqlQueryService
     {
         $normalizedQuery = strtoupper(trim($query));
         
-        // Sadece SELECT işlemlerine izin ver
+        // Only allow SELECT operations
         $hasAllowedStart = false;
         foreach (self::ALLOWED_COMMANDS as $command) {
             if (strpos($normalizedQuery, $command) === 0) {
@@ -49,19 +49,19 @@ class SqlQueryService
             throw new UnsafeSqlException("SQL sorgusu izin verilen bir komutla başlamalıdır.");
         }
         
-        // Yasaklı anahtar kelimeleri kontrol et
+        // Check for forbidden keywords
         foreach (self::FORBIDDEN_KEYWORDS as $keyword) {
             if (preg_match('/\b' . preg_quote($keyword) . '\b/i', $normalizedQuery)) {
                 throw new UnsafeSqlException("SQL sorgusunda güvenli olmayan anahtar kelime bulundu: {$keyword}");
             }
         }
         
-        // Çoklu sorgu kontrolü - tek bir sorguya izin ver
+        // Multiple query check - only allow one query
         if (strpos($normalizedQuery, ';') !== false) {
-            // İstisnai durum: son karakter noktalı virgül ise izin ver
+            // Special case: if the last character is a semicolon, allow it
             $lastChar = substr(trim($normalizedQuery), -1);
             if ($lastChar === ';') {
-                // Sorun yok, son karakter noktalı virgül
+                // No problem, last character is a semicolon
             } else if (substr_count($normalizedQuery, ';') > 1) {
                 throw new UnsafeSqlException("Birden fazla SQL sorgusu çalıştırılamaz.");
             }
@@ -71,7 +71,7 @@ class SqlQueryService
     }
     
     /**
-     * SQL sorgusunu çalıştır
+     * Execute the SQL query.
      * 
      * @param string $query
      * @return array
@@ -85,10 +85,10 @@ class SqlQueryService
         try {
             Log::info('Executing SQL query', ['query' => $query]);
             
-            // İstenirse buraya ilave güvenlik önlemleri eklenebilir
+            // Additional security measures can be added here if needed
             $results = DB::select($query);
             
-            // Sonuçları indeksli array'e dönüştür
+            // Convert results to indexed array
             $results = json_decode(json_encode($results), true);
             
             Log::info('SQL query executed successfully', [

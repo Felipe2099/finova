@@ -9,59 +9,59 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 
 /**
- * Abonelik işlemleri servisi arayüzü
+ * Subscription transactions service interface
  * 
- * Abonelik işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Aboneliklerin oluşturulması, yenilenmesi ve yönetilmesi işlemlerini yapar.
+ * Defines methods required to manage subscription transactions,
+ * including creation, renewal, and overall management.
  */
 interface SubscriptionTransactionServiceInterface
 {
     /**
-     * Yeni bir abonelik işlemi oluşturur
+     * Create a new subscription transaction.
      * 
-     * Abonelik işlemini kaydeder ve ilgili hesap bakiyesini günceller.
+     * Persists the subscription transaction and updates account balance.
      * 
-     * @param TransactionData $data Abonelik işlemi verileri
-     * @return Transaction Oluşturulan abonelik işlemi
+     * @param TransactionData $data Subscription transaction data
+     * @return Transaction Created subscription transaction
      */
     public function create(TransactionData $data): Transaction;
 
     /**
-     * Aktif devamlı işlemleri getirir
+     * Get active recurring transactions.
      *
-     * 'is_subscription' true olan tüm işlemleri getirir,
-     * en yakın ödeme tarihine göre sıralar.
+     * Returns all transactions with 'is_subscription' true,
+     * ordered by nearest payment date.
      *
-     * @return \Illuminate\Database\Eloquent\Collection Aktif devamlı işlemler
+     * @return \Illuminate\Database\Eloquent\Collection Active recurring transactions
      */
     public function getActiveSubscriptions(): \Illuminate\Database\Eloquent\Collection;
 
     /**
-     * Abonelikten yeni bir işlem oluşturur
+     * Create a new transaction from a subscription.
      * 
-     * Abonelik ödemesini işler ve bir sonraki ödeme tarihini günceller.
+     * Processes payment and updates the next payment date.
      * 
-     * @param Transaction $subscription Abonelik işlemi
-     * @return Transaction Oluşturulan yeni işlem
+     * @param Transaction $subscription Subscription transaction
+     * @return Transaction Created transaction
      */
     public function createFromSubscription(Transaction $subscription): Transaction;
 
     /**
-     * Aboneliği sonlandırır
+     * End a subscription.
      *
-     * İşlemin 'is_subscription' flag'ini false yapar.
+     * Sets the 'is_subscription' flag to false.
      *
-     * @param Transaction $subscription Sonlandırılacak abonelik
+     * @param Transaction $subscription Subscription to end
      */
     public function endSubscription(Transaction $subscription): void;
 
     /**
-     * Bir sonraki ödeme tarihini hesaplar
+     * Calculate the next payment date.
      * 
-     * Abonelik periyoduna göre bir sonraki ödeme tarihini belirler.
+     * Determines the next payment date based on subscription period.
      * 
-     * @param Transaction|TransactionData $transaction Abonelik işlemi veya verisi
-     * @return Carbon Bir sonraki ödeme tarihi
+     * @param Transaction|TransactionData $transaction Subscription transaction or data
+     * @return Carbon Next payment date
      */
     public function calculateNextPaymentDate(Transaction|TransactionData $transaction): Carbon;
 } 

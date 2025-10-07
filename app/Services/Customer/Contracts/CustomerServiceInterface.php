@@ -10,44 +10,44 @@ use App\DTOs\Customer\NoteData;
 use App\Models\CustomerNote;
 
 /**
- * Müşteri servisi arayüzü
+ * Customer service interface
  * 
- * Müşteri işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Müşterilerin oluşturulması, güncellenmesi, silinmesi ve not eklenmesi işlemlerini yapar.
+ * Defines the methods required for managing customer operations.
+ * Handles customer creation, updating, deletion, and note addition.
  */
 interface CustomerServiceInterface
 {
     /**
-     * Yeni bir müşteri oluşturur
+     * Create a new customer.
      * 
-     * @param CustomerData $data Müşteri verileri
-     * @return Customer Oluşturulan müşteri
+     * @param CustomerData $data Customer data
+     * @return Customer Created customer
      */
     public function create(CustomerData $data): Customer;
 
     /**
-     * Mevcut bir müşteriyi günceller
+     * Update an existing customer.
      * 
-     * @param Customer $customer Güncellenecek müşteri
-     * @param CustomerData $data Yeni müşteri verileri
-     * @return Customer Güncellenmiş müşteri
+     * @param Customer $customer Customer to update
+     * @param CustomerData $data New customer data
+     * @return Customer Updated customer
      */
     public function update(Customer $customer, CustomerData $data): Customer;
 
     /**
-     * Müşteriyi siler
+     * Delete a customer.
      * 
-     * @param Customer $customer Silinecek müşteri
-     * @param bool $shouldNotify Bildirim gösterilip gösterilmeyeceği
+     * @param Customer $customer Customer to delete
+     * @param bool $shouldNotify Whether to show a notification
      */
     public function delete(Customer $customer, bool $shouldNotify = true): void;
 
     /**
-     * Müşteriye not ekler
+     * Add a note to a customer.
      * 
-     * @param Customer $customer Not eklenecek müşteri
-     * @param NoteData $data Not verileri
-     * @return CustomerNote Oluşturulan not
+     * @param Customer $customer Customer to add note to
+     * @param NoteData $data Note data
+     * @return CustomerNote Created note
      */
     public function addNote(Customer $customer, NoteData $data): CustomerNote;
 } 

@@ -9,14 +9,14 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
- * Müşteri Hassas Bilgi Modeli
+ * Customer Sensitive Information model
  * 
- * Bu model, müşterilere ait hassas bilgileri (domain, hosting, sunucu vb.) yönetir.
- * Özellikler:
- * - Hassas bilgileri şifreli olarak saklama
- * - Bilgi ekleme/düzenleme/silme
- * - Bilgi geçmişi takibi
- * - Kullanıcı bazlı yetkilendirme
+ * Manages customers' sensitive information (domain, hosting, server, etc.).
+ * Features:
+ * - Store sensitive information encrypted
+ * - Add/edit/delete information
+ * - Track information history
+ * - User-based authorization
  * 
  * @package App\Models
  */
@@ -24,7 +24,7 @@ class CustomerCredential extends Model
 {
     use SoftDeletes, HasFactory;
 
-    /** @var array Doldurulabilir alanlar */
+    /** @var array Fillable attributes */
     protected $fillable = [
         'user_id',
         'customer_id',
@@ -33,20 +33,20 @@ class CustomerCredential extends Model
         'status',
     ];
 
-    /** @var array JSON olarak saklanacak alanlar */
+    /** @var array Attributes stored as JSON */
     protected $casts = [
         'status' => 'boolean',
     ];
 
-    /** @var array Şifrelenecek alanlar */
+    /** @var array Attributes to encrypt */
     protected $encryptable = [
         'value',
     ];
 
     /**
-     * Müşteri ilişkisi
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Customer relationship
+     *
+     * @return BelongsTo
      */
     public function customer(): BelongsTo
     {
@@ -54,9 +54,9 @@ class CustomerCredential extends Model
     }
 
     /**
-     * Kullanıcı ilişkisi
-     * 
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * User relationship
+     *
+     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -64,8 +64,8 @@ class CustomerCredential extends Model
     }
 
     /**
-     * Şifreleme işlemi öncesi
-     * 
+     * Before encrypting values
+     *
      * @return void
      */
     protected static function boot()
@@ -75,7 +75,7 @@ class CustomerCredential extends Model
         static::saving(function ($model) {
             foreach ($model->encryptable as $field) {
                 if (isset($model->attributes[$field])) {
-                    // Array'i önce JSON'a, sonra şifrele
+                    // Convert array to JSON first, then encrypt
                     $model->attributes[$field] = encrypt(json_encode($model->attributes[$field]));
                 }
             }
@@ -85,7 +85,7 @@ class CustomerCredential extends Model
             foreach ($model->encryptable as $field) {
                 if (isset($model->attributes[$field])) {
                     try {
-                        // Şifreyi çöz ve JSON'dan array'e çevir
+                        // Decrypt and convert JSON back to array
                         $decrypted = decrypt($model->attributes[$field]);
                         $model->attributes[$field] = json_decode($decrypted, true) ?: [];
                     } catch (\Exception $e) {

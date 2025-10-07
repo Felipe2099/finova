@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\{Route, Auth};
 
-// Livewire Auth Components
+// Auth Components
 use App\Livewire\Auth\{
     Login,
     Register
 };
 
-// Livewire Post Components
+// Post Components
 use App\Livewire\{
     Dashboard
 };
 
-// Livewire Settings Components
+// Settings Components
 use App\Livewire\Settings\{
     SettingsIndex,
     SiteSettings,
@@ -23,37 +23,37 @@ use App\Livewire\Settings\{
     TelegramSettings
 };
 
-// Livewire Role Components
+// Role Components
 use App\Livewire\Role\RoleManager;
 use App\Livewire\Role\RoleForm;
 
-// Livewire Income & Expense Components
+// Income & Expense Components
 use App\Livewire\Categories\{
     CategoryManager
 };
 
-// Livewire Transaction Components
+// Transaction Components
 use App\Livewire\Transaction\{
     TransactionManager,
     TransactionForm
 };
 
-// Mevduat Yönetimi
+// Deposit Management
 use App\Livewire\BankAccount;
 
-// Livewire Customer Group Components
+// Customer Group Components
 use App\Livewire\CustomerGroup\CustomerGroupManager;
 
-// Livewire Customer Components
+// Customer Components
 use App\Livewire\Customer\CustomerManager;
 
-// Livewire Supplier Components
+// Supplier Components
 use App\Livewire\Supplier\SupplierManager;
 
-// Livewire Lead Components
+// Lead Components
 use App\Livewire\Lead\LeadManager;
 
-// Livewire Customer Detail Components
+// Customer Detail Components
 use App\Livewire\Customer\CustomerDetail;
 
 // Proposal Management
@@ -61,12 +61,11 @@ use App\Http\Controllers\ProposalController;
 use App\Livewire\Proposal\ProposalTemplateManager;
 use App\Livewire\Proposal\ProposalTemplateForm;
 
-
-// Proje Yönetimi
+// Project Management
 use App\Livewire\Project\ProjectManager;
 use App\Livewire\Project\Board\BoardManager;
 
-// Finans Yönetimi Routes
+// Financial Management Routes
 use App\Livewire\Account\AccountManager;
 use App\Livewire\Account\BankAccountManager;
 use App\Livewire\Account\CryptoWalletManager;
@@ -75,14 +74,14 @@ use App\Livewire\Account\CreditCardManager;
 use App\Livewire\Account\CreditCardTransactions;
 use App\Livewire\Account\AccountHistory;
 
-// Livewire Debt Components
+// Debt Components
 use App\Livewire\Debt\DebtManager;
 use App\Livewire\Debt\DebtPayments;
 
-// Livewire Loan Components
+// Loan Components
 use App\Livewire\Loan\LoanManager;
 
-// Analiz ve Takip Components
+// Analysis & Tracking Components
 use App\Livewire\Analysis\CashFlowAnalysis;
 use App\Livewire\Analysis\ProfitLossAnalysis;
 use App\Livewire\Analysis\ExpenseCategoryAnalysis;
@@ -92,7 +91,7 @@ use App\Livewire\Analysis\CustomerProfitabilityAnalysis;
 use App\Livewire\Analysis\ProjectProfitabilityAnalysis;
 use App\Livewire\Analysis\CategoryAnalysis;
 
-// Livewire User Components
+// User Components
 use App\Livewire\User\UserManager;
 use App\Livewire\User\UserForm;
 
@@ -150,7 +149,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{user}/commissions', UserCommissionHistory::class)->name('commissions')->middleware('permission:users.commissions');
         });
 
-        // Gelir & Gider Yönetimi
+        // Income & Expense Management
         Route::prefix('transactions')->group(function () {
             Route::get('/', TransactionManager::class)->name('transactions.index')->middleware('permission:transactions.view');
             Route::get('/create', TransactionForm::class)->name('transactions.create')->middleware('permission:transactions.create');
@@ -185,24 +184,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{customer}', CustomerDetail::class)->name('show')->middleware('permission:customers.detail');
         });
 
-        // Proje Yönetimi
+        // Project Management
         Route::prefix('projects')->name('projects.')->group(function () {
             Route::get('/', ProjectManager::class)->name('index')->middleware('permission:projects.view');
             Route::get('/{project}/boards', BoardManager::class)->name('boards')->middleware('permission:projects.details');
         });
 
-        // Kredi Yönetimi
+        // Loan Management
         Route::prefix('loans')->name('loans.')->group(function () {
             Route::get('/', LoanManager::class)->name('index')->middleware(['permission:loans.view']);
         });
 
-        // Borç & Alacak Takibi
+        // Debt & Receivable Tracking
         Route::prefix('debts')->name('debts.')->group(function () {
             Route::get('/', DebtManager::class)->name('index')->middleware(['permission:debts.view']);
             // Not active - Route::get('/payments/{debt}', DebtPayments::class)->name('payments');
         });
 
-        // Finans Yönetimi Routes
+        // Financial Management Routes
         Route::prefix('accounts')->name('accounts.')->group(function () {
             Route::get('/bank', BankAccountManager::class)->name('bank')->middleware(['permission:bank_accounts.view']);
             Route::get('/credit-cards', CreditCardManager::class)->name('credit-cards')->middleware(['permission:credit_cards.view']);
@@ -211,14 +210,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{account}/history', AccountHistory::class)->name('history')->middleware(['permission:bank_accounts.history']);
         });
         
-        // Analiz ve Takip Routes
+        // Analysis & Tracking Routes
         Route::prefix('analysis')->name('analysis.')->group(function () {
-            // Finansal Analizler
+            // Financial Analysis
             Route::get('/cash-flow', CashFlowAnalysis::class)->name('cash-flow')->middleware(['permission:reports.cash_flow']);
             Route::get('/categories', CategoryAnalysis::class)->name('categories')->middleware(['permission:reports.category_analysis']);
         });
 
-        // Planlama Modülü
+        // Planning Module
         Route::prefix('planning')->name('planning.')->group(function () {
             Route::get('/savings', \App\Livewire\Planning\SavingsPlanner::class)->name('savings')->middleware(['permission:savings.view']);
             Route::get('/investments', \App\Livewire\Planning\InvestmentPlanner::class)->name('investments')->middleware(['permission:investments.view']);

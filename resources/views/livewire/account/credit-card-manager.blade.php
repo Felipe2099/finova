@@ -8,7 +8,7 @@
     <livewire:account.widgets.credit-card-stats-widget />
 
     <div class="mt-6">
-        <!-- Sekme Başlıkları -->
+        <!-- Tab Headers -->
         <div class="flex space-x-4 border-b border-gray-200">
             <button
                 wire:click="$set('activeTab', 'Kredi Kartları')"
@@ -33,17 +33,17 @@
             </button>
         </div>
 
-        <!-- Sekme İçerikleri -->
+        <!-- Tab Content -->
         <div class="mt-4">
             @if($activeTab === 'Kredi Kartları')
-                <!-- Kredi Kartları sekmesi için ek card yapısı zaten kaldırılmıştı -->
+                <!-- Credit Cards tab content -->
                 {{ $this->table }}
             @elseif($activeTab === 'İşlemler')
                 @if($selectedCard)
-                    <!-- İşlemler sekmesi için ek card yapısı kaldırıldı, başlık kaldırıldı -->
+                    <!-- Transactions tab content -->
                     <livewire:account.transactions-table :accountId="$selectedCard->id" />
                 @else
-                    <!-- Daha açıklayıcı bir mesaj ve yönlendirme butonu -->
+                    <!-- More descriptive message and redirect button -->
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
                         <p class="text-gray-500 mb-4">
                             Lütfen bir kredi kartı seçin. Kredi Kartları sekmesine dönerek bir kart seçebilirsiniz.

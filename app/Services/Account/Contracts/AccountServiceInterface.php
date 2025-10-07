@@ -6,67 +6,69 @@ use App\Models\Account;
 use App\DTOs\Account\AccountData;
 
 /**
- * Hesap servisi arayüzü
+ * Account service interface
  * 
- * Hesap işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Hesapların oluşturulması, güncellenmesi, silinmesi ve diğer hesap işlemlerini yapar.
+ * Defines methods required to manage account operations.
+ * Handles creating, updating, deleting, and other account-related operations.
+ *
+ * @return void
  */
 interface AccountServiceInterface
 {
     /**
-     * Yeni bir hesap oluşturur
+     * Create a new account.
      * 
-     * @param AccountData $data Hesap verileri
-     * @return Account Oluşturulan hesap
+     * @param AccountData $data Account data
+     * @return Account Created account
      */
     public function createAccount(AccountData $data): Account;
 
     /**
-     * Mevcut bir hesabı günceller
+     * Update an existing account.
      * 
-     * @param Account $account Güncellenecek hesap
-     * @param AccountData $data Yeni hesap verileri
-     * @return Account Güncellenmiş hesap
+     * @param Account $account Account to update
+     * @param AccountData $data New account data
+     * @return Account Updated account
      */
     public function updateAccount(Account $account, AccountData $data): Account;
 
     /**
-     * Hesabı siler
+     * Delete an account.
      * 
-     * @param Account $account Silinecek hesap
-     * @return bool İşlem başarılı ise true, değilse false
+     * @param Account $account Account to delete
+     * @return bool True if successful, false otherwise
      */
     public function delete(Account $account): bool;
 
     /**
-     * Taksitli alışveriş işlemi oluşturur
+     * Create an installment purchase.
      * 
-     * @param AccountData $data Taksitli alışveriş verileri
-     * @return Transaction Oluşturulan taksitli alışveriş işlemi
+     * @param AccountData $data Installment purchase data
+     * @return Transaction Created installment purchase transaction
      */
     public function createInstallmentPurchase(AccountData $data): \App\Models\Transaction;
 
     /**
-     * Kredi kartı için taksitli ödemeleri getirir
+     * Get installments for a credit card.
      * 
-     * @param int $accountId Kredi kartı hesap ID'si
-     * @return \Illuminate\Database\Eloquent\Collection Taksitli ödemeler
+     * @param int $accountId Credit card account ID
+     * @return \Illuminate\Database\Eloquent\Collection Installments
      */
     public function getInstallmentsForCard(int $accountId): \Illuminate\Database\Eloquent\Collection;
 
     /**
-     * Kripto cüzdan hesabı oluşturur
+     * Create a crypto wallet.
      * 
-     * @param AccountData $data Kripto cüzdan verileri
-     * @return Account Oluşturulan kripto cüzdan hesabı
+     * @param AccountData $data Crypto wallet data
+     * @return Account Created crypto wallet
      */
     public function createCryptoWallet(AccountData $data): Account;
 
     /**
-     * Sanal POS hesabı oluşturur
+     * Create a virtual POS account.
      * 
-     * @param AccountData $data Sanal POS verileri
-     * @return Account Oluşturulan sanal POS hesabı
+     * @param AccountData $data Virtual POS data
+     * @return Account Created virtual POS account
      */
     public function createVirtualPos(AccountData $data): Account;
 }

@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->integer('quantity')->default(1);
             $table->string('unit')->default('adet');
             $table->decimal('discount', 12, 2)->default(0);
-            $table->decimal('tax_rate', 5, 2)->default(18); // %18 KDV
+            $table->decimal('tax_rate', 5, 2)->default(20); // %20 VAT
             $table->boolean('tax_included')->default(false);
             $table->decimal('total', 12, 2)->default(0);
             $table->timestamps();

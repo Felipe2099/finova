@@ -11,10 +11,10 @@ use App\Services\Transaction\Contracts\ExpenseTransactionServiceInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Gider işlemleri servisi
+ * Expense transactions service
  * 
- * Gider işlemlerini yönetir.
- * Gider işlemlerinin kaydedilmesi ve hesap bakiyelerinin güncellenmesi işlemlerini yapar.
+ * Manages expense transactions.
+ * Handles recording expenses and updating account balances.
  */
 final class ExpenseTransactionService implements ExpenseTransactionServiceInterface
 {
@@ -24,13 +24,13 @@ final class ExpenseTransactionService implements ExpenseTransactionServiceInterf
     }
 
     /**
-     * Yeni bir gider işlemi oluşturur
+     * Create a new expense transaction.
      * 
-     * Gider işlemini kaydeder ve ilgili hesap bakiyesini günceller.
-     * Kredi kartı işlemleri için özel mantık uygular.
+     * Persists the transaction and updates the related account balance.
+     * Applies special logic for credit card transactions.
      * 
-     * @param TransactionData $data Gider işlemi verileri
-     * @return Transaction Oluşturulan gider işlemi
+     * @param TransactionData $data Expense transaction data
+     * @return Transaction Created expense transaction
      */
     public function create(TransactionData $data): Transaction
     {

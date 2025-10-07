@@ -8,45 +8,46 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
- * İşlem Veri Transfer Nesnesi
+ * Transaction Data Transfer Object
  * 
- * Finansal işlem verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Gelir, gider, transfer, taksitli ödeme, abonelik ve kredi ödemesi gibi işlemler için kullanılır.
- * Vergi, tevkifat, taksit ve abonelik özelliklerini destekler.
+ * Used to transfer and convert transaction data.
+ * Used for transaction creation, updating, and viewing.
+ * Supports tax, withholding, installment, and subscription features.
+ * Supports tax, withholding, installment, and subscription features.
  */
 class TransactionData
 {
     /**
-     * @param int $user_id Kullanıcı ID
-     * @param int|null $category_id Kategori ID
-     * @param int|null $customer_id Müşteri ID
-     * @param int|null $supplier_id Tedarikçi ID
-     * @param int|null $source_account_id Kaynak hesap ID
-     * @param int|null $destination_account_id Hedef hesap ID
-     * @param string $type İşlem türü
-     * @param string|null $payment_method Ödeme yöntemi
-     * @param float $amount İşlem tutarı
-     * @param string $date İşlem tarihi
-     * @param string $currency Para birimi
-     * @param float|null $exchange_rate Döviz kuru
-     * @param float|null $try_equivalent TRY karşılığı
-     * @param float|null $fee_amount Komisyon tutarı
-     * @param string|null $description Açıklama
-     * @param bool $is_subscription Abonelik mi?
-     * @param string|null $subscription_period Abonelik periyodu
-     * @param string|null $next_payment_date Bir sonraki ödeme tarihi
-     * @param bool $auto_renew Otomatik yenileme
-     * @param bool $is_taxable Vergiye tabi mi?
-     * @param int|null $tax_rate Vergi oranı
-     * @param float|null $tax_amount Vergi tutarı
-     * @param bool $has_withholding Tevkifat var mı?
-     * @param int|null $withholding_rate Tevkifat oranı
-     * @param float|null $withholding_amount Tevkifat tutarı
-     * @param int|null $installments Taksit sayısı
-     * @param int|null $remaining_installments Kalan taksit sayısı
-     * @param float|null $monthly_amount Aylık taksit tutarı
-     * @param string $status İşlem durumu
-     * @param int|null $reference_id Referans ID
+     * @param int $user_id User ID
+     * @param int|null $category_id Category ID
+     * @param int|null $customer_id Customer ID
+     * @param int|null $supplier_id Supplier ID
+     * @param int|null $source_account_id Source account ID
+     * @param int|null $destination_account_id Destination account ID
+     * @param string $type Transaction type
+     * @param string|null $payment_method Payment method
+     * @param float $amount Transaction amount
+     * @param string $date Transaction date
+     * @param string $currency Currency
+     * @param float|null $exchange_rate Exchange rate
+     * @param float|null $try_equivalent TRY equivalent
+     * @param float|null $fee_amount Commission amount
+     * @param string|null $description Description
+     * @param bool $is_subscription Is subscription?
+     * @param string|null $subscription_period Subscription period
+     * @param string|null $next_payment_date Next payment date
+     * @param bool $auto_renew Auto renew?
+     * @param bool $is_taxable Is taxable?
+     * @param int|null $tax_rate Tax rate
+     * @param float|null $tax_amount Tax amount
+     * @param bool $has_withholding Has withholding?
+     * @param int|null $withholding_rate Withholding rate
+     * @param float|null $withholding_amount Withholding amount
+     * @param int|null $installments Installments
+     * @param int|null $remaining_installments Remaining installments
+     * @param float|null $monthly_amount Monthly installment amount
+     * @param string $status Transaction status
+     * @param int|null $reference_id Reference ID
      */
     public function __construct(
         public readonly int $user_id,
@@ -82,11 +83,11 @@ class TransactionData
     ) {}
 
     /**
-     * Dizi verisinden işlem verisi oluşturur
+     * Create transaction data from array
      * 
-     * Ödeme yöntemi için geçerli değerler: cash, bank, credit_card, crypto, virtual_pos
+     * Valid values for payment method: cash, bank, credit_card, crypto, virtual_pos
      * 
-     * @param array $data İşlem verileri dizisi
+     * @param array $data Transaction data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -137,7 +138,7 @@ class TransactionData
     }
 
     /**
-     * İşlem verisini dizi formatına dönüştürür
+     * Convert transaction data to array
      * 
      * @return array
      */

@@ -12,63 +12,62 @@ use App\DTOs\User\UserPasswordResetData;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
- * Kullanıcı servisi arayüzü
+ * User service interface
  * 
- * Kullanıcı işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Kullanıcıların oluşturulması, güncellenmesi, silinmesi, yetkilendirilmesi ve
- * komisyon yönetimi işlemlerini yapar.
+ * Defines the methods required for managing user operations.
+ * Handles user creation, updating, deletion, authentication, and password management.
  */
 interface UserServiceInterface
 {
     /**
-     * Yeni bir kullanıcı oluşturur
+     * Create a new user.
      * 
-     * @param UserData $data Kullanıcı verileri
-     * @return User Oluşturulan kullanıcı
+     * @param UserData $data User data
+     * @return User Created user
      */
     public function create(UserData $data): User;
 
     /**
-     * Mevcut bir kullanıcıyı günceller
+     * Update an existing user.
      * 
-     * @param User $user Güncellenecek kullanıcı
-     * @param UserData $data Yeni kullanıcı verileri
-     * @return User Güncellenmiş kullanıcı
+     * @param User $user User to update
+     * @param UserData $data New user data
+     * @return User Updated user
      */
     public function update(User $user, UserData $data): User;
 
     /**
-     * Kullanıcıyı siler (soft delete)
+     * Delete a user.
      * 
-     * @param User $user Silinecek kullanıcı
-     * @param bool $shouldNotify Bildirim gösterilip gösterilmeyeceği
+     * @param User $user User to delete
+     * @param bool $shouldNotify Whether to show a notification
      */
     public function delete(User $user, bool $shouldNotify = true): void;
 
     /**
-     * Silinmiş kullanıcıyı geri yükler
+     * Restore a deleted user.
      * 
-     * @param User $user Geri yüklenecek kullanıcı
-     * @param bool $shouldNotify Bildirim gösterilip gösterilmeyeceği
-     * @return User Geri yüklenen kullanıcı
+     * @param User $user User to restore
+     * @param bool $shouldNotify Whether to show a notification
+     * @return User Restored user
      */
     public function restore(User $user, bool $shouldNotify = true): User;
 
     /**
-     * Kullanıcının şifresini günceller
+     * Update a user's password.
      * 
-     * @param User $user Şifresi güncellenecek kullanıcı
-     * @param string $password Yeni şifre
-     * @return User Şifresi güncellenmiş kullanıcı
+     * @param User $user User to update password
+     * @param string $password New password
+     * @return User Updated user
      */
     public function updatePassword(User $user, string $password): User;
 
 
     /**
-     * Kullanıcı girişini yapar
+     * Login a user.
      * 
-     * @param UserLoginData $data Giriş verileri
-     * @return Authenticatable|null Giriş yapan kullanıcı veya null
+     * @param UserLoginData $data Login data
+     * @return Authenticatable|null Logged in user or null
      */
     public function login(UserLoginData $data): ?Authenticatable;
 } 

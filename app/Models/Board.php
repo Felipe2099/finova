@@ -8,24 +8,36 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
- * Board modeli
+ * Board model
  * 
- * Proje yönetiminde kullanılan boardları temsil eder.
- * Her board bir projeye ait olup, birden fazla görev listesi içerebilir.
+ * Represents boards used in project management.
+ * Each board belongs to a project and can contain multiple task lists.
  */
 class Board extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
-    protected $fillable = ['project_id', 'name'];
+    protected $fillable = [
+        'project_id',
+        'name',
+    ];
 
     /**
-     * Boardun ait olduğu proje
+     * Attribute casts
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'project_id' => 'integer',
+    ];
+
+    /**
+     * The project that the board belongs to.
      * 
      * @return BelongsTo
      */
@@ -35,7 +47,7 @@ class Board extends Model
     }
 
     /**
-     * Boarda ait görev listeleri
+     * Task lists belonging to the board.
      * 
      * @return HasMany
      */

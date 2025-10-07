@@ -8,20 +8,20 @@ use App\DTOs\Transaction\TransactionData;
 use App\Models\Transaction;
 
 /**
- * Taksitli ödeme işlemleri servisi arayüzü
+ * Installment transactions service interface
  * 
- * Taksitli ödeme işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Taksitli ödemelerin oluşturulması ve yönetilmesi işlemlerini yapar.
+ * Defines methods to manage installment transactions,
+ * including creation and overall management.
  */
 interface InstallmentTransactionServiceInterface
 {
     /**
-     * Yeni bir taksitli ödeme işlemi oluşturur
+     * Create a new installment transaction.
      * 
-     * Taksitli ödeme işlemini kaydeder ve ilgili hesap bakiyesini günceller.
+     * Persists the transaction and updates account balance.
      * 
-     * @param TransactionData $data Taksitli ödeme verileri
-     * @return Transaction Oluşturulan taksitli ödeme işlemi
+     * @param TransactionData $data Installment transaction data
+     * @return Transaction Created installment transaction
      */
     public function create(TransactionData $data): Transaction;
 } 

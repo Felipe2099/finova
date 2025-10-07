@@ -7,17 +7,17 @@ namespace App\Services\Currency;
 use Illuminate\Support\Carbon;
 
 /**
- * Para birimi dönüşüm servisi
+ * Currency conversion service
  * 
- * Farklı para birimleri arasında dönüşüm işlemlerini gerçekleştirir.
- * TRY bazlı dönüşüm yaparak çapraz kurları hesaplar.
+ * Performs conversions between different currencies.
+ * Calculates cross rates using TRY as the base.
  */
 class CurrencyConversionService
 {
     private CurrencyService $currencyService;
 
     /**
-     * @param CurrencyService $currencyService Döviz kuru servisi
+     * @param CurrencyService $currencyService Exchange rate service
      */
     public function __construct(CurrencyService $currencyService)
     {
@@ -25,35 +25,35 @@ class CurrencyConversionService
     }
 
     /**
-     * Bir tutarı bir para biriminden diğerine çevirir
+     * Convert an amount from one currency to another.
      * 
-     * @param float $amount Dönüştürülecek tutar
-     * @param string $fromCurrency Kaynak para birimi
-     * @param string $toCurrency Hedef para birimi
-     * @param Carbon $date İşlem tarihi
-     * @return float Dönüştürülmüş tutar
+     * @param float $amount Amount to convert
+     * @param string $fromCurrency Source currency
+     * @param string $toCurrency Target currency
+     * @param Carbon $date Transaction date
+     * @return float Converted amount
      */
     public function convert(float $amount, string $fromCurrency, string $toCurrency, Carbon $date): float
     {
-        // Aynı para birimi ise direkt dön
+        // If same currency, return directly
         if ($fromCurrency === $toCurrency) {
             return $amount;
         }
 
-        // TRY'ye çevir
+        // Convert to TRY
         $tryAmount = $this->convertToTRY($amount, $fromCurrency, $date);
         
-        // TRY'den hedef para birimine çevir
+        // Convert from TRY to target currency
         return $this->convertFromTRY($tryAmount, $toCurrency, $date);
     }
 
     /**
-     * Bir tutarı TRY'ye çevirir
+     * Convert an amount to TRY.
      * 
-     * @param float $amount Dönüştürülecek tutar
-     * @param string $fromCurrency Kaynak para birimi
-     * @param Carbon $date İşlem tarihi
-     * @return float TRY cinsinden tutar
+     * @param float $amount Amount to convert
+     * @param string $fromCurrency Source currency
+     * @param Carbon $date Transaction date
+     * @return float Amount in TRY
      */
     private function convertToTRY(float $amount, string $fromCurrency, Carbon $date): float
     {
@@ -70,12 +70,12 @@ class CurrencyConversionService
     }
 
     /**
-     * TRY tutarını başka bir para birimine çevirir
+     * Convert an amount in TRY to another currency.
      * 
-     * @param float $tryAmount TRY cinsinden tutar
-     * @param string $toCurrency Hedef para birimi
-     * @param Carbon $date İşlem tarihi
-     * @return float Dönüştürülmüş tutar
+     * @param float $tryAmount Amount in TRY
+     * @param string $toCurrency Target currency
+     * @param Carbon $date Transaction date
+     * @return float Converted amount
      */
     private function convertFromTRY(float $tryAmount, string $toCurrency, Carbon $date): float
     {
@@ -92,13 +92,13 @@ class CurrencyConversionService
     }
 
     /**
-     * Hesap bakiyesi için düşülecek tutarı hesaplar
+     * Calculate the amount to deduct from account balance.
      * 
-     * @param float $amount İşlem tutarı
-     * @param string $transactionCurrency İşlem para birimi
-     * @param string $accountCurrency Hesap para birimi
-     * @param Carbon $date İşlem tarihi
-     * @return float Hesaptan düşülecek tutar
+     * @param float $amount Transaction amount
+     * @param string $transactionCurrency Transaction currency
+     * @param string $accountCurrency Account currency
+     * @param Carbon $date Transaction date
+     * @return float Amount to deduct from account
      */
     public function calculateAccountDeduction(
         float $amount,

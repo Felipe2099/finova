@@ -10,6 +10,11 @@ class CommissionPayout extends Model
 {
     use HasFactory;
 
+    /**
+     * Fillable attributes
+     *
+     * @var array<string>
+     */
     protected $fillable = [
         'user_id',
         'amount',
@@ -27,7 +32,9 @@ class CommissionPayout extends Model
     ];
 
     /**
-     * Bu ödemenin yapıldığı kullanıcı.
+     * The user who received the commission payout.
+     *
+     * @return BelongsTo
      */
     public function user(): BelongsTo
     {

@@ -11,18 +11,18 @@ use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 
 /**
- * Tedarikçi servisi implementasyonu
+ * Supplier service implementation
  * 
- * Tedarikçi yönetimi için gerekli metodları içerir.
- * Tedarikçilerin oluşturulması, güncellenmesi ve silinmesi işlemlerini gerçekleştirir.
+ * Contains methods required to manage supplier operations.
+ * Handles supplier creation, updating, and deletion.
  */
 final class SupplierService implements SupplierServiceInterface
 {
     /**
-     * Yeni bir tedarikçi oluşturur
+     * Create a new supplier.
      * 
-     * @param SupplierData $data Tedarikçi verileri
-     * @return Supplier Oluşturulan tedarikçi
+     * @param SupplierData $data Supplier data
+     * @return Supplier Created supplier
      */
     public function create(SupplierData $data): Supplier
     {
@@ -32,11 +32,11 @@ final class SupplierService implements SupplierServiceInterface
     }
 
     /**
-     * Mevcut bir tedarikçiyi günceller
+     * Update an existing supplier.
      * 
-     * @param Supplier $supplier Güncellenecek tedarikçi
-     * @param SupplierData $data Güncellenecek veriler
-     * @return Supplier Güncellenmiş tedarikçi
+     * @param Supplier $supplier Supplier to update
+     * @param SupplierData $data Data to update
+     * @return Supplier Updated supplier
      */
     public function update(Supplier $supplier, SupplierData $data): Supplier
     {
@@ -47,9 +47,9 @@ final class SupplierService implements SupplierServiceInterface
     }
 
     /**
-     * Bir tedarikçiyi siler
+     * Delete a supplier.
      * 
-     * @param Supplier $supplier Silinecek tedarikçi
+     * @param Supplier $supplier Supplier to delete
      */
     public function delete(Supplier $supplier): void
     {

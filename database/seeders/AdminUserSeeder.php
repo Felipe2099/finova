@@ -13,7 +13,7 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Mevcut rolleri ve izinleri temizle
+        // Clear existing roles and permissions
         Schema::disableForeignKeyConstraints();
         DB::table('role_has_permissions')->truncate();
         DB::table('model_has_roles')->truncate();
@@ -21,14 +21,14 @@ class AdminUserSeeder extends Seeder
         DB::table('roles')->truncate();
         Schema::enableForeignKeyConstraints();
 
-        // Super Admin rolü oluştur
+        // Create Super Admin role
         $superAdminRole = Role::create([
             'name' => 'admin',
             'guard_name' => 'web'
         ]);
         $superAdminRole->syncPermissions(Permission::all());
 
-        // Employee rolü oluştur
+        // Create Employee role
         $employeeRole = Role::create([
             'name' => 'employee',
             'guard_name' => 'web'
@@ -48,7 +48,7 @@ class AdminUserSeeder extends Seeder
             'projects.details',
         ]);
 
-        // Admin kullanıcısına Super Admin rolünü ata
+        // Assign Super Admin role to Admin user
         $admin = User::where('email', 'admin@admin.com')->first();
         $employee = User::where('email', 'test@test.com')->first();
         if ($admin) {

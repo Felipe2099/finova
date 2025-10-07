@@ -22,17 +22,17 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Services\Planning\Contracts\PlanningServiceInterface;
 
 /**
- * Yatırım Planı Yönetimi Bileşeni
+ * Investment Planner Component
  * 
- * Bu bileşen, yatırım planlarının yönetimini sağlar.
- * Özellikler:
- * - Yatırım planı listesi görüntüleme
- * - Yeni yatırım planı oluşturma
- * - Yatırım planı düzenleme
- * - Yatırım planı silme
- * - Yatırım türü takibi
- * - Yatırım filtreleme
- * - Toplu işlem desteği
+ * This component provides functionality to manage investment plans.
+ * Features:
+ * - Investment plan list view
+ * - New investment plan creation
+ * - Investment plan editing
+ * - Investment plan deletion
+ * - Investment type tracking
+ * - Investment filtering
+ * - Bulk action support
  * 
  * @package App\Livewire\Planning
  */
@@ -41,13 +41,13 @@ final class InvestmentPlanner extends Component implements Tables\Contracts\HasT
     use InteractsWithTable;
     use InteractsWithForms;
 
-    /** @var PlanningServiceInterface Planlama servisi */
+    /** @var PlanningServiceInterface Planning service */
     private PlanningServiceInterface $planningService;
 
     /**
-     * Bileşen başlatılırken planlama servisini enjekte eder
+     * When the component is booted, the planning service is injected
      * 
-     * @param PlanningServiceInterface $planningService Planlama servisi
+     * @param PlanningServiceInterface $planningService Planning service
      * @return void
      */
     public function boot(PlanningServiceInterface $planningService): void
@@ -56,10 +56,10 @@ final class InvestmentPlanner extends Component implements Tables\Contracts\HasT
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -201,7 +201,7 @@ final class InvestmentPlanner extends Component implements Tables\Contracts\HasT
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

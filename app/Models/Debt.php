@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Borç/Alacak modeli
+ * Debt/Receivable model
  * 
- * İşletmenin müşterilerden alacaklarını ve tedarikçilere borçlarını temsil eder.
- * Her borç/alacak bir kullanıcıya ait olup, bir müşteri veya tedarikçi ile ilişkilidir.
- * Borç/alacak işlemleri ve ödemeleri takip edilebilir.
+ * Represents the business's receivables from customers and payables to suppliers.
+ * Each debt/receivable belongs to a user and is linked to a customer or supplier.
+ * Debt/receivable transactions and payments can be tracked.
  */
 final class Debt extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -42,7 +43,7 @@ final class Debt extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -56,7 +57,7 @@ final class Debt extends Model
     ];
 
     /**
-     * Borç/Alacağın sahibi olan kullanıcı
+     * The user who owns the debt/receivable.
      * 
      * @return BelongsTo
      */
@@ -66,7 +67,7 @@ final class Debt extends Model
     }
 
     /**
-     * Borç/Alacağın ilişkili olduğu müşteri
+     * The customer associated with the debt/receivable.
      * 
      * @return BelongsTo
      */
@@ -76,7 +77,7 @@ final class Debt extends Model
     }
 
     /**
-     * Borç/Alacağın ilişkili olduğu tedarikçi
+     * The supplier associated with the debt/receivable.
      * 
      * @return BelongsTo
      */
@@ -86,7 +87,7 @@ final class Debt extends Model
     }
 
     /**
-     * Borç/Alacağa ait işlemler
+     * Transactions related to the debt/receivable.
      * 
      * @return HasMany
      */
@@ -96,9 +97,9 @@ final class Debt extends Model
     }
 
     /**
-     * Kalan borç/alacak tutarını hesaplar
+     * Calculate the remaining debt/receivable amount.
      * 
-     * @return float Kalan tutar
+     * @return float Remaining amount
      */
     public function getRemainingAmountAttribute(): float
     {
@@ -110,9 +111,9 @@ final class Debt extends Model
     }
 
     /**
-     * Kar/zarar tutarını hesaplar
+     * Calculate the profit/loss amount.
      * 
-     * @return float Kar/zarar tutarı
+     * @return float Profit/Loss amount
      */
     public function getProfitLossAttribute(): float
     {

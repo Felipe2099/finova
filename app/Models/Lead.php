@@ -7,18 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Potansiyel Müşteri (Lead) modeli
+ * Lead model
  * 
- * İşletmenin potansiyel müşterilerini temsil eder.
- * Her potansiyel müşteri bir kullanıcıya atanabilir ve müşteriye dönüştürülebilir.
- * Potansiyel müşterilerin durumu, iletişim bilgileri ve dönüşüm süreci takip edilebilir.
+ * Represents the business's potential customers.
+ * Each lead can be assigned to a user and converted into a customer.
+ * Tracks lead status, contact info, and conversion process.
  */
 class Lead extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -43,26 +43,28 @@ class Lead extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
-     * 
+     * Attribute casts
+     *
      * @var array<string, string>
      */
     protected $casts = [
         'last_contact_date' => 'datetime',
         'next_contact_date' => 'datetime',
         'converted_at' => 'datetime',
-        'status' => 'string', // Enum için
+        'status' => 'string',
     ];
 
     /**
-     * Model boot metodu - user_id değişimini engeller
+     * Model boot method - prevent changing user_id.
+     *
+     * @return void
      */
     protected static function boot()
     {
         parent::boot();
 
         static::updating(function ($lead) {
-            // Eğer user_id değiştirilmeye çalışılıyorsa, eski değeri koru
+            // If user_id is attempted to be changed, keep the original value
             if ($lead->isDirty('user_id')) {
                 $lead->user_id = $lead->getOriginal('user_id');
             }
@@ -70,7 +72,7 @@ class Lead extends Model
     }
 
     /**
-     * Potansiyel müşterinin sahibi olan kullanıcı
+     * The user who owns the lead.
      * 
      * @return BelongsTo
      */
@@ -80,7 +82,7 @@ class Lead extends Model
     }
 
     /**
-     * Potansiyel müşteriye atanan kullanıcı
+     * The user assigned to the lead.
      * 
      * @return BelongsTo
      */
@@ -90,7 +92,7 @@ class Lead extends Model
     }
 
     /**
-     * Potansiyel müşterinin dönüştürüldüğü müşteri
+     * The customer the lead was converted into.
      * 
      * @return BelongsTo
      */

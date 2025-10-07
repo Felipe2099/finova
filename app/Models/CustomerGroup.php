@@ -4,19 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Müşteri Grubu modeli
+ * Customer Group model
  * 
- * Müşterilerin gruplandırılmasını sağlar.
- * Her grup bir kullanıcıya ait olup, birden fazla müşteri içerebilir.
+ * Enables grouping of customers.
+ * Each group belongs to a user and can include multiple customers.
  */
 class CustomerGroup extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -28,7 +30,7 @@ class CustomerGroup extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -37,7 +39,7 @@ class CustomerGroup extends Model
     ];
 
     /**
-     * Gruba ait müşteriler
+     * Customers belonging to the group.
      * 
      * @return HasMany
      */
@@ -47,7 +49,7 @@ class CustomerGroup extends Model
     }
 
     /**
-     * Grubun sahibi olan kullanıcı
+     * The user who owns the group.
      * 
      * @return BelongsTo
      */

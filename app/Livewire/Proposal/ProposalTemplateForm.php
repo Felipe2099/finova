@@ -13,17 +13,17 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
 
 /**
- * Teklif Şablonu Form Bileşeni
+ * Proposal Template Form Component
  * 
- * Bu bileşen, teklif şablonlarının oluşturulması ve düzenlenmesi için form sağlar.
- * Özellikler:
- * - Teklif şablonu oluşturma
- * - Teklif şablonu düzenleme
- * - Teklif kalemleri yönetimi
- * - Müşteri seçimi
- * - Geçerlilik tarihi belirleme
- * - Ödeme koşulları tanımlama
- * - Notlar ekleme
+ * This component provides a form for creating and editing proposal templates.
+ * Features:
+ * - Proposal template creation
+ * - Proposal template editing
+ * - Proposal item management
+ * - Customer selection
+ * - Validity date definition
+ * - Payment terms definition
+ * - Notes addition
  * 
  * @package App\Livewire\Proposal
  */
@@ -31,20 +31,20 @@ class ProposalTemplateForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    /** @var ProposalTemplate|null Düzenlenen teklif şablonu */
+    /** @var ProposalTemplate|null Edited proposal template */
     public ?ProposalTemplate $record = null;
 
-    /** @var array Form verileri */
+    /** @var array Form data */
     public array $data = [];
 
-    /** @var bool Düzenleme modu durumu */
+    /** @var bool Editing mode status */
     public bool $isEdit = false;
 
     /**
-     * Form yapılandırmasını oluşturur
+     * Creates the form configuration
      * 
-     * @param Forms\Form $form Form nesnesi
-     * @return Forms\Form Yapılandırılmış form
+     * @param Forms\Form $form Form object
+     * @return Forms\Form Configured form
      */
     public function form(Forms\Form $form): Forms\Form
     {
@@ -55,9 +55,9 @@ class ProposalTemplateForm extends Component implements HasForms
     }
 
     /**
-     * Bileşen başlatılırken çalışır
+     * When the component is booted, it runs
      * 
-     * @param int|null $id Düzenlenecek teklif şablonu ID'si
+     * @param int|null $id ID of the proposal template to be edited
      * @return void
      */
     public function mount(?int $id = null): void
@@ -68,7 +68,7 @@ class ProposalTemplateForm extends Component implements HasForms
             $this->record = ProposalTemplate::with(['customer', 'items'])->findOrFail($id);
             $this->data = $this->record->toArray();
             
-            // Items verilerini form'a ekle
+            // Add items data to the form
             $this->data['items'] = $this->record->items->map(function ($item) {
                 return [
                     'name' => $item->name,
@@ -84,9 +84,9 @@ class ProposalTemplateForm extends Component implements HasForms
     }
 
     /**
-     * Form şemasını oluşturur
+     * Creates the form schema
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getFormSchema(): array
     {
@@ -193,9 +193,9 @@ class ProposalTemplateForm extends Component implements HasForms
     }
 
     /**
-     * Form verilerini kaydeder
+     * Saves the form data
      * 
-     * @throws \Exception Kayıt sırasında oluşabilecek hatalar
+     * @throws \Exception Errors that can occur during the record
      * @return void
      */
     public function save(): void
@@ -203,7 +203,7 @@ class ProposalTemplateForm extends Component implements HasForms
         try {
             $data = $this->form->getState();
             
-            // Items verilerini ayır
+            // Separate items data
             $items = $data['items'] ?? [];
             unset($data['items']);
             
@@ -217,14 +217,14 @@ class ProposalTemplateForm extends Component implements HasForms
                     $proposal = ProposalTemplate::create($data);
                 }
 
-                // Teklif kalemlerini kaydet
+                // Save proposal items
                 if (!empty($items)) {
-                    // Mevcut kalemleri sil
+                    // Delete existing items
                     if ($this->isEdit) {
                         $proposal->items()->delete();
                     }
                     
-                    // Yeni kalemleri ekle
+                    // Add new items
                     foreach ($items as $item) {
                         $proposal->items()->create([
                             'name' => $item['name'],
@@ -261,7 +261,7 @@ class ProposalTemplateForm extends Component implements HasForms
     }
 
     /**
-     * Form işlemini iptal eder
+     * Cancels the form operation
      * 
      * @return void
      */
@@ -271,7 +271,7 @@ class ProposalTemplateForm extends Component implements HasForms
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

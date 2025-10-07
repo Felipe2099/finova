@@ -18,11 +18,11 @@ class DateRangeAnalyzer
     {
         $message = mb_strtolower($message);
         
-        // Yıl tespiti
+        // Detect year
         preg_match('/\b(20\d{2})\b/', $message, $yearMatches);
         $year = $yearMatches[1] ?? date('Y');
         
-        // Ay tespiti
+        // Detect month
         $month = null;
         foreach ($this->monthNames as $name => $number) {
             if (Str::contains($message, $name)) {
@@ -31,7 +31,7 @@ class DateRangeAnalyzer
             }
         }
 
-        // Özel durumlar
+        // Special cases
         if (Str::contains($message, 'bu yıl')) {
             $year = date('Y');
         }
@@ -40,16 +40,16 @@ class DateRangeAnalyzer
             $year = (int)date('Y') - 1;
         }
 
-        // Tarih aralığı belirleme
+        // Determine date range
         if ($month) {
-            // Belirli bir ay için
+            // For a specific month
             $start = Carbon::create($year, $month, 1)->startOfMonth();
             $end = $start->copy()->endOfMonth();
         } else {
-            // Yıl için
+            // For a specific year
             $start = Carbon::create($year, 1, 1)->startOfYear();
             
-            // Eğer gelecek yıl ise, bugüne kadar
+            // If the year is in the future, cap at today
             if ($year > date('Y')) {
                 $end = now();
             } else {
@@ -57,7 +57,7 @@ class DateRangeAnalyzer
             }
         }
 
-        // "... dan bu yana" veya "... den beri" gibi durumlar
+        // Phrases like "since ..."
         if (Str::contains($message, ['dan bu yana', 'den bu yana', 'dan beri', 'den beri'])) {
             if (preg_match('/(\d+)\s*\.\s*ay/', $message, $matches)) {
                 $start = now()->subMonths($matches[1])->startOfMonth();
@@ -67,12 +67,12 @@ class DateRangeAnalyzer
             $end = now();
         }
 
-        // Başlangıç tarihi bugünden sonra ise bugüne çek
+        // Ensure start date is not in the future
         if ($start->isFuture()) {
             $start = now()->startOfDay();
         }
 
-        // Bitiş tarihi başlangıçtan önce ise başlangıca eşitle
+        // Ensure end date is not before start date
         if ($end->lt($start)) {
             $end = $start->copy()->endOfMonth();
         }

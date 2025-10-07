@@ -11,16 +11,16 @@ use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 /**
- * Hesap İşlem Geçmişi Bileşeni
+ * Account Transaction History Component
  * 
- * Belirli bir hesabın tüm işlem geçmişini görüntüleyen ve yöneten Livewire bileşeni.
- * Gelir, gider, transfer ve diğer finansal işlemleri listeler ve filtreler.
+ * Livewire component to display and manage the full transaction history of a specific account.
+ * Lists and filters income, expense, transfer and other financial transactions.
  * 
- * Özellikler:
- * - İşlem geçmişi tablosu
- * - Tarih ve işlem türü filtreleme
- * - Para birimi dönüşümleri
- * - İşlem detayları görüntüleme
+ * Features:
+ * - Transaction history table
+ * - Date and transaction type filtering
+ * - Currency conversions
+ * - View transaction details
  */
 class AccountHistory extends Component implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
@@ -28,16 +28,16 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
     use Forms\Concerns\InteractsWithForms;
 
 
-    /** @var Account İşlem geçmişi görüntülenecek hesap */
+    /** @var Account The account whose history will be displayed */
     public Account $account;
 
-    /** @var CurrencyService Para birimi dönüşümleri için servis */
+    /** @var CurrencyService Service for currency conversions */
     private CurrencyService $currencyService;
 
     /**
-     * Bileşen başlatma
+     * Component boot.
      * 
-     * @param CurrencyService $currencyService Para birimi servisi
+     * @param CurrencyService $currencyService Currency service
      * @return void
      */
     public function boot(CurrencyService $currencyService): void
@@ -46,9 +46,9 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
     }
 
     /**
-     * Bileşen yükleme
+     * Component mount.
      * 
-     * @param Account $account İşlem geçmişi görüntülenecek hesap
+     * @param Account $account Account whose history will be displayed
      * @return void
      */
     public function mount(Account $account): void
@@ -57,9 +57,9 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
     }
 
     /**
-     * İşlem geçmişi tablosunu yapılandırır
+     * Configure the transaction history table.
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -108,14 +108,14 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
                         $amount = abs($record->amount);
                         $prefix = '';
                         
-                        // Hesaptan para çıkışı durumları
+                        // Outflows from account
                         if ($record->source_account_id === $this->account->id) {
-                            // Hesaptan para çıkışı (harcama, transfer, kredi ödemesi)
+                            // Outflow (expense, transfer, loan payment)
                             $prefix = '-';
                         } 
-                        // Hesaba para girişi durumları
+                        // Inflows to account
                         elseif ($record->destination_account_id === $this->account->id) {
-                            // Hesaba para girişi (gelir, transfer, ödeme)
+                            // Inflow (income, transfer, payment)
                             $prefix = '+';
                         }
                         
@@ -142,18 +142,18 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
                             return "{$prefix}" . number_format($tryAmount, 2) . " TRY";
                         }
 
-                        // Kaydedilmiş TRY karşılığını kullan
+                        // Use the stored TRY equivalent
                         $tryAmount = abs($record->try_equivalent);
                         $prefix = '';
                         
-                        // Hesaptan para çıkışı durumları
+                        // Outflows from account
                         if ($record->source_account_id === $this->account->id) {
-                            // Hesaptan para çıkışı (harcama, transfer, kredi ödemesi)
+                            // Outflow (expense, transfer, loan payment)
                             $prefix = '-';
                         } 
-                        // Hesaba para girişi durumları
+                        // Inflows to account
                         elseif ($record->destination_account_id === $this->account->id) {
-                            // Hesaba para girişi (gelir, transfer, ödeme)
+                            // Inflow (income, transfer, payment)
                             $prefix = '+';
                         }
                         
@@ -193,7 +193,7 @@ class AccountHistory extends Component implements Forms\Contracts\HasForms, Tabl
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view.
      * 
      * @return View
      */

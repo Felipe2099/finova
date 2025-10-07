@@ -1,5 +1,6 @@
 <?php
 
+// THIS FILE NOT USED NOW
 declare(strict_types=1);
 
 namespace App\Livewire\Debt;
@@ -16,6 +17,16 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 
+/**
+ * Debt Payments Component
+ * 
+ * This component provides functionality to manage debt payments.
+ * Features:
+ * - Debt payment list view
+ * - Debt payment creation
+ * - Debt payment editing
+ * - Debt payment deletion
+ */
 final class DebtPayments extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;

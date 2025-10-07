@@ -13,18 +13,18 @@ use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 
 /**
- * Müşteri servisi implementasyonu
+ * Customer service implementation
  * 
- * Müşteri işlemlerinin yönetimi için gerekli metodları içerir.
- * Müşterilerin oluşturulması, güncellenmesi, silinmesi ve not eklenmesi işlemlerini gerçekleştirir.
+ * Contains methods required to manage customer operations.
+ * Handles creating, updating, deleting, and adding notes for customers.
  */
 class CustomerService implements CustomerServiceInterface
 {
     /**
-     * Yeni bir müşteri oluşturur
+     * Create a new customer.
      * 
-     * @param CustomerData $data Müşteri verileri
-     * @return Customer Oluşturulan müşteri
+     * @param CustomerData $data Customer data
+     * @return Customer Created customer
      */
     public function create(CustomerData $data): Customer
     {
@@ -34,11 +34,11 @@ class CustomerService implements CustomerServiceInterface
     }
 
     /**
-     * Mevcut bir müşteriyi günceller
+     * Update an existing customer.
      * 
-     * @param Customer $customer Güncellenecek müşteri
-     * @param CustomerData $data Yeni müşteri verileri
-     * @return Customer Güncellenmiş müşteri
+     * @param Customer $customer Customer to update
+     * @param CustomerData $data New customer data
+     * @return Customer Updated customer
      */
     public function update(Customer $customer, CustomerData $data): Customer
     {
@@ -62,23 +62,23 @@ class CustomerService implements CustomerServiceInterface
     }
 
     /**
-     * Müşteriyi siler
+     * Delete the customer.
      * 
-     * Müşteriye ait tüm notları da siler ve istenirse bildirim gösterir.
+     * Deletes all notes belonging to the customer and optionally shows a notification.
      * 
-     * @param Customer $customer Silinecek müşteri
-     * @param bool $shouldNotify Bildirim gösterilip gösterilmeyeceği
+     * @param Customer $customer Customer to delete
+     * @param bool $shouldNotify Whether to show a notification
      */
     public function delete(Customer $customer, bool $shouldNotify = true): void
     {
         DB::transaction(function () use ($customer, $shouldNotify) {
-            // Müşteriye ait notları sil
+            // Delete customer's notes
             $customer->notes()->delete();
             
-            // Müşteriyi sil
+            // Delete the customer
             $customer->delete();
 
-            // Eğer bildirim isteniyorsa
+            // If notification is requested
             if ($shouldNotify) {
                 Notification::make()
                     ->title('Müşteri silindi')
@@ -89,11 +89,11 @@ class CustomerService implements CustomerServiceInterface
     }
 
     /**
-     * Müşteriye not ekler
+     * Add a note to the customer.
      * 
-     * @param Customer $customer Not eklenecek müşteri
-     * @param NoteData $data Not verileri
-     * @return CustomerNote Oluşturulan not
+     * @param Customer $customer Customer to add note to
+     * @param NoteData $data Note data
+     * @return CustomerNote Created note
      */
     public function addNote(Customer $customer, NoteData $data): CustomerNote
     {

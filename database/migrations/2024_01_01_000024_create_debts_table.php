@@ -15,9 +15,9 @@ return new class extends Migration {
             $table->enum('type', ['loan_payment', 'debt_payment']);
             $table->decimal('amount', 15, 5);
             $table->string('currency', 10)->default('TRY');
-            $table->decimal('buy_price', 15, 2)->nullable(); // Alış fiyatı
-            $table->decimal('sell_price', 15, 2)->nullable(); // Satış fiyatı
-            $table->decimal('profit_loss', 15, 2)->nullable(); // Kar/Zarar
+            $table->decimal('buy_price', 15, 2)->nullable(); // Buy price
+            $table->decimal('sell_price', 15, 2)->nullable(); // Sell price
+            $table->decimal('profit_loss', 15, 2)->nullable(); // Profit/Loss
             $table->text('description')->nullable();
             $table->date('date');
             $table->date('due_date')->nullable();

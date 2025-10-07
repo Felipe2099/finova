@@ -29,18 +29,18 @@ class SendUpcomingPaymentNotifications extends Command
      */
     public function handle(PaymentNotificationService $notificationService): int
     {
-        // Telegram bildirimleri aktif mi kontrol et
+        // Check if Telegram notifications are active
         $telegramEnabled = Setting::where('group', 'telegram')
             ->where('key', 'telegram_enabled')
             ->first();
             
-        // Boolean ve string 'true' için esnek kontrol
+        // Boolean and string 'true' flexible control
         if (!$telegramEnabled || !filter_var($telegramEnabled->value, FILTER_VALIDATE_BOOLEAN)) {
             $this->info('Telegram bildirimleri devre dışı.');
             return 0;
         }
         
-        // Token ve chat ID kontrolü
+        // Token and chat ID control
         $botToken = Setting::where('group', 'telegram')
             ->where('key', 'telegram_bot_token')
             ->first();

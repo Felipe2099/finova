@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         
-        // Her 30 dakikada bir demo verilerini güncelle
+        // Every 30 minutes update the demo data
         if (config('app.app_demo_mode')) {
             $schedule->command('demo:refresh')
                 ->everyThirtyMinutes()
@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
                 });
         })->daily();
 
-        // Yaklaşan ödemeler için Telegram bildirimleri gönder
+        // Send Telegram notifications for upcoming payments
         $schedule->command('notifications:upcoming-payments')
             ->dailyAt('08:00')
             ->when(function () {

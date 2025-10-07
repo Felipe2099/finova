@@ -8,34 +8,34 @@ use App\Models\CustomerGroup;
 use App\DTOs\CustomerGroup\CustomerGroupData;
 
 /**
- * Müşteri grubu servisi arayüzü
+ * Customer group service interface
  * 
- * Müşteri gruplarının yönetimi için gerekli metodları tanımlar.
- * Müşteri gruplarının oluşturulması, güncellenmesi ve silinmesi işlemlerini yapar.
+ * Defines the methods required for managing customer group operations.
+ * Handles customer group creation, updating, and deletion.
  */
 interface CustomerGroupServiceInterface
 {
     /**
-     * Yeni bir müşteri grubu oluşturur
+     * Create a new customer group.
      * 
-     * @param CustomerGroupData $data Müşteri grubu verileri
-     * @return CustomerGroup Oluşturulan müşteri grubu
+     * @param CustomerGroupData $data Customer group data
+     * @return CustomerGroup Created customer group
      */
     public function create(CustomerGroupData $data): CustomerGroup;
 
     /**
-     * Mevcut bir müşteri grubunu günceller
+     * Update an existing customer group.
      * 
-     * @param CustomerGroup $customerGroup Güncellenecek müşteri grubu
-     * @param CustomerGroupData $data Yeni müşteri grubu verileri
-     * @return CustomerGroup Güncellenmiş müşteri grubu
+     * @param CustomerGroup $customerGroup Customer group to update
+     * @param CustomerGroupData $data New customer group data
+     * @return CustomerGroup Updated customer group
      */
     public function update(CustomerGroup $customerGroup, CustomerGroupData $data): CustomerGroup;
 
     /**
-     * Müşteri grubunu siler
+     * Delete a customer group.
      * 
-     * @param CustomerGroup $customerGroup Silinecek müşteri grubu
+     * @param CustomerGroup $customerGroup Customer group to delete
      */
     public function delete(CustomerGroup $customerGroup): void;
 } 

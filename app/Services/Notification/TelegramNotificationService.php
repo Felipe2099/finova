@@ -15,12 +15,12 @@ class TelegramNotificationService
     protected ?Api $telegram = null;
 
     /**
-     * Telegram üzerinden bildirim gönder
+     * Send notification via Telegram
      */
     public function send(string $message): bool
     {
         try {
-            // Telegram etkin mi kontrol et
+            // Check if Telegram is enabled
             $enabled = Setting::where('group', 'telegram')
                 ->where('key', 'telegram_enabled')
                 ->first();
@@ -29,7 +29,7 @@ class TelegramNotificationService
                 return false;
             }
             
-            // Token ve chat ID al
+            // Get token and chat ID
             $token = Setting::where('group', 'telegram')
                 ->where('key', 'telegram_bot_token')
                 ->first();
@@ -42,12 +42,12 @@ class TelegramNotificationService
                 return false;
             }
             
-            // Telegram API
+            // Telegram API instance
             if (!$this->telegram) {
                 $this->telegram = new Api($token->value);
             }
             
-            // Mesajı gönder
+            // Send message
             $this->telegram->sendMessage([
                 'chat_id' => $chatId->value,
                 'text' => $message,

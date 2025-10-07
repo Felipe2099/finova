@@ -3,10 +3,10 @@
 namespace App\Enums;
 
 /**
- * İşlem Durumu Enum Sınıfı
+ * Transaction Status Enum Class
  * 
- * Finansal işlemlerin durumlarını tanımlar.
- * İşlemlerin yaşam döngüsünü takip etmek için kullanılır.
+ * Defines the statuses of financial transactions.
+ * Used to track the lifecycle of transactions.
  */
 enum TransactionStatusEnum: string
 {

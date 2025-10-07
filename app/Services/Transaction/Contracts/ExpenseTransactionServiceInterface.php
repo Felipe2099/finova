@@ -8,20 +8,19 @@ use App\DTOs\Transaction\TransactionData;
 use App\Models\Transaction;
 
 /**
- * Gider işlemleri servisi arayüzü
+ * Expense transactions service interface
  * 
- * Gider işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Gider işlemlerinin oluşturulması ve yönetilmesi işlemlerini yapar.
+ * Defines methods required to manage expense transactions.
  */
 interface ExpenseTransactionServiceInterface
 {
     /**
-     * Yeni bir gider işlemi oluşturur
+     * Create a new expense transaction.
      * 
-     * Gider işlemini kaydeder ve ilgili hesap bakiyesini günceller.
+     * Persists the transaction and updates related account balance.
      * 
-     * @param TransactionData $data Gider işlemi verileri
-     * @return Transaction Oluşturulan gider işlemi
+     * @param TransactionData $data Expense transaction data
+     * @return Transaction Created expense transaction
      */
     public function create(TransactionData $data): Transaction;
 } 

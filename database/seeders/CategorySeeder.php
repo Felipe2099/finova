@@ -12,7 +12,7 @@ class CategorySeeder extends Seeder
     {
         $user = User::first();
 
-        // Gelir Kategorileri
+        // Income Categories
         $incomeCategories = [
             ['name' => 'Maaş', 'color' => '#22c55e'],
             ['name' => 'Freelance', 'color' => '#3b82f6'],
@@ -31,7 +31,7 @@ class CategorySeeder extends Seeder
             ]);
         }
 
-        // Gider Kategorileri
+        // Expense Categories
         $expenseCategories = [
             ['name' => 'Kira', 'color' => '#ef4444'],
             ['name' => 'Market', 'color' => '#f97316'],

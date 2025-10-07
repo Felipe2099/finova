@@ -8,20 +8,19 @@ use App\DTOs\Transaction\TransactionData;
 use App\Models\Transaction;
 
 /**
- * Transfer işlemleri servisi arayüzü
+ * Transfer transactions service interface
  * 
- * Transfer işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Hesaplar arası para transferlerinin oluşturulması ve yönetilmesi işlemlerini yapar.
+ * Defines methods required to manage transfers between accounts.
  */
 interface TransferTransactionServiceInterface
 {
     /**
-     * Yeni bir transfer işlemi oluşturur
+     * Create a new transfer transaction.
      * 
-     * Transfer işlemini kaydeder ve ilgili hesap bakiyelerini günceller.
+     * Persists the transfer and updates related account balances.
      * 
-     * @param TransactionData $data Transfer işlemi verileri
-     * @return Transaction Oluşturulan transfer işlemi
+     * @param TransactionData $data Transfer transaction data
+     * @return Transaction Created transfer transaction
      */
     public function create(TransactionData $data): Transaction;
 } 

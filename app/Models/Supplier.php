@@ -5,20 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Tedarikçi modeli
+ * Supplier model
  * 
- * İşletmenin tedarikçilerini temsil eder.
- * Her tedarikçi için iletişim bilgileri ve borç kayıtları tutulabilir.
+ * Represents the business's suppliers.
+ * Keeps contact information and debt records for each supplier.
  */
 class Supplier extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -33,7 +34,7 @@ class Supplier extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -42,7 +43,7 @@ class Supplier extends Model
     ];
 
     /**
-     * Tedarikçiye ait borçlar
+     * Debts related to the supplier.
      * 
      * @return HasMany
      */

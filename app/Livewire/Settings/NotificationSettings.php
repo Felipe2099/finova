@@ -11,20 +11,33 @@ use Filament\Notifications\Notification;
 use Livewire\Component;
 use Illuminate\Contracts\View\View;
 
+/**
+ * Notification Settings Component
+ * 
+ * This component provides functionality to manage notification settings.
+ * Features:
+ * - Notification settings management
+ */
 final class NotificationSettings extends Component implements Forms\Contracts\HasForms
 {
     use Forms\Concerns\InteractsWithForms;
 
+    /** @var array Form data */
     public ?array $data = [];
 
+    /**
+     * When the component is mounted, the settings are loaded
+     * 
+     * @return void
+     */
     public function mount(): void
     {
         $settings = Setting::where('group', 'notification')->pluck('value', 'key')->toArray();
         $booleanKeys = [
-            'notify_credit_card_statement', // Kredi Kartı Ekstre Bildirimi
-            'notify_loan_payment', // Kredi Ödeme Bildirimi
-            'notify_recurring_payment', // Tekrarlayan Ödeme Bildirimi
-            'notify_debt_receivable', // Borç & Alacak Bildirimi
+            'notify_credit_card_statement',
+            'notify_loan_payment',
+            'notify_recurring_payment',
+            'notify_debt_receivable',
         ];
         foreach ($booleanKeys as $key) {
             if (!isset($settings[$key])) {
@@ -36,6 +49,12 @@ final class NotificationSettings extends Component implements Forms\Contracts\Ha
         $this->form->fill(['data' => $settings]);
     }
 
+    /**
+     * Creates the form configuration
+     * 
+     * @param Forms\Form $form Form object
+     * @return Forms\Form Configured form
+     */
     public function form(Form $form): Form
     {
         return $form
@@ -88,12 +107,17 @@ final class NotificationSettings extends Component implements Forms\Contracts\Ha
             ->statePath('data');
     }
 
+    /**
+     * Saves the form data
+     * 
+     * @return void
+     */
     public function save(): void
     {
         $data = $this->form->getState()['data'];
 
         foreach ($data as $key => $value) {
-            // Select'ten gelen değer string 'true'/'false' olabilir, boolean'a çevir
+            // Values from select may be 'true'/'false' strings, convert to boolean.
             $processedValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
 
             Setting::updateOrCreate(
@@ -112,6 +136,11 @@ final class NotificationSettings extends Component implements Forms\Contracts\Ha
             ->send();
     }
 
+    /**
+     * Renders the component view
+     * 
+     * @return \Illuminate\Contracts\View\View
+     */
     public function render(): View
     {
         return view('livewire.settings.generic-settings-view');

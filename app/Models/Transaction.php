@@ -9,21 +9,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Services\Commission\CommissionService;
 use App\Enums\TransactionTypeEnum;
 /**
- * İşlem modeli
+ * Transaction model
  * 
- * Finansal işlemleri temsil eder (gelir, gider, transfer, ödeme vb.).
- * Her işlem bir kullanıcıya ait olup, çeşitli hesaplar, müşteriler veya tedarikçilerle ilişkilendirilebilir.
- * İşlemler için vergi, stopaj, taksit ve abonelik özellikleri desteklenir.
+ * Represents financial transactions (income, expense, transfer, payment, etc.).
+ * Each transaction belongs to a user and can be associated with various accounts, customers, or suppliers.
+ * Supports tax, withholding, installment, and subscription features.
  */
 class Transaction extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
-     * İşlem tipleri
+     * Transaction types
      */
     const TYPE_INCOME = 'income';
     const TYPE_EXPENSE = 'expense';
@@ -36,14 +37,14 @@ class Transaction extends Model
     
 
     /**
-     * Ödeme tipleri
+     * Payment types
      */
     const PAYMENT_CASH = 'cash';
     const PAYMENT_BANK_TRANSFER = 'bank_transfer';
     const PAYMENT_CREDIT_CARD = 'credit_card';
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      *
      * @var array<string, string>
      */
@@ -66,7 +67,7 @@ class Transaction extends Model
     ];
 
     /**
-     * Ödeme yöntemi enum değerleri
+     * Payment method enum values
      */
     public const PAYMENT_METHOD_CASH = PaymentMethodEnum::CASH->value;
     public const PAYMENT_METHOD_BANK = PaymentMethodEnum::BANK->value;
@@ -75,7 +76,7 @@ class Transaction extends Model
     public const PAYMENT_METHOD_VIRTUAL_POS = PaymentMethodEnum::VIRTUAL_POS->value;
 
     /**
-     * Ödeme yöntemi seçeneklerini döndürür
+     * Get payment method options.
      * 
      * @return array<string, string>
      */
@@ -85,7 +86,7 @@ class Transaction extends Model
     }
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -123,7 +124,7 @@ class Transaction extends Model
     ];
 
     /**
-     * İşlemin sahibi olan kullanıcı
+     * The user who owns the transaction.
      * 
      * @return BelongsTo
      */
@@ -133,7 +134,7 @@ class Transaction extends Model
     }
 
     /**
-     * İşlemin kategorisi
+     * The category of the transaction.
      * 
      * @return BelongsTo
      */
@@ -143,7 +144,7 @@ class Transaction extends Model
     }
 
     /**
-     * İşlemin kaynak hesabı
+     * The source account of the transaction.
      * 
      * @return BelongsTo
      */
@@ -153,7 +154,7 @@ class Transaction extends Model
     }
 
     /**
-     * İşlemin hedef hesabı
+     * The destination account of the transaction.
      * 
      * @return BelongsTo
      */
@@ -163,7 +164,7 @@ class Transaction extends Model
     }
 
     /**
-     * İşlemin müşterisi
+     * The customer of the transaction.
      * 
      * @return BelongsTo
      */
@@ -173,7 +174,7 @@ class Transaction extends Model
     }
 
     /**
-     * İşlemin tedarikçisi
+     * The supplier of the transaction.
      * 
      * @return BelongsTo
      */
@@ -183,7 +184,7 @@ class Transaction extends Model
     }
 
     /**
-     * Referans işlem
+     * Reference transaction
      * 
      * @return BelongsTo
      */
@@ -193,7 +194,7 @@ class Transaction extends Model
     }
 
     /**
-     * İlişkili işlemler
+     * Related transactions
      * 
      * @return HasMany
      */
@@ -203,28 +204,28 @@ class Transaction extends Model
     }
 
     /**
-     * Transfer hesabı
-     * 
+     * Transfer account for the transaction.
+     *
      * @return BelongsTo
      */
-    public function transferAccount()
+    public function transferAccount(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'transfer_account_id');
     }
 
     /**
-     * İlişkili transfer işlemi
-     * 
+     * Related transfer transaction.
+     *
      * @return HasOne
      */
-    public function relatedTransfer()
+    public function relatedTransfer(): HasOne
     {
         return $this->hasOne(Transaction::class, 'reference_id', 'reference_id')
             ->where('id', '!=', $this->id);
     }
 
     /**
-     * Model olayları için observer metodları
+     * Observer methods for model events.
      * 
      * @return void
      */
@@ -235,7 +236,7 @@ class Transaction extends Model
                 $transaction->status = 'completed';
             }
             
-            // TRY eşdeğeri hesaplama
+            // Calculate TRY equivalent
             if (!isset($transaction->try_equivalent)) {
                 if ($transaction->currency !== 'TRY') {
                     $exchangeRate = $transaction->exchange_rate ?? 1;
@@ -245,7 +246,7 @@ class Transaction extends Model
                 }
             }
             
-            // Diğer hesaplamalar...
+            // Other calculations...
             if ($transaction->is_taxable && $transaction->tax_rate) {
                 $taxRate = $transaction->tax_rate / 100;
                 $netAmount = $transaction->amount / (1 + $taxRate);
@@ -282,7 +283,7 @@ class Transaction extends Model
                 $transaction->withholding_amount = null;
             }
 
-            // Eğer gelir işlemi ise ve miktar değiştiyse komisyonu güncelle
+            // If income transaction and amount changed, update the commission
             if ($transaction->type === TransactionTypeEnum::INCOME->value && $transaction->isDirty('amount')) {
                 if ($transaction->commission) {
                     $commission = $transaction->commission;
@@ -293,14 +294,14 @@ class Transaction extends Model
         });
 
         static::created(function ($transaction) {
-            // Sadece gelir işlemlerinde komisyon hesapla
+            // Calculate commission only for income transactions
             if ($transaction->type === TransactionTypeEnum::INCOME->value) {
                 app(CommissionService::class)->createCommissionForTransaction($transaction);
             }
         });
 
         static::deleted(function ($transaction) {
-            // İşlem silindiğinde ilişkili komisyonu da sil
+            // Delete the related commission when the transaction is deleted
             if ($transaction->commission) {
                 $transaction->commission->delete();
             }
@@ -308,7 +309,7 @@ class Transaction extends Model
     }
 
     /**
-     * İşlemin komisyonu
+     * Commission related to the transaction
      */
     public function commission(): HasOne
     {

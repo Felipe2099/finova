@@ -14,18 +14,18 @@ use App\Enums\PaymentMethodEnum;
 use Filament\Notifications\Notification;
 
 /**
- * Hesap servisi implementasyonu
+ * Account service implementation
  * 
- * Hesap işlemlerinin yönetimi için gerekli metodları içerir.
- * Hesapların oluşturulması, güncellenmesi, silinmesi ve diğer hesap işlemlerini gerçekleştirir.
+ * Contains methods required to manage account operations.
+ * Handles creating, updating, deleting, and other account-related operations.
  */
 class AccountService implements AccountServiceInterface
 {
     /**
-     * Yeni bir hesap oluşturur
+     * Create a new account.
      * 
-     * @param AccountData $data Hesap verileri
-     * @return Account Oluşturulan hesap
+     * @param AccountData $data Account data
+     * @return Account Created account
      */
     public function createAccount(AccountData $data): Account
     {
@@ -45,11 +45,11 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Mevcut bir hesabı günceller
+     * Update an existing account.
      * 
-     * @param Account $account Güncellenecek hesap
-     * @param AccountData $data Yeni hesap verileri
-     * @return Account Güncellenmiş hesap
+     * @param Account $account Account to update
+     * @param AccountData $data New account data
+     * @return Account Updated account
      */
     public function updateAccount(Account $account, AccountData $data): Account
     {
@@ -66,15 +66,15 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Hesabı siler
+     * Delete the account.
      * 
-     * @param Account $account Silinecek hesap
-     * @return bool İşlem başarılı ise true, değilse false
+     * @param Account $account Account to delete
+     * @return bool True on success, false otherwise
      */
     public function delete(Account $account): bool
     {
         try {
-            // İşlem kontrolü
+            // Transaction check
             if ($account->sourceTransactions()->withTrashed()->exists() || $account->destinationTransactions()->withTrashed()->exists()) {
                 $accountType = match($account->type) {
                     Account::TYPE_CRYPTO_WALLET => 'kripto cüzdan',
@@ -103,12 +103,12 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Hesap detaylarını hazırlar
+     * Prepare account details.
      * 
-     * Hesap tipine göre gerekli detayları oluşturur.
+     * Builds required details based on the account type.
      * 
-     * @param AccountData $data Hesap verileri
-     * @return array Hazırlanmış hesap detayları
+     * @param AccountData $data Account data
+     * @return array Prepared account details
      */
     private function prepareDetails(AccountData $data): array
     {
@@ -139,10 +139,10 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Taksitli alışveriş işlemi oluşturur
+     * Create an installment purchase transaction.
      * 
-     * @param AccountData $data Taksitli alışveriş verileri
-     * @return Transaction Oluşturulan taksitli alışveriş işlemi
+     * @param AccountData $data Installment purchase data
+     * @return Transaction Created installment purchase transaction
      */
     public function createInstallmentPurchase(AccountData $data): Transaction
     {
@@ -183,10 +183,10 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Kredi kartı için taksitli ödemeleri getirir
+     * Get installment payments for a credit card account.
      * 
-     * @param int $accountId Kredi kartı hesap ID'si
-     * @return \Illuminate\Database\Eloquent\Collection Taksitli ödemeler
+     * @param int $accountId Credit card account ID
+     * @return \Illuminate\Database\Eloquent\Collection Installment payments
      */
     public function getInstallmentsForCard(int $accountId): \Illuminate\Database\Eloquent\Collection
     {
@@ -199,12 +199,12 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Hesap bakiyesini günceller
+     * Update account balance.
      * 
-     * @param int $accountId Hesap ID'si
-     * @param float $amount İşlem miktarı
-     * @param string $currency Para birimi
-     * @param string $operation İşlem tipi (add/subtract)
+     * @param int $accountId Account ID
+     * @param float $amount Transaction amount
+     * @param string $currency Currency
+     * @param string $operation Operation type (add/subtract)
      */
     public function updateAccountBalance(int $accountId, float $amount, string $currency, string $operation): void
     {
@@ -217,7 +217,7 @@ class AccountService implements AccountServiceInterface
 
             switch ($account->type) {
                 case Account::TYPE_CREDIT_CARD:
-                    // Kredi kartı: Harcama -> borç artar, Ödeme -> borç azalır
+                    // Credit card: Expense -> debt increases, Payment -> debt decreases
                     if ($operation === 'add') {
                         $account->balance -= $adjustedAmount;
                     } else {
@@ -229,7 +229,7 @@ class AccountService implements AccountServiceInterface
                 case Account::TYPE_CRYPTO_WALLET:
                 case Account::TYPE_VIRTUAL_POS:
                 case Account::TYPE_CASH:
-                    // Normal hesaplar: Gelir -> bakiye artar, Gider -> bakiye azalır
+                    // Regular accounts: Income -> balance increases, Expense -> balance decreases
                     if ($operation === 'add') {
                         $account->balance += $adjustedAmount;
                     } else {
@@ -243,10 +243,10 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Kripto cüzdan hesabı oluşturur
+     * Create a crypto wallet account.
      * 
-     * @param AccountData $data Kripto cüzdan verileri
-     * @return Account Oluşturulan kripto cüzdan hesabı
+     * @param AccountData $data Crypto wallet data
+     * @return Account Created crypto wallet account
      */
     public function createCryptoWallet(AccountData $data): Account
     {
@@ -255,7 +255,7 @@ class AccountService implements AccountServiceInterface
         return DB::transaction(function () use ($data) {
             $account = new Account();
             
-            // user_id'yi direkt set edelim
+            // Set user_id directly
             $account->user_id = auth()->id() ?? $data->user_id;
             
             if (!$account->user_id) {
@@ -282,10 +282,10 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Sanal POS hesabı oluşturur
+     * Create a virtual POS account.
      * 
-     * @param AccountData $data Sanal POS verileri
-     * @return Account Oluşturulan sanal POS hesabı
+     * @param AccountData $data Virtual POS data
+     * @return Account Created virtual POS account
      */
     public function createVirtualPos(AccountData $data): Account
     {
@@ -309,13 +309,13 @@ class AccountService implements AccountServiceInterface
     }
 
     /**
-     * Kredi kartı ödemesi yapar
+     * Make a credit card payment.
      * 
-     * @param int $creditCardId Kredi kartı hesap ID'si
-     * @param float $amount Ödeme miktarı
-     * @param string $paymentMethod Ödeme yöntemi
-     * @param int|null $sourceAccountId Kaynak hesap ID'si
-     * @param string|null $date İşlem tarihi
+     * @param int $creditCardId Credit card account ID
+     * @param float $amount Payment amount
+     * @param string $paymentMethod Payment method
+     * @param int|null $sourceAccountId Source account ID
+     * @param string|null $date Transaction date
      */
     public function makeCardPayment(
         int $creditCardId, 
@@ -328,15 +328,15 @@ class AccountService implements AccountServiceInterface
             DB::transaction(function () use ($creditCardId, $amount, $paymentMethod, $sourceAccountId, $date) {
                 $creditCard = Account::findOrFail($creditCardId);
                 
-                // Mevcut borç miktarını al
+                // Get current debt amount
                 $currentDebt = $creditCard->balance;
                 
-                // Ödeme miktarı borçtan fazla ise
+                // If payment amount exceeds the debt
                 if ($amount > $currentDebt) {
-                    // Fazla ödeme miktarını hesapla
+                    // Calculate overpayment amount
                     $overpayment = $amount - $currentDebt;
                     
-                    // Kullanıcıya bildirim gönder
+                    // Send a notification to the user
                     Notification::make()
                         ->warning()
                         ->title('Fazla Ödeme Uyarısı')
@@ -344,23 +344,23 @@ class AccountService implements AccountServiceInterface
                         ->duration(8000)
                         ->send();
                     
-                    // Ödeme miktarını mevcut borç kadar sınırla
+                    // Limit the payment amount to the current debt
                     $amount = $currentDebt;
                 }
                 
-                // Kredi kartı borcunu azalt
+                // Reduce credit card debt
                 $creditCard->balance = max(0, $creditCard->balance - $amount);
                 $creditCard->save();
 
-                // Eğer banka hesabından ödeme yapıldıysa, banka hesabından da düşülecek miktar
-                // fazla ödeme durumunda sınırlandırılmış miktar olmalı
+                // If paid from a bank account, the amount deducted from the bank
+                // account should reflect the limited amount in overpayment cases
                 if ($paymentMethod === PaymentMethodEnum::BANK->value && $sourceAccountId) {
                     $sourceAccount = Account::findOrFail($sourceAccountId);
-                    $sourceAccount->balance -= $amount; // Artık sınırlandırılmış miktar kullanılıyor
+                    $sourceAccount->balance -= $amount; // Using the limited amount now
                     $sourceAccount->save();
                 }
 
-                // Ödeme işlemini kaydet
+                // Record the payment transaction
                 $transaction = new Transaction();
                 $transaction->user_id = auth()->id();
                 $transaction->source_account_id = $sourceAccountId;
@@ -373,7 +373,7 @@ class AccountService implements AccountServiceInterface
                 $transaction->description = 'Kredi kartı ödemesi';
                 $transaction->save();
                 
-                // Başarılı bildirim gönder
+                // Send success notification
                 Notification::make()
                     ->success()
                     ->title('Ödeme Başarılı')

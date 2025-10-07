@@ -19,86 +19,86 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Nakit Akışı Analizi Bileşeni
+ * Cash Flow Analysis Component
  * 
- * Bu bileşen, nakit akışı analizini ve raporlamasını sağlar.
- * Özellikler:
- * - Tarih aralığına göre nakit akışı analizi
- * - Hesap bazlı filtreleme
- * - Gelir ve gider trendleri
- * - Nakit akışı sağlığı değerlendirmesi
- * - Detaylı metrikler (toplam gelir, gider, ortalama, zirve değerler)
- * - Görsel grafikler ve tablolar
+ * This component provides a cash flow analysis and reporting.
+ * Features:
+ * - Cash flow analysis by date range
+ * - Account-based filtering
+ * - Income and expense trends
+ * - Cash flow health assessment
+ * - Detailed metrics (total income, expense, average, peak values)
+ * - Visual graphs and tables
  * 
- * @package App\Livewire\Analysis
+ * @package App\Livewire\AI
  */
 class CashFlowAnalysis extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    /** @var string Başlangıç tarihi (Y-m-d formatında) */
+    /** @var string Start date (Y-m-d format) */
     public $startDate;
 
-    /** @var string Bitiş tarihi (Y-m-d formatında) */
+    /** @var string End date (Y-m-d format) */
     public $endDate;
 
-    /** @var string Analiz periyodu (daily, weekly, monthly, quarterly, yearly) */
+    /** @var string Analysis period (daily, weekly, monthly, quarterly, yearly) */
     public $period = 'monthly';
 
-    /** @var array Seçili hesap ID'leri */
+    /** @var array Selected account IDs */
     public $accountIds = [];
     
-    /** @var string Grafik tipi (line, bar, stacked) */
+    /** @var string Chart type (line, bar, stacked) */
     public $chartType = 'line';
 
-    /** @var string Grafik başlangıç tarihi (Y-m-d formatında) */
+    /** @var string Chart start date (Y-m-d format) */
     public $chartStartDate;
 
-    /** @var string Grafik bitiş tarihi (Y-m-d formatında) */
+    /** @var string Chart end date (Y-m-d format) */
     public $chartEndDate;
 
-    /** @var string Grafik periyodu (daily, weekly, monthly, quarterly, yearly) */
+    /** @var string Chart period (daily, weekly, monthly, quarterly, yearly) */
     public $chartPeriod = 'monthly';
 
-    /** @var array Grafik verileri */
+    /** @var array Chart data */
     public $chartData = [];
     
-    /** @var array Nakit akışı verileri */
+    /** @var array Cash flow data */
     public $cashFlowData = [];
 
-    /** @var float Net nakit akışı */
+    /** @var float Net cash flow */
     public $netCashFlow = 0;
 
-    /** @var float Toplam gelir */
+    /** @var float Total income */
     public $totalInflow = 0;
 
-    /** @var float Toplam gider */
+    /** @var float Total expense */
     public $totalOutflow = 0;
 
-    /** @var float Ortalama gelir */
+    /** @var float Average income */
     public $averageInflow = 0;
 
-    /** @var float Ortalama gider */
+    /** @var float Average expense */
     public $averageOutflow = 0;
 
-    /** @var float Kümülatif nakit akışı */
+    /** @var float Cumulative cash flow */
     public $cumulativeCashFlow = 0;
 
-    /** @var float En yüksek gelir */
+    /** @var float Highest income */
     public $peakInflow = 0;
 
-    /** @var float En yüksek gider */
+    /** @var float Highest expense */
     public $peakOutflow = 0;
 
-    /** @var array Nakit akışı özeti */
+    /** @var array Cash flow summary */
     public $cashFlowSummary = [];
     
-    /** @var string|null Hata mesajı */
+    /** @var string|null Error message */
     public $errorMessage = null;
 
     /**
-     * Bileşen başlatıldığında çalışır
-     * Varsayılan tarih aralığını ve ilk verileri yükler
+     * When the component is mounted, it loads the default dates and initial data
+     * Loads the default dates and initial data
      */
     public function mount(): void
     {
@@ -112,7 +112,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
 
     /**
-     * Tüm tarihleri varsayılan değerlere sıfırlar (son 3 ay)
+     * Resets all dates to the default values (last 3 months)
      */
     private function resetDatesToDefault(): void
     {
@@ -126,9 +126,9 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Tarih değerlerinin geçerliliğini kontrol eder
+     * Checks the validity of the dates
      * 
-     * @return bool Tarihler geçerli ise true, değilse false
+     * @return bool True if dates are valid, false otherwise
      */
     private function validateDates(): bool
     {
@@ -158,8 +158,8 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Tüm verileri yükler ve hesaplar
-     * Tarihlerin geçerliliğini kontrol eder ve gerekirse varsayılan değerlere sıfırlar
+     * Loads all data and calculates the metrics
+     * Checks the validity of the dates and resets to default if invalid
      */
     private function loadData(): void
     {
@@ -178,29 +178,29 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Genel nakit akışı verilerini yükler (hesap filtresi olmadan)
+     * Loads the general cash flow data (without account filtering)
      */
     private function loadGeneralCashFlowData()
     {
         $this->generalCashFlowData = $this->getCashFlowData($this->startDate, $this->endDate, $this->period, []);
         
-        // Genel nakit akışı metrikleri hesapla
+        // Calculate the general cash flow metrics
         $this->generalNetCashFlow = $this->calculateNetCashFlow($this->generalCashFlowData);
         $this->generalAverageInflow = $this->calculateAverageInflow($this->generalCashFlowData);
         $this->generalAverageOutflow = $this->calculateAverageOutflow($this->generalCashFlowData);
         
-        // Nakit akışı sağlığı ve özeti
+        // Cash flow health and summary
         $this->cashFlowSummary = $this->generateCashFlowSummary($this->generalCashFlowData);
     }
     
     /**
-     * Filtrelenmiş nakit akışı verilerini yükler (seçilen hesaplara göre)
+     * Loads the filtered cash flow data (based on selected accounts)
      */
     private function loadFilteredCashFlowData()
     {
         $this->cashFlowData = $this->getCashFlowData($this->startDate, $this->endDate, $this->period, $this->accountIds);
         
-        // Filtrelenmiş nakit akışı metrikleri hesapla
+        // Calculate the filtered cash flow metrics
         $this->netCashFlow = $this->calculateNetCashFlow($this->cashFlowData);
         $this->totalInflow = $this->cashFlowData->sum('inflow');
         $this->totalOutflow = $this->cashFlowData->sum('outflow');
@@ -212,7 +212,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Grafik verilerini yükler (ayrı tarih aralığı ve periyot kullanarak)
+     * Loads the chart data (using separate date range and period)
      */
     private function loadChartData()
     {
@@ -233,7 +233,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Filtre değişikliğinde grafiği günceller
+     * Updates the chart when filter changes
      * 
      * @return null
      */
@@ -255,7 +255,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Başlangıç tarihi güncellendiğinde grafik başlangıç tarihini senkronize eder
+     * Synchronizes the chart start date when the start date is updated
      */
     public function updatedStartDate(): void
     {
@@ -264,7 +264,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
 
     /**
-     * Bitiş tarihi güncellendiğinde grafik bitiş tarihini senkronize eder
+     * Synchronizes the chart end date when the end date is updated
      */
     public function updatedEndDate(): void
     {
@@ -273,7 +273,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
 
     /**
-     * Hesap seçimleri güncellendiğinde grafiği günceller
+     * Updates the chart when the account selection is updated
      */
     public function updatedAccountIds()
     {
@@ -281,7 +281,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Grafik başlangıç tarihi güncellendiğinde verileri yeniden yükler
+     * Reloads the data when the chart start date is updated
      */
     public function updatedChartStartDate(): void
     {
@@ -320,7 +320,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Grafik bitiş tarihi güncellendiğinde verileri yeniden yükler
+     * Reloads the data when the chart end date is updated
      */
     public function updatedChartEndDate(): void
     {
@@ -359,7 +359,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Grafik periyodu güncellendiğinde verileri yeniden yükler
+     * Reloads the data when the chart period is updated
      */
     public function updatedChartPeriod()
     {
@@ -382,7 +382,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Grafik filtrelerini varsayılan değerlere sıfırlar
+     * Resets the chart filters to the default values
      */
     public function resetChartFilters()
     {
@@ -399,7 +399,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Grafik tipi güncellendiğinde verileri yeniden yükler
+     * Reloads the data when the chart type is updated
      * 
      * @param string $value Yeni grafik tipi
      */
@@ -415,7 +415,7 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */
@@ -437,9 +437,9 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Form şemasını oluşturur
+     * Creates the form schema
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getFormSchema(): array
     {
@@ -471,7 +471,7 @@ class CashFlowAnalysis extends Component implements HasForms
                             ->options(function () {
                                 return Account::where('user_id', auth()->id())
                                     ->where('status', true)
-                                    ->where('type', '!=', 'cash') // Nakit hesapları filtrele
+                                    ->where('type', '!=', 'cash') // Filter out cash accounts
                                     ->pluck('name', 'id')
                                     ->toArray();
                             }),
@@ -482,17 +482,17 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Nakit akışı verilerini getirir
+     * Gets the cash flow data
      * 
-     * @param string|null $startDate Başlangıç tarihi
-     * @param string|null $endDate Bitiş tarihi
-     * @param string|null $period Periyot (daily, weekly, monthly, quarterly, yearly)
-     * @param array|null $accountIds Hesap ID'leri
+     * @param string|null $startDate Start date
+     * @param string|null $endDate End date
+     * @param string|null $period Period (daily, weekly, monthly, quarterly, yearly)
+     * @param array|null $accountIds Account IDs
      * @return \Illuminate\Support\Collection
      */
     public function getCashFlowData($startDate = null, $endDate = null, $period = null, $accountIds = null)
     {
-        // Varsayılan değerleri kullan
+        // Use default values
         $startDate = $startDate ?? $this->startDate;
         $endDate = $endDate ?? $this->endDate;
         $period = $period ?? $this->period;
@@ -513,9 +513,9 @@ class CashFlowAnalysis extends Component implements HasForms
             });
         }
         
-        // Periyoda göre SQL sorgusunu oluşturalım
+        // Create the SQL query based on the period
         if ($period === 'quarterly') {
-            // Alt sorgu kullanarak çeyreklik sorguyu çözüyoruz
+            // Use subquery to resolve the quarterly query
             $sql = "SELECT 
                     t.year,
                     t.quarter,
@@ -541,7 +541,7 @@ class CashFlowAnalysis extends Component implements HasForms
             ];
             
             if (!empty($accountIds)) {
-                // Hesap filtresi için ayrı bir sorgu kullanmamız gerekiyor
+                // We need to use a separate query for the account filter
                 $sql = "SELECT 
                         t.year,
                         t.quarter,
@@ -569,7 +569,7 @@ class CashFlowAnalysis extends Component implements HasForms
                     $endDate
                 ];
                 
-                // Hesap ID'lerini iki kez ekliyoruz (source ve destination için)
+                // We need to add the account IDs twice (source and destination)
                 foreach ($accountIds as $id) {
                     $bindings[] = $id;
                 }
@@ -580,14 +580,14 @@ class CashFlowAnalysis extends Component implements HasForms
             
             $rawResults = DB::select($sql, $bindings);
             
-            // Sonuçları collection'a çeviriyoruz
+            // Convert the results to a collection
             $results = collect($rawResults)
                 ->map(function ($item) {
                     $item->net = $item->inflow - $item->outflow;
                     return $item;
                 });
         } else {
-            // Diğer periyotlar için normal sorgu
+            // For other periods, use the normal query
             $dateFormat = $this->getDateFormat($period);
             
             $results = $query->select(
@@ -608,10 +608,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Periyoda göre tarih formatını döndürür
+     * Returns the date format based on the period
      * 
-     * @param string|null $period Periyot (daily, weekly, monthly, quarterly, yearly)
-     * @return string MySQL DATE_FORMAT için format string
+     * @param string|null $period Period (daily, weekly, monthly, quarterly, yearly)
+     * @return string MySQL DATE_FORMAT format string
      */
     private function getDateFormat($period = null)
     {
@@ -619,25 +619,25 @@ class CashFlowAnalysis extends Component implements HasForms
         
         switch ($period) {
             case 'daily':
-                return '%Y-%m-%d'; // Günlük: 2023-01-01
+                return '%Y-%m-%d'; // Daily: 2023-01-01
             case 'weekly':
-                return '%x-W%v'; // Haftalık: 2023-W01
+                return '%x-W%v'; // Weekly: 2023-W01
             case 'monthly':
-                return '%Y-%m'; // Aylık: 2023-01
+                return '%Y-%m'; // Monthly: 2023-01
             case 'quarterly':
-                return '%Y-Q' . DB::raw('QUARTER(date)'); // Çeyreklik: 2023-Q1
+                return '%Y-Q' . DB::raw('QUARTER(date)'); // Quarterly: 2023-Q1
             case 'yearly':
-                return '%Y'; // Yıllık: 2023
+                return '%Y'; // Yearly: 2025
             default:
-                return '%Y-%m'; // Varsayılan olarak aylık
+                return '%Y-%m'; // Default is monthly
         }
     }
     
     /**
-     * Net nakit akışını hesaplar
+     * Calculates the net cash flow
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return float Net nakit akışı
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return float Net cash flow
      */
     private function calculateNetCashFlow($data)
     {
@@ -647,10 +647,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Kümülatif nakit akışını hesaplar
+     * Calculates the cumulative cash flow
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return array Kümülatif nakit akışı verileri
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return array Cumulative cash flow data
      */
     private function calculateCumulativeCashFlow($data)
     {
@@ -669,10 +669,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Ortalama geliri hesaplar
+     * Calculates the average inflow
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return float Ortalama gelir
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return float Average inflow
      */
     private function calculateAverageInflow($data)
     {
@@ -686,10 +686,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Ortalama gideri hesaplar
+     * Calculates the average outflow
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return float Ortalama gider
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return float Average outflow
      */
     private function calculateAverageOutflow($data)
     {
@@ -703,10 +703,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * En yüksek geliri hesaplar
+     * Calculates the peak inflow
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return float En yüksek gelir
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return float Peak inflow
      */
     private function calculatePeakInflow($data)
     {
@@ -714,10 +714,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * En yüksek gideri hesaplar
+     * Calculates the peak outflow
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return float En yüksek gider
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return float Peak outflow
      */
     private function calculatePeakOutflow($data)
     {
@@ -725,10 +725,10 @@ class CashFlowAnalysis extends Component implements HasForms
     }
     
     /**
-     * Nakit akışı özetini oluşturur
+     * Generates the cash flow summary
      * 
-     * @param \Illuminate\Support\Collection $data Nakit akışı verileri
-     * @return array Nakit akışı özeti
+     * @param \Illuminate\Support\Collection $data Cash flow data
+     * @return array Cash flow summary
      */
     private function generateCashFlowSummary($data)
     {
@@ -736,10 +736,10 @@ class CashFlowAnalysis extends Component implements HasForms
         $totalOutflow = $data->sum('outflow');
         $netCashFlow = $totalInflow - $totalOutflow;
         
-        // Nakit akışı oranı
+        // Cash flow ratio
         $cashFlowRatio = $totalOutflow > 0 ? $totalInflow / $totalOutflow : ($totalInflow > 0 ? 2 : 0);
         
-        // Trend yüzdesini hesapla
+        // Trend percentage
         $trendPercent = 0;
         
         if ($data->count() >= 2) {
@@ -759,7 +759,7 @@ class CashFlowAnalysis extends Component implements HasForms
             'trendPercent' => $trendPercent,
         ];
         
-        // Nakit akışı sağlığı değerlendirmesi
+        // Cash flow health evaluation
         if ($netCashFlow > 0 && $cashFlowRatio >= 1.2) {
             $summary['health'] = 'excellent';
             $summary['healthMessage'] = 'Nakit akışı mükemmel durumda. Giderlerinizi karşılamak için yeterli gelir var ve tasarruf yapabiliyorsunuz.';
@@ -780,7 +780,7 @@ class CashFlowAnalysis extends Component implements HasForms
             $summary['healthMessage'] = 'Nakit akışı kritik seviyede. Giderleriniz gelirinizi aşıyor. Acil önlem almanız gerekiyor.';
         }
         
-        // Tavsiyeler
+        // Recommendations
         $recommendations = [];
         
         if ($cashFlowRatio < 1.0) {

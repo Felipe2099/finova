@@ -7,8 +7,20 @@ use App\Services\AI\Implementations\OpenAIAssistant;
 use Illuminate\Support\ServiceProvider;
 use OpenAI;
 
+/**
+ * OpenAI Service Provider
+ *
+ * Registers the OpenAI client and AI assistant implementation.
+ *
+ * @return void
+*/
 class OpenAIServiceProvider extends ServiceProvider
 {
+    /**
+     * Register the OpenAI client and AI assistant implementation.
+     *
+     * @return void
+     */
     public function register(): void
     {
         $this->app->singleton(OpenAI\Client::class, function () {

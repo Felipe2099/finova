@@ -11,22 +11,22 @@ use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 
 /**
- * Döviz kuru servisi
+ * Exchange rate service
  * 
- * TCMB'den döviz kurlarını çeker, önbellekler ve yönetir.
- * Kur bilgilerini almak ve çapraz kurları hesaplamak için gerekli metodları içerir.
+ * Fetches, caches, and manages exchange rates from the Central Bank of Turkey (TCMB).
+ * Contains methods to retrieve rates and calculate cross rates.
  */
 final class CurrencyService
 {
     private const CACHE_KEY = 'currency_rates';
-    private const CACHE_TTL = 3600; // 1 saat
-    private const MAX_RETRY_DAYS = 12; // Maksimum 12 gün geriye bakacak
+    private const CACHE_TTL = 3600; // 1 hour
+    private const MAX_RETRY_DAYS = 12; // Look back up to 12 days
     
     /**
-     * Belirli bir tarih için döviz kurlarını getirir
+     * Get exchange rates for a given date.
      * 
-     * @param Carbon|null $date Tarih
-     * @return array|null Döviz kurları
+     * @param Carbon|null $date Date
+     * @return array|null Exchange rates
      */
     public function getExchangeRates(?Carbon $date = null): ?array
     {
@@ -39,10 +39,10 @@ final class CurrencyService
     }
 
     /**
-     * Belirli bir tarih için döviz kurlarını çeker ve yedek mekanizması uygular
+     * Fetch rates for a specific date with fallback mechanism.
      * 
-     * @param Carbon $date Tarih
-     * @return array|null Döviz kurları
+     * @param Carbon $date Date
+     * @return array|null Exchange rates
      */
     private function fetchRatesWithFallback(Carbon $date): ?array
     {
@@ -50,13 +50,13 @@ final class CurrencyService
         $attempts = 0;
 
         while ($attempts < self::MAX_RETRY_DAYS) {
-            // Hafta sonu kontrolü
+            // Weekend check
             if ($tryDate->isWeekend()) {
                 $tryDate = $tryDate->copy()->previous('Friday');
                 continue;
             }
 
-            // Resmi tatil veya başka bir nedenle veri yoksa bir önceki güne bak
+            // If data is missing due to holidays or other reasons, try the previous day
             $rates = $this->fetchRatesForDate($tryDate);
             
             if ($rates !== null) {
@@ -74,10 +74,10 @@ final class CurrencyService
     }
 
     /**
-     * Belirli bir tarih için TCMB'den döviz kurlarını çeker
+     * Fetch exchange rates from TCMB for a given date.
      * 
-     * @param Carbon $date Tarih
-     * @return array|null Döviz kurları
+     * @param Carbon $date Date
+     * @return array|null Exchange rates
      */
     private function fetchRatesForDate(Carbon $date): ?array
     {
@@ -88,8 +88,8 @@ final class CurrencyService
                 // TCMB format: /202403/13032024.xml
                 $url = sprintf(
                     'https://www.tcmb.gov.tr/kurlar/%s/%s.xml',
-                    $date->format('Y') . $date->format('m'),  // Yıl ve ay: 202403
-                    $date->format('d') . $date->format('m') . $date->format('Y')  // GünAyYıl: 13032024
+                    $date->format('Y') . $date->format('m'),  // Year and month: 202403
+                    $date->format('d') . $date->format('m') . $date->format('Y')  // DayMonthYear: 13032024
                 );
             }
 
@@ -110,10 +110,10 @@ final class CurrencyService
     }
 
     /**
-     * XML formatındaki kur verilerini işler
+     * Parse exchange rates from XML format.
      * 
-     * @param SimpleXMLElement $xml XML verisi
-     * @return array İşlenmiş kur verileri
+     * @param SimpleXMLElement $xml XML data
+     * @return array Parsed rate data
      */
     private function parseXmlRates(SimpleXMLElement $xml): array
     {
@@ -139,9 +139,9 @@ final class CurrencyService
     }
 
     /**
-     * Varsayılan döviz kurlarını döndürür
+     * Return default exchange rates.
      * 
-     * @return array Varsayılan kurlar
+     * @return array Default rates
      */
     private function getDefaultRates(): array
     {
@@ -171,15 +171,15 @@ final class CurrencyService
     }
 
     /**
-     * Belirli bir para birimi için kur bilgisini getirir
+     * Get exchange rate info for a specific currency.
      * 
-     * @param string $currencyCode Para birimi kodu
-     * @param Carbon|null $date Tarih
-     * @return array|null Kur bilgisi
+     * @param string $currencyCode Currency code
+     * @param Carbon|null $date Date
+     * @return array|null Rate info
      */
     public function getExchangeRate(string $currencyCode, ?Carbon $date = null): ?array
     {
-        // TRY için özel kontrol
+        // Special case for TRY
         if ($currencyCode === 'TRY') {
             return [
                 'buying' => 1,
@@ -195,31 +195,31 @@ final class CurrencyService
     }
 
     /**
-     * İki para birimi arasındaki çapraz kuru hesaplar
+     * Calculate cross rate between two currencies.
      * 
-     * @param string $fromCurrency Kaynak para birimi
-     * @param string $toCurrency Hedef para birimi
-     * @param array $rates Kur bilgileri
-     * @return float Çapraz kur
+     * @param string $fromCurrency Source currency
+     * @param string $toCurrency Target currency
+     * @param array $rates Rate info
+     * @return float Cross rate
      */
     public function calculateCrossRate(string $fromCurrency, string $toCurrency, array $rates): float
     {
-        // Aynı para birimi
+        // Same currency
         if ($fromCurrency === $toCurrency) {
             return 1;
         }
 
-        // TRY -> Diğer
+        // TRY -> Other
         if ($fromCurrency === 'TRY') {
             return 1 / $rates[$toCurrency]['selling'];
         }
 
-        // Diğer -> TRY
+        // Other -> TRY
         if ($toCurrency === 'TRY') {
             return $rates[$fromCurrency]['buying'];
         }
 
-        // Diğer -> Diğer (USD üzerinden)
+        // Other -> Other (via USD)
         $fromUsdRate = $rates[$fromCurrency]['buying'] / $rates['USD']['buying'];
         $toUsdRate = $rates[$toCurrency]['selling'] / $rates['USD']['selling'];
         

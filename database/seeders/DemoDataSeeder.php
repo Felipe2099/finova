@@ -41,7 +41,7 @@ class DemoDataSeeder extends Seeder
             throw new \RuntimeException('Test kullanıcısı bulunamadı. Önce UserSeeder çalıştırılmalı.');
         }
 
-        // Admin için tüm veriler
+        // For Admin, create all data
         $this->createCustomerGroups($this->admin);
         $this->createCategories($this->admin);
         $this->createCustomersAndLeads($this->admin);
@@ -53,18 +53,18 @@ class DemoDataSeeder extends Seeder
         $this->createProjects($this->admin);
         $this->createTransactions($this->admin);
 
-        // Çalışan için SADECE müşteri yönetimi ve işlemleri
-        // Hesaplar, Kategoriler, Gruplar admin tarafından oluşturulanları kullanacak
-        $this->createCustomersAndLeads($this->employee); // Çalışan kendi müşterilerini ekler
-        $this->createCustomerNotes($this->employee);   // Çalışan kendi notlarını ekler
-        $this->createTransactions($this->employee);    // Çalışan kendi müşterileri için işlem ekler (Admin hesap/kategorilerini kullanarak)
-        $this->createCommissionPayouts($this->employee); // Komisyon ödemelerini çalışan için oluştur
+        // For Employee, only create customer management and transactions
+        // Use admin's created accounts, categories, and groups
+        $this->createCustomersAndLeads($this->employee); // Employee creates own customers
+        $this->createCustomerNotes($this->employee);   // Employee creates own notes
+        $this->createTransactions($this->employee);    // Employee creates transactions for own customers (using admin's accounts/categories)
+        $this->createCommissionPayouts($this->employee); // Create commission payouts for employee
     
     }
 
     private function createCategories(User $user): void
     {
-        // Sadeleştirilmiş kategori yapısı (5-6 Gelir, 5-6 Gider)
+        // Simplified category structure (5-6 Income, 5-6 Expense)
         $incomeCategories = [
             ['name' => 'Hizmet Geliri', 'type' => 'income'],
             ['name' => 'Satış Geliri', 'type' => 'income'],
@@ -75,7 +75,7 @@ class DemoDataSeeder extends Seeder
         ];
 
         $expenseCategories = [
-            ['name' => 'Ofis Giderleri', 'type' => 'expense'], // Kira, Fatura, Malzeme vb.
+            ['name' => 'Ofis Giderleri', 'type' => 'expense'], // Rent, Bills, Materials, etc.
             ['name' => 'Personel Giderleri', 'type' => 'expense'],
             ['name' => 'Yazılım & Abonelikler', 'type' => 'expense'],
             ['name' => 'Pazarlama & Reklam Giderleri', 'type' => 'expense'],
@@ -124,23 +124,23 @@ class DemoDataSeeder extends Seeder
 
     private function createCustomersAndLeads(User $user): void
     {
-        // Önce grupların var olduğundan emin ol
-        // Müşteri gruplarını HER ZAMAN admin kullanıcısından al
+        // First make sure groups exist
+        // Always use admin user's customer groups
         $groups = CustomerGroup::where('user_id', $this->admin->id)->get();
         if ($groups->isEmpty()) {
             throw new \RuntimeException('Müşteri grupları bulunamadı. Önce createCustomerGroups çalıştırılmalı.');
         }
 
-        // Son 1 yıl için müşteri oluştur
+        // Create customers for last 1 year
         $startDate = Carbon::now()->subYear();
         $currentDate = $startDate->copy();
         
         while ($currentDate <= Carbon::now()) {
-            // Her ay için 5-10 arası müşteri
+            // Create customers for last 1 year
             $monthlyCustomerCount = $this->faker->numberBetween(5, 10);
             
             for ($i = 0; $i < $monthlyCustomerCount; $i++) {
-                $group = $groups->random(); // Rastgele bir grup seç
+                $group = $groups->random(); // Random group selection
                 $createdAt = $currentDate->copy()->addDays($this->faker->numberBetween(1, 28));
                 
                 $isCompany = $this->faker->boolean(70);
@@ -155,7 +155,7 @@ class DemoDataSeeder extends Seeder
                     'city' => $this->faker->city,
                     'district' => $this->faker->city,
                     'description' => $this->faker->sentence,
-                    'status' => true, // Tüm müşteriler aktif olsun
+                    'status' => true, // All customers are active
                     'customer_group_id' => $group->id,
                     'user_id' => $user->id,
                     'created_at' => $createdAt,
@@ -163,7 +163,7 @@ class DemoDataSeeder extends Seeder
                 ]);
             }
 
-            // Lead'ler sadece admin için
+            // Leads only for admin
             if ($user->hasRole('admin')) {
                 $monthlyLeadCount = $this->faker->numberBetween(2, 4);
                 
@@ -288,7 +288,7 @@ class DemoDataSeeder extends Seeder
 
     private function createProjects(User $user): void
     {
-        // Tek bir proje oluştur
+        // Create single project
         $project = Project::create([
             'name' => 'Müşteri Yönetim Sistemi',
             'description' => 'Müşteri ilişkileri ve satış süreçlerinin yönetimi için yazılım projesi',
@@ -297,10 +297,10 @@ class DemoDataSeeder extends Seeder
             'created_by' => $user->id,
         ]);
 
-        // Ana board'u oluştur
+        // Create main board
 
 
-        // Task listelerini oluştur
+        // Create task lists
         $lists = [
             ['name' => 'Bekliyor', 'order' => 1],
             ['name' => 'İşlemde', 'order' => 2],
@@ -317,7 +317,7 @@ class DemoDataSeeder extends Seeder
             ]);
         }
 
-        // İşlemde olan görevler
+        // In progress tasks
         $tasks = [
             [
                 'list' => 'İşlemde',
@@ -372,7 +372,7 @@ class DemoDataSeeder extends Seeder
             ]
         ];
 
-        // Görevleri oluştur
+        // Create tasks
         foreach ($tasks as $listTasks) {
             $list = $taskLists[$listTasks['list']];
             foreach ($listTasks['tasks'] as $index => $task) {
@@ -391,7 +391,7 @@ class DemoDataSeeder extends Seeder
 
     private function createSavingsAndInvestments(User $user): void
     {
-        // Sadece 2 tasarruf planı
+        // Only 2 savings plans
         $savingsPlans = [
             [
                 'goal_name' => 'Acil Durum Fonu',
@@ -420,7 +420,7 @@ class DemoDataSeeder extends Seeder
             ]);
         }
 
-        // Sadece 2 yatırım planı
+        // Only 2 investment plans
         $investmentPlans = [
             [
                 'investment_name' => 'Bitcoin Yatırımı',
@@ -452,7 +452,7 @@ class DemoDataSeeder extends Seeder
 
     private function createLoans(User $user): void
     {
-        // Krediler sadece admin için oluşturulur
+        // Loans only for admin
         if (!$user->hasRole('admin')) {
             return;
         }
@@ -486,7 +486,7 @@ class DemoDataSeeder extends Seeder
                 'next_payment_date' => Carbon::now()->addMonth()->startOfMonth(),
                 'due_date' => $startDate->copy()->addMonths($loan['installments']),
                 'remaining_amount' => $monthlyPayment * $remainingInstallments,
-                'status' => 'pending', // Durumu string olarak 'active' yapalım
+                'status' => 'pending', // Status as string 'active'
                 'notes' => 'İşletme giderlerinin finansmanı için kullanılan kredi',
             ]);
         }
@@ -494,10 +494,10 @@ class DemoDataSeeder extends Seeder
 
     private function createTransactions(User $user): void
     {
-        // Hesapları ve Kategorileri HER ZAMAN admin kullanıcısından al
-        // --- Veri Hazırlama (Döngüden Önce) ---
+        // Always use admin user's accounts and categories
+        // --- Data Preparation (Before loop) ---
 
-        // 1. Gerekli Admin Hesaplarını Çek ve Kontrol Et
+        // 1. Get required admin accounts and check
         $mainAccount = Account::where('user_id', $this->admin->id)->where('name', 'Ana Banka Hesabı')->first();
         $creditCard = Account::where('user_id', $this->admin->id)->where('type', Account::TYPE_CREDIT_CARD)->first();
         $cryptoWallet = Account::where('user_id', $this->admin->id)->where('type', Account::TYPE_CRYPTO_WALLET)->first();
@@ -506,36 +506,36 @@ class DemoDataSeeder extends Seeder
 
         if (!$mainAccount) {
             \Log::error('DemoDataSeeder: Admin için Ana Banka Hesabı bulunamadı!');
-            return; // Ana hesap yoksa devam etme
+            return; // If main account doesn't exist, continue
         }
 
-        // 2. Admin Kategorilerinin ID'lerini Dizilere Çek ve Kontrol Et
+        // 2. Get admin category IDs and check
         $adminIncomeCategoryIds = Category::where('user_id', $this->admin->id)->where('type', 'income')->pluck('id')->toArray();
         $adminExpenseCategoryIds = Category::where('user_id', $this->admin->id)->where('type', 'expense')->pluck('id')->toArray();
 
         if (empty($adminIncomeCategoryIds) || empty($adminExpenseCategoryIds)) {
              \Log::error('DemoDataSeeder: Admin için gelir veya gider kategorileri bulunamadı!');
-            return; // Kategoriler yoksa devam etme
+            return; // If categories don't exist, continue
         }
 
-        // 3. Mevcut Kullanıcının Müşteri ID'lerini Diziye Çek ve Kontrol Et
+        // 3. Get current user's customer IDs and check
         $customerIds = Customer::where('user_id', $user->id)->pluck('id')->toArray();
         if (empty($customerIds) && $user->id !== $this->admin->id) {
              \Log::warning("DemoDataSeeder: Kullanıcı {$user->id} için müşteri bulunamadı, işlem oluşturulamıyor.");
-             // Çalışan için müşteri yoksa gelir işlemi oluşturamayız, ancak diğer işlemler (varsa) devam edebilir.
-             // Bu yüzden burada return ETMİYORUZ, sadece gelir döngüsünü atlayacağız.
+             // For employee, if no customers, we cannot create income transactions, but other transactions (if any) can continue.
+             // Therefore, we don't return here, we only skip the income loop.
         }
 
-        // --- İşlem Oluşturma Döngüleri ---
+        // --- Transaction Creation Loops ---
 
         $startDate = $this->startDate->copy();
-        $endDate = Carbon::now(); // Bugünün tarihi
+        $endDate = Carbon::now(); // Today's date
         $oneMonthAgo = Carbon::now()->subMonth();
-        $createdIncomeTransactionIdsLastMonth = []; // Son ayda oluşturulan gelir işlemi ID'lerini tutmak için
+        $createdIncomeTransactionIdsLastMonth = []; // To store income transaction IDs created last month
 
         while ($startDate <= $endDate) {
 
-            // A. Kredi Kartı Harcaması ve Ödemesi (Sadece admin için mantıklı, ama her kullanıcı için oluşturuluyor - şimdilik kalsın)
+            // A. Credit Card Expense and Payment (Only logical for admin, but created for every user - for now keep it)
             if ($creditCard && $mainAccount) {
                 $expenseCatId = !empty($adminExpenseCategoryIds) ? $adminExpenseCategoryIds[array_rand($adminExpenseCategoryIds)] : null;
                 if ($expenseCatId) {
@@ -550,27 +550,27 @@ class DemoDataSeeder extends Seeder
                         'currency' => 'TRY',
                         'exchange_rate' => 1,
                         'try_equivalent' => $ccAmount,
-                        // Tarih bugünü geçmesin
+                        // Date should not be today
                         'date' => min($startDate->copy()->addDays($this->faker->numberBetween(1, 15)), $endDate),
                         'payment_method' => 'credit_card',
                         'description' => 'Aylık kredi kartı harcamaları',
                         'status' => 'completed',
                     ]);
 
-                    // Ödeme (Ayın sonuna doğru)
+                    // Payment (End of the month)
                     $paymentDate = $startDate->copy()->endOfMonth()->subDays(rand(0, 5));
                     if ($paymentDate <= $endDate) {
                          Transaction::create([
                             'user_id' => $user->id,
                             'source_account_id' => $mainAccount->id,
                             'destination_account_id' => $creditCard->id,
-                            'type' => 'payment', // Ödeme tipi
-                            'category_id' => null, // Ödemenin kategorisi olmaz
-                            'amount' => $ccAmount, // Harcama kadar ödeme
+                            'type' => 'payment', // Payment type
+                            'category_id' => null, // Payment category
+                            'amount' => $ccAmount, // Amount of expense
                             'currency' => 'TRY',
                             'exchange_rate' => 1,
                             'try_equivalent' => $ccAmount,
-                            // Tarih bugünü geçmesin
+                            // Date should not be today
                             'date' => min($paymentDate, $endDate),
                             'payment_method' => 'bank',
                             'description' => 'Kredi kartı ödemesi',
@@ -580,65 +580,65 @@ class DemoDataSeeder extends Seeder
                 }
             }
 
-            // B. Müşteri Gelirleri (Sadece müşteri varsa)
+            // B. Customer Incomes (Only if customer exists)
             if (!empty($customerIds)) {
-                $incomeCount = $this->faker->numberBetween(3, 8); // Daha az işlem
+                $incomeCount = $this->faker->numberBetween(3, 8); // Less transactions
                 for ($i = 0; $i < $incomeCount; $i++) {
                     $customerId = $customerIds[array_rand($customerIds)];
                     $incomeCatId = !empty($adminIncomeCategoryIds) ? $adminIncomeCategoryIds[array_rand($adminIncomeCategoryIds)] : null;
 
-                    // Geçerli ID'ler varsa devam et
+                    // If valid IDs exist, continue
                     if ($customerId && $incomeCatId) {
                         $amount = $this->faker->numberBetween(500, 6000);
                         $paymentMethodType = $this->faker->randomElement(['bank', 'virtual_pos', 'cash']);
-                        // Tarih bugünü geçmesin
+                        // Date should not be today
                         $transactionDate = min($startDate->copy()->addDays($this->faker->numberBetween(1, 28)), $endDate);
 
-                        // Hesapları ve ödeme yöntemini belirle (daha katı kontrol)
+                        // Determine accounts and payment method (more strict control)
                         $sourceAccount = null;
                         $destAccount = null;
                         $paymentMethod = null;
                         $description = null;
 
                         if ($paymentMethodType === 'virtual_pos') {
-                            // Sadece admin'in Sanal POS ve Ana Hesabı varsa bu yöntemi kullan
+                            // Only if admin has Virtual POS and Main Account
                             if ($virtualPos && $mainAccount) {
                                 $sourceAccount = $virtualPos;
                                 $destAccount = $mainAccount;
                                 $paymentMethod = 'virtual_pos';
                                 $description = 'Sanal POS tahsilatı';
                             } else {
-                                continue; // Gerekli hesap yoksa bu müşteri için bu işlemi ATLA
+                                continue; // If required account doesn't exist, skip this transaction for this customer
                             }
                         } elseif ($paymentMethodType === 'cash') {
-                             // Sadece admin'in Nakit Hesabı varsa bu yöntemi kullan
+                             // Only if admin has Cash Account
                             if ($cashAccount) {
                                 $sourceAccount = $cashAccount;
                                 $destAccount = null;
                                 $paymentMethod = 'cash';
                                 $description = 'Nakit tahsilat';
                             } else {
-                                continue; // Gerekli hesap yoksa bu müşteri için bu işlemi ATLA
+                                continue; // If required account doesn't exist, skip this transaction for this customer
                             }
                         } elseif ($paymentMethodType === 'bank') {
-                             // Sadece admin'in Ana Hesabı varsa bu yöntemi kullan
+                             // Only if admin has Main Account
                              if ($mainAccount) {
                                 $sourceAccount = $mainAccount;
                                 $destAccount = null;
                                 $paymentMethod = 'bank';
                                 $description = 'Havale/EFT tahsilatı';
                             } else {
-                                // Ana hesap yoksa zaten fonksiyon başında çıkmıştık ama yine de atla
+                                // If main account doesn't exist, we already returned in the beginning, but skip anyway
                                 continue;
                             }
                         } else {
-                             // Beklenmedik paymentMethodType, bu işlemi atla
+                             // Unexpected paymentMethodType, skip this transaction
                              \Log::warning("DemoDataSeeder: Beklenmedik paymentMethodType: {$paymentMethodType}");
                              continue;
                         }
-                        // Bu noktaya gelindiyse, $sourceAccount ve $paymentMethod geçerli olmalı
+                        // If we get here, $sourceAccount and $paymentMethod should be valid
 
-                        // Kaynak hesap geçerliyse işlemi oluştur
+                        // If source account is valid, create transaction
                         if ($sourceAccount) {
                             $transactionData = [
                                 'user_id' => $user->id,
@@ -648,8 +648,8 @@ class DemoDataSeeder extends Seeder
                                 'destination_account_id' => $destAccount ? $destAccount->id : null,
                                 'type' => 'income',
                                 'amount' => $amount,
-                                'currency' => $sourceAccount->currency === 'USD' ? 'USD' : 'TRY', // Hesaba göre para birimi
-                                'exchange_rate' => $sourceAccount->currency === 'USD' ? 32 : 1, // Basit kur
+                                'currency' => $sourceAccount->currency === 'USD' ? 'USD' : 'TRY', // Currency based on account
+                                'exchange_rate' => $sourceAccount->currency === 'USD' ? 32 : 1, // Simple exchange rate
                                 'try_equivalent' => $sourceAccount->currency === 'USD' ? $amount * 32 : $amount,
                                 'date' => $transactionDate,
                                 'payment_method' => $paymentMethod,
@@ -658,20 +658,20 @@ class DemoDataSeeder extends Seeder
                                 'is_subscription' => false,
                             ];
 
-                            // Abonelik için ID'yi kaydet (döngüden sonra işlenecek)
+                            // For subscription, store ID (will be processed later)
                             if ($transactionDate >= $oneMonthAgo) {
-                                $createdIncomeTransactionIdsLastMonth[] = Transaction::create($transactionData)->id; // ID'yi al ve diziye ekle
-                                continue; // Bu işlemi tekrar oluşturmamak için döngünün başına dön
+                                $createdIncomeTransactionIdsLastMonth[] = Transaction::create($transactionData)->id; // Get ID and add to array
+                                continue; // Skip this transaction to avoid creating it again
                             }
 
-                            // Normal işlemi oluştur (abonelik değilse veya eski tarihliyse)
+                            // Create normal transaction (not subscription and not old date)
                             Transaction::create($transactionData);
                         }
                     }
                 }
             }
 
-            // C. Sabit Giderler (Sadece admin için)
+            // C. Fixed Expenses (Only for admin)
             if ($user->hasRole('admin') && $mainAccount) {
                  $expenseCatId = !empty($adminExpenseCategoryIds) ? $adminExpenseCategoryIds[array_rand($adminExpenseCategoryIds)] : null;
                  if($expenseCatId) {
@@ -682,7 +682,7 @@ class DemoDataSeeder extends Seeder
                      ['name' => 'İnternet faturası', 'amount' => 500],
                      ['name' => 'Telefon faturası', 'amount' => [300, 600]],
                      ['name' => 'Temizlik hizmeti', 'amount' => 2000],
-                    ]; // Diziyi burada kapat
+                    ]; // Array closed here
 
                     foreach ($expenses as $expense) {
                         $amount = is_array($expense['amount'])
@@ -692,14 +692,14 @@ class DemoDataSeeder extends Seeder
                         Transaction::create([
                             'user_id' => $user->id,
                             'category_id' => $expenseCatId,
-                            'source_account_id' => $mainAccount->id, // Ana hesaptan gider
+                            'source_account_id' => $mainAccount->id, // From main account
                             'destination_account_id' => null,
                             'type' => 'expense',
                             'amount' => $amount,
                             'currency' => 'TRY',
                             'exchange_rate' => 1,
                             'try_equivalent' => $amount,
-                            // Tarih bugünü geçmesin
+                            // Date should not be today
                             'date' => min($startDate->copy()->addDays($this->faker->numberBetween(1, 28)), $endDate),
                             'payment_method' => 'bank',
                             'description' => $expense['name'],
@@ -710,12 +710,12 @@ class DemoDataSeeder extends Seeder
             }
 
             $startDate->addMonth();
-        } // while ($startDate <= $endDate) döngüsü sonu
+        } // while ($startDate <= $endDate) loop ends
 
-        // --- Abonelikleri Ayarla (Döngüden Sonra) ---
+        // --- Set Subscriptions (After loop) ---
         if (!empty($createdIncomeTransactionIdsLastMonth)) {
-            $subscriptionCount = $this->faker->numberBetween(5, 10); // 5-10 arası abonelik
-            // Diziyi karıştır ve istenen sayıda ID seç
+            $subscriptionCount = $this->faker->numberBetween(5, 10); // 5-10 subscriptions
+            // Shuffle array and select desired number of IDs
             shuffle($createdIncomeTransactionIdsLastMonth);
             $subscriptionIds = array_slice($createdIncomeTransactionIdsLastMonth, 0, $subscriptionCount);
 
@@ -725,14 +725,13 @@ class DemoDataSeeder extends Seeder
                     'is_subscription' => true,
                     'subscription_period' => 'monthly',
                     'auto_renew' => true,
-                    // next_payment_date'i her işlem için ayrı ayrı hesaplamak daha doğru olur,
-                    // ama basitlik için toplu güncellemede transaction date + 1 ay yapalım
-                    // Dikkat: Bu SQL sorgusu doğrudan çalışmaz, her birini ayrı güncellemek gerekebilir.
-                    // Şimdilik sadece is_subscription'ı güncelleyelim, diğerleri manuel ayarlanabilir.
-                    // 'next_payment_date' => DB::raw('DATE_ADD(date, INTERVAL 1 MONTH)'), // Bu satır doğrudan çalışmaz
+                    // next_payment_date should be calculated for each transaction separately
+                    // but for simplicity, in the bulk update, set transaction date + 1 month
+                    // For now, only update is_subscription, others can be set manually.
+                    // 'next_payment_date' => DB::raw('DATE_ADD(date, INTERVAL 1 MONTH)'), // This line doesn't work directly + 1 month
                 ]);
 
-                // next_payment_date ve description'ı ayrı ayrı güncelleyelim
+                // Update next_payment_date and description  
                 $subscriptionsToUpdate = Transaction::whereIn('id', $subscriptionIds)->get();
                 foreach ($subscriptionsToUpdate as $sub) {
                     $sub->update([
@@ -743,14 +742,14 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        // D. Kripto İşlemleri (Sadece admin için ve hesaplar varsa)
+        // D. Crypto Transactions (Only for admin and if accounts exist)
         if ($user->hasRole('admin') && $cryptoWallet && $mainAccount) {
-            $cryptoTransactions = [ // Dizi tanımını burada başlat
+            $cryptoTransactions = [ // Array definition starts here
                  ['type' => 'expense', 'description' => 'BTC Alım', 'amount' => 10000],
                 ['type' => 'income', 'description' => 'BTC Satış', 'amount' => 12000],
                 ['type' => 'expense', 'description' => 'ETH Alım', 'amount' => 5000],
                 ['type' => 'income', 'description' => 'ETH Satış', 'amount' => 6000],
-            ]; // Diziyi burada kapat
+            ]; // Array closed here
 
             foreach ($cryptoTransactions as $index => $tx) {
                 $date = Carbon::now()->subMonths($index + 1);
@@ -762,7 +761,7 @@ class DemoDataSeeder extends Seeder
                      $categoryId = $adminExpenseCategoryIds[array_rand($adminExpenseCategoryIds)];
                 }
 
-                if($categoryId) { // Kategori bulunduysa devam et
+                if($categoryId) { // If category exists, continue
                     $transactionData = [
                         'user_id' => $user->id,
                         'category_id' => $categoryId,
@@ -777,10 +776,10 @@ class DemoDataSeeder extends Seeder
                         'status' => 'completed'
                     ];
 
-                    if ($tx['type'] === 'income') { // Satış: Kripto -> Banka
+                    if ($tx['type'] === 'income') { // Sale: Crypto -> Bank
                         $transactionData['source_account_id'] = $cryptoWallet->id;
                         $transactionData['destination_account_id'] = $mainAccount->id;
-                    } else { // Alım: Banka -> Kripto
+                    } else { // Purchase: Bank -> Crypto
                         $transactionData['source_account_id'] = $mainAccount->id;
                         $transactionData['destination_account_id'] = $cryptoWallet->id;
                     }
@@ -807,7 +806,7 @@ class DemoDataSeeder extends Seeder
         $customers = \App\Models\Customer::where('user_id', $user->id)->get();
         $noteTypes = ['note', 'call', 'meeting', 'email', 'other'];
 
-        // Anlamlı not içerikleri
+        // Meaningful note contents
         $noteContents = [
             'note' => [
                 'Müşteri ile genel durum değerlendirmesi yapıldı.',
@@ -847,7 +846,7 @@ class DemoDataSeeder extends Seeder
         ];
         
         foreach ($customers as $customer) {
-            // Her müşteri için 3-8 not oluştur
+            // Create 3-8 notes for each customer
             $noteCount = $this->faker->numberBetween(3, 5);
             
             for ($i = 0; $i < $noteCount; $i++) {
@@ -856,16 +855,16 @@ class DemoDataSeeder extends Seeder
                     ? $this->faker->dateTimeBetween('-6 months', 'now')
                     : $this->faker->dateTimeBetween('now', '+1 month');
 
-                // Türüne göre anlamlı içerik seç
+                // Select meaningful content based on type
                 $content = isset($noteContents[$type]) && !empty($noteContents[$type])
                     ? $this->faker->randomElement($noteContents[$type])
-                    : $this->faker->sentence; // Eğer tür için içerik yoksa rastgele cümle
+                    : $this->faker->sentence; // If type has no content, random sentence
 
                 \App\Models\CustomerNote::create([
                     'customer_id' => $customer->id,
                     'user_id' => $user->id,
                     'assigned_user_id' => $this->faker->boolean(30) ? $user->id : null,
-                    'content' => $content, // Anlamlı içerik ata
+                    'content' => $content, // Meaningful content
                     'type' => $type,
                     'activity_date' => $activityDate,
                 ]);
@@ -878,7 +877,7 @@ class DemoDataSeeder extends Seeder
         $customers = \App\Models\Customer::where('user_id', $user->id)->get();
         
         foreach ($customers as $customer) {
-            // Her müşteri için 1-3 anlaşma oluştur
+            // Create 1-3 agreements for each customer
             if ($this->faker->boolean(70)) {
                 $agreementCount = $this->faker->numberBetween(1, 3);
                 
@@ -908,9 +907,9 @@ class DemoDataSeeder extends Seeder
     }
 
 
-    private function createCommissionPayouts(User $employee): void // Parametre adını employee olarak değiştirelim
+    private function createCommissionPayouts(User $employee): void // Change parameter name to employee
     {
-        // Ödeme için gerekli Admin kategorisini ve hesabını al
+        // Get required admin category and account for payment
         $adminExpenseCategory = Category::where('user_id', $this->admin->id)
             ->where('type', 'expense')
             ->where('name', 'Personel Giderleri')
@@ -925,37 +924,37 @@ class DemoDataSeeder extends Seeder
             return;
         }
 
-        // Son iki ayı hedefle
+        // Target last two months
         $currentMonthStart = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
         $previousMonthStart = Carbon::now()->subMonth()->startOfMonth();
         $previousMonthEnd = Carbon::now()->subMonth()->endOfMonth();
 
-        // Çalışanın komisyon oranını al (varsayılan %5)
+        // Get employee's commission rate (default %5)
         $commissionRate = $employee->commission_rate ? ($employee->commission_rate / 100) : 0.05;
 
-        // 1. Önceki Ay Komisyonu (Tam Ödeme)
+        // 1. Previous Month Commission (Full Payment)
         $previousMonthCommission = Transaction::where('user_id', $employee->id)
             ->where('type', 'income')
             ->whereBetween('date', [$previousMonthStart, $previousMonthEnd])
             ->sum('amount') * $commissionRate;
 
         if ($previousMonthCommission > 0) {
-            $paymentDate = $currentMonthStart->copy()->addDays(5); // Bu ayın başında öde
+            $paymentDate = $currentMonthStart->copy()->addDays(5); // Pay at the beginning of the month
 
-            // CommissionPayout kaydı (Çalışana ait)
+            // CommissionPayout record (For employee)
             \App\Models\CommissionPayout::create([
                 'user_id' => $employee->id,
                 'amount' => $previousMonthCommission,
                 'payment_date' => $paymentDate,
             ]);
 
-            // Transaction kaydı (Gider, Çalışana ait, Admin hesabından)
+            // Transaction record (Expense, For employee, From admin account)
             Transaction::create([
-                'user_id' => $employee->id, // Gider çalışana ait
+                'user_id' => $employee->id, // Expense for employee
                 'type' => 'expense',
-                'category_id' => $adminExpenseCategory->id, // Admin'in Personel Gideri kategorisi
-                'source_account_id' => $adminMainAccount->id, // Admin'in ana hesabından ödeme
+                'category_id' => $adminExpenseCategory->id, // Admin's Expense category
+                'source_account_id' => $adminMainAccount->id, // Payment from admin's main account
                 'destination_account_id' => null,
                 'amount' => $previousMonthCommission,
                 'currency' => 'TRY',
@@ -968,25 +967,25 @@ class DemoDataSeeder extends Seeder
             ]);
         }
 
-        // 2. Mevcut Ay Komisyonu (Yarım Ödeme)
+        // 2. Current Month Commission (Half Payment)
         $currentMonthCommission = Transaction::where('user_id', $employee->id)
             ->where('type', 'income')
             ->whereBetween('date', [$currentMonthStart, $currentMonthEnd])
             ->sum('amount') * $commissionRate;
 
         if ($currentMonthCommission > 0) {
-            $amountToPay = round($currentMonthCommission / 2, 2); // Yarısını öde
-            $paymentDate = $currentMonthEnd->copy()->addDays(5); // Gelecek ayın başında öde (veya ay sonunda)
+            $amountToPay = round($currentMonthCommission / 2, 2); // Half of the commission
+            $paymentDate = $currentMonthEnd->copy()->addDays(5); // Pay at the beginning of the next month (or end of the month)
 
-             // CommissionPayout kaydı (Çalışana ait, yarım tutar)
+             // CommissionPayout record (For employee, half amount)
             \App\Models\CommissionPayout::create([
                 'user_id' => $employee->id,
-                'amount' => $amountToPay, // Sadece ödenen yarım tutar
+                'amount' => $amountToPay, // Only half of the amount paid
                 'payment_date' => $paymentDate,
-                // Not: Belki buraya toplam hak edilen komisyonu da eklemek mantıklı olabilir
+                // Note: Maybe add total earned commission here as well
             ]);
 
-            // Transaction kaydı (Gider, Çalışana ait, Admin hesabından, yarım tutar)
+            // Transaction record (Expense, For employee, From admin account, half amount)
             Transaction::create([
                 'user_id' => $employee->id,
                 'type' => 'expense',

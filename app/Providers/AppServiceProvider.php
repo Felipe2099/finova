@@ -66,19 +66,18 @@ use Illuminate\Support\Facades\Log;
 
 
 /**
- * Uygulama Servis Sağlayıcısı
+ * App Service Provider
  *
- * Uygulamanın servis kayıtlarını ve başlangıç yapılandırmasını yönetir.
- * Tüm servis arayüzlerinin implementasyonlarını kaydeder ve uygulama başlangıcında
- * gerekli yapılandırmaları gerçekleştirir.
- */
+ * Manages service registration and bootstrapping for the application.
+ * Registers all service interfaces and their implementations.
+ * Singleton and bind registrations are configured.
+ *
+ * @return void
+*/
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Uygulama servislerini kaydeder
-     *
-     * Tüm servis arayüzlerini ilgili implementasyonlarına bağlar.
-     * Singleton ve bind kayıtları yapılandırılır.
+     * Register services for the application.
      *
      * @return void
      */
@@ -96,7 +95,6 @@ class AppServiceProvider extends ServiceProvider
                  $logoPath = $settings['site_logo'];
             }
 
-            // Favicon
             $faviconUrl = null;
             if (!empty($settings['site_favicon'])) {
             }
@@ -105,7 +103,7 @@ class AppServiceProvider extends ServiceProvider
             Log::error('Filament ayarları register metodunda yüklenirken hata oluştu: ' . $e->getMessage());
         }
 
-        // Temel servis arayüzlerini implementasyonlarına bağla
+        // Register core service interfaces and their implementations
         $this->app->singleton(CustomerServiceInterface::class, CustomerService::class);
         $this->app->singleton(LeadServiceInterface::class, LeadService::class);
         $this->app->singleton(CustomerGroupServiceInterface::class, CustomerGroupService::class);
@@ -114,21 +112,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ProjectServiceInterface::class, ProjectService::class);
         $this->app->singleton(UserServiceInterface::class, UserService::class);
 
-        // Kredi kartı servisi
+        // Credit card service
         $this->app->bind(CreditCardServiceInterface::class, CreditCardService::class);
 
-        // Diğer temel servisler
+        // Other core services
         $this->app->bind(DebtServiceInterface::class, DebtService::class);
         $this->app->bind(RoleServiceInterface::class, RoleService::class);
         $this->app->bind(SupplierServiceInterface::class, SupplierService::class);
         $this->app->bind(LoanServiceInterface::class, LoanService::class);
         $this->app->bind(AccountServiceInterface::class, AccountService::class);
 
-        // Yardımcı servisleri singleton olarak kaydet
+        // Register helper services as singletons
         $this->app->singleton(PaymentServiceInterface::class, PaymentService::class);
         $this->app->singleton(TransactionAnalyticsService::class);
 
-        // İşlem servisleri
+        // Transaction services
         $this->app->bind(AccountBalanceServiceInterface::class, AccountBalanceService::class);
         $this->app->bind(IncomeTransactionServiceInterface::class, IncomeTransactionService::class);
         $this->app->bind(ExpenseTransactionServiceInterface::class, ExpenseTransactionService::class);
@@ -136,7 +134,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(InstallmentTransactionServiceInterface::class, InstallmentTransactionService::class);
         $this->app->bind(SubscriptionTransactionServiceInterface::class, SubscriptionTransactionService::class);
 
-        // Planlama servisi
+        // Planning service
         $this->app->bind(PlanningServiceInterface::class, PlanningService::class);
 
 
@@ -156,16 +154,13 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
-        // AI ve SQL servisleri
+        // AI and SQL services
         $this->app->singleton(\App\Services\AI\DatabaseSchemaService::class);
         $this->app->singleton(\App\Services\AI\SqlQueryService::class);
     }
 
     /**
-     * Uygulama servislerini başlatır
-     *
-     * Uygulama başlangıcında gerekli yapılandırmaları gerçekleştirir.
-     * Blade bileşenlerini, renk şemalarını ve sistem ayarlarını yapılandırır.
+     * Bootstrap the application services.
      *
      * @return void
      */
@@ -175,10 +170,10 @@ class AppServiceProvider extends ServiceProvider
             \URL::forceScheme('https');
         }
 
-        // Blade bileşenlerini kaydet
+        // Register blade components
         Blade::component('auth', \App\View\Auth::class);
 
-        // Filament renk şemalarını kaydet
+        // Register filament color schemes
         FilamentColor::register([
             'danger' => Color::Red,
             'gray' => Color::Gray,
@@ -187,25 +182,25 @@ class AppServiceProvider extends ServiceProvider
             'warning' => Color::Yellow,
         ]);
 
-        // Sistem ayarlarını yapılandır
+        // Configure system settings
         ini_set('memory_limit', '512M');
         ini_set('max_execution_time', 300);
 
-        // Logo ve Favicon URL'lerini boot aşamasında ayarlamayı dene (config üzerinden)
+        // Configure logo and favicon URLs
         try {
              if ($this->app->runningInConsole() || !Schema::hasTable('settings')) {
                  return;
              }
-             $settings = Cache::get('site_settings', []); // Cache'den tekrar oku
+             $settings = Cache::get('site_settings', []);
 
-             // Site Logosu URL'sini ayarla
+             // Configure site logo URL
              if (!empty($settings['site_logo']) && Storage::disk('public')->exists($settings['site_logo'])) {
                  config(['filament.logo' => Storage::url($settings['site_logo'])]);
              } else {
-                 config(['filament.logo' => null]); // Veya varsayılan bir URL
+                 config(['filament.logo' => null]);
              }
 
-             // Favicon URL'sini ayarla
+             // Configure favicon URL
              if (!empty($settings['site_favicon']) && Storage::disk('public')->exists($settings['site_favicon'])) {
                  config(['filament.favicon' => Storage::url($settings['site_favicon'])]);
              } else {

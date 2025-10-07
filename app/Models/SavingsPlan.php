@@ -7,18 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Tasarruf Planı modeli
- * 
- * Kullanıcıların tasarruf hedeflerini ve ilerleme durumlarını temsil eder.
- * Her tasarruf planı bir kullanıcıya ait olup, hedef miktar ve birikmiş miktar takip edilebilir.
+ * Savings Plan model
+ *
+ * Represents users' savings goals and progress tracking.
+ * Each savings plan belongs to a user and tracks target amount and accumulated savings.
  */
 class SavingsPlan extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
     protected $fillable = [
@@ -31,19 +31,20 @@ class SavingsPlan extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
-     * 
+     * Attribute casts
+     *
      * @var array<string, string>
      */
     protected $casts = [
         'target_date' => 'date',
         'target_amount' => 'decimal:2',
         'saved_amount' => 'decimal:2',
+        'status' => 'boolean',
     ];
 
     /**
-     * Tasarruf planının sahibi olan kullanıcı
-     * 
+     * The user who owns the savings plan.
+     *
      * @return BelongsTo
      */
     public function user(): BelongsTo

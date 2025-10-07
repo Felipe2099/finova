@@ -3,28 +3,28 @@
 namespace App\Enums;
 
 /**
- * Ödeme Yöntemi Enum Sınıfı
+ * Payment Method Enum Class
  * 
- * Sistemde desteklenen ödeme yöntemlerini tanımlar.
- * Her ödeme yöntemi için Türkçe etiket ve dönüşüm metodları içerir.
+ * Defines the supported payment methods in the system.
+ * Contains the Turkish label and conversion methods for each payment method.
  */
 enum PaymentMethodEnum: string
 {
-    /** Nakit Ödeme */
+    /** Cash Payment */
     case CASH = 'cash';
-    /** Banka Hesabı */
+    /** Bank Account */
     case BANK = 'bank';
-    /** Kredi Kartı */
+    /** Credit Card */
     case CREDIT_CARD = 'credit_card';
-    /** Kripto Cüzdan */
+    /** Crypto Wallet */
     case CRYPTO = 'crypto';
-    /** Sanal POS */
+    /** Virtual POS */
     case VIRTUAL_POS = 'virtual_pos';
 
     /**
-     * Ödeme yönteminin Türkçe etiketini döndürür
+     * Returns the Turkish label for the payment method
      * 
-     * @return string Türkçe etiket
+     * @return string Turkish label
      */
     public function label(): string
     {
@@ -38,9 +38,9 @@ enum PaymentMethodEnum: string
     }
 
     /**
-     * Tüm ödeme yöntemlerini etiketleriyle birlikte dizi olarak döndürür
+     * Returns all payment methods with their labels as an array
      * 
-     * @return array<string, string> Ödeme yöntemleri ve etiketleri
+     * @return array<string, string> Payment methods and labels
      */
     public static function toArray(): array
     {

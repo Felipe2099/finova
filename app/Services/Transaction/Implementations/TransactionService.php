@@ -17,10 +17,10 @@ use App\Services\Transaction\Contracts\AccountBalanceServiceInterface;
 use App\Enums\TransactionTypeEnum;
 
 /**
- * İşlem (Transaction) servisi
+ * Transaction service
  * 
- * Bu servis, gelir-gider takibi için yapılan tüm işlemleri yönetir.
- * Her işlem tipi için ilgili alt servislere yönlendirme yapar.
+ * Manages all transactions for income/expense tracking.
+ * Delegates to specialized services based on transaction type.
  */
 final class TransactionService implements TransactionServiceInterface
 {
@@ -35,13 +35,13 @@ final class TransactionService implements TransactionServiceInterface
     }
 
     /**
-     * Yeni bir işlem oluşturur
+     * Create a new transaction.
      * 
-     * İşlem tipine göre ilgili servisi kullanır.
+     * Uses the appropriate service based on the transaction type.
      * 
-     * @param TransactionData $data İşlem verileri
-     * @return Transaction Oluşturulan işlem
-     * @throws \InvalidArgumentException Geçersiz işlem tipi durumunda
+     * @param TransactionData $data Transaction data
+     * @return Transaction Created transaction
+     * @throws \InvalidArgumentException When the transaction type is invalid
      */
     public function create(TransactionData $data): Transaction
     {
@@ -56,29 +56,29 @@ final class TransactionService implements TransactionServiceInterface
     }
 
     /**
-     * İşlemi günceller
+     * Update the transaction.
      * 
-     * Önce eski işlemin bakiye etkilerini geri alır, sonra işlemi günceller,
-     * ardından yeni işlemin bakiye etkilerini uygular.
+     * First reverts the old transaction's balance effects, then updates the
+     * transaction and applies the new transaction's balance effects.
      * 
-     * @param Transaction $transaction Güncellenecek işlem
-     * @param TransactionData $data Yeni işlem verileri
-     * @return Transaction Güncellenmiş işlem
+     * @param Transaction $transaction Transaction to update
+     * @param TransactionData $data New transaction data
+     * @return Transaction Updated transaction
      */
     public function update(Transaction $transaction, TransactionData $data): Transaction
     {
         return DB::transaction(function () use ($transaction, $data) {
-            // 1. Eski işlemin bakiye etkilerini geri al
-            // revertTransaction artık orijinal verileri içeriden alıyor.
+            // 1) Revert the old transaction's balance effects
+            // revertTransaction now retrieves original values internally.
             $this->accountBalanceService->revertTransaction($transaction);
 
-            // 2. İşlemi güncelle
-            // Not: İşlem tipi değişikliği desteklenmiyorsa burada kontrol eklenmeli.
-            // Şu anki koda göre işlem tipi de güncellenebilir.
+            // 2) Update the transaction
+            // Note: If changing the transaction type is not supported,
+            // add a check here. Currently the type can be updated.
             $transaction->update($data->toArray());
 
-            // 3. Yeni (güncellenmiş) işlemin bakiye etkilerini uygula
-            // Güncellenmiş transaction nesnesini kullan
+            // 3) Apply the balance effects for the updated transaction
+            // Use the updated transaction instance
             match ($transaction->type) { 
                 TransactionTypeEnum::INCOME->value => $this->accountBalanceService->updateForIncome($transaction),
                 TransactionTypeEnum::EXPENSE->value => $this->accountBalanceService->updateForExpense($transaction),
@@ -94,17 +94,17 @@ final class TransactionService implements TransactionServiceInterface
     }
 
     /**
-     * İşlemi siler
+     * Delete the transaction.
      * 
-     * İşlemi silmeden önce ilgili hesap bakiyelerini geri alır.
+     * Reverts related account balances before deleting the transaction.
      * 
-     * @param Transaction $transaction Silinecek işlem
-     * @return bool İşlem başarılı ise true
+     * @param Transaction $transaction Transaction to delete
+     * @return bool True if the operation succeeded
      */
     public function delete(Transaction $transaction): bool
     {
         return DB::transaction(function () use ($transaction) {
-            // revertTransaction artık orijinal verileri içeriden aldığı için doğru çalışacaktır.
+            // revertTransaction reads original values internally, ensuring correctness.
             $this->accountBalanceService->revertTransaction($transaction);
             return $transaction->delete();
         });

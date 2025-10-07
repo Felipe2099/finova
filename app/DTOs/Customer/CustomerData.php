@@ -5,27 +5,27 @@ declare(strict_types=1);
 namespace App\DTOs\Customer;
 
 /**
- * Müşteri Veri Transfer Nesnesi
+ * Customer Data Transfer Object
  * 
- * Müşteri verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Müşteri oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert customer data.
+ * Used for customer creation, updating, and viewing.
  */
 class CustomerData
 {
     /**
-     * @param string $name Müşteri adı
-     * @param string $type Müşteri türü
-     * @param string|null $email E-posta adresi
-     * @param string|null $phone Telefon numarası
-     * @param string|null $tax_number Vergi numarası
-     * @param string|null $tax_office Vergi dairesi
-     * @param string|null $city Şehir
-     * @param string|null $district İlçe
-     * @param string|null $address Adres
-     * @param string|null $description Açıklama
-     * @param bool $status Durum
-     * @param int|null $customer_group_id Müşteri grubu ID
-     * @param int|null $user_id Kullanıcı ID
+     * @param string $name Customer name
+     * @param string $type Customer type
+     * @param string|null $email Email address
+     * @param string|null $phone Phone number
+     * @param string|null $tax_number Tax number
+     * @param string|null $tax_office Tax office
+     * @param string|null $city City
+     * @param string|null $district District
+     * @param string|null $address Address
+     * @param string|null $description Description
+     * @param bool $status Status
+     * @param int|null $customer_group_id Customer group ID
+     * @param int|null $user_id User ID
      */
     public function __construct(
         public readonly string $name,
@@ -44,9 +44,9 @@ class CustomerData
     ) {}
 
     /**
-     * Dizi verisinden müşteri verisi oluşturur
+     * Create customer data from array
      * 
-     * @param array $data Müşteri verileri dizisi
+     * @param array $data Customer data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -69,7 +69,7 @@ class CustomerData
     }
 
     /**
-     * Müşteri verisini dizi formatına dönüştürür
+     * Convert customer data to array
      * 
      * @return array
      */

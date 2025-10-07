@@ -22,17 +22,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * İşlem Yönetimi Bileşeni
+ * Transaction Management Component
  * 
- * Bu bileşen, finansal işlemlerin yönetimini sağlar.
- * Özellikler:
- * - İşlem listesi görüntüleme
- * - Yeni işlem oluşturma
- * - İşlem düzenleme
- * - İşlem silme
- * - İşlem filtreleme (tür, kategori, tarih aralığı)
- * - Toplu işlem desteği
- * - İstatistik widget'ları
+ * Manages financial transactions.
+ * Features:
+ * - List transactions
+ * - Create transactions
+ * - Edit transactions
+ * - Delete transactions
+ * - Filter transactions (type, category, date range)
+ * - Bulk actions
+ * - Statistics widgets
  * 
  * @package App\Livewire\Transaction
  */
@@ -41,13 +41,13 @@ class TransactionManager extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
-    /** @var TransactionService İşlem servisi */
+    /** @var TransactionService Transaction service */
     private TransactionService $transactionService;
     
-    /** @var array Dinleyici olayları */
+    /** @var array Listener events */
     protected $listeners = ['refreshTransactions' => '$refresh'];
 
-    /** Aktif Filtre */
+    /** Active filter */
     public $activeFilter = 'income';
 
     protected $queryString = [
@@ -55,9 +55,9 @@ class TransactionManager extends Component implements HasForms, HasTable
     ];
 
     /**
-     * Bileşen başlatılırken işlem servisini enjekte eder
+     * Inject the transaction service on component boot.
      * 
-     * @param TransactionService $transactionService İşlem servisi
+     * @param TransactionService $transactionService Transaction service
      * @return void
      */
     public function boot(TransactionService $transactionService): void
@@ -66,9 +66,9 @@ class TransactionManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşen başlatılırken çalışır
+     * Lifecycle: runs when component is mounted.
      * 
-     * @param int|null $transactionId Düzenlenecek işlem ID'si
+     * @param int|null $transactionId Transaction ID to edit
      * @return void
      */
     public function mount($transactionId = null): void
@@ -91,9 +91,9 @@ class TransactionManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Aktif filtreyi ayarlar.
+     * Set the active filter.
      *
-     * @param string $filter Seçilen filtre ('all', 'income', 'expense', 'transfer', 'payments')
+     * @param string $filter Selected filter ('all', 'income', 'expense', 'transfer', 'payments')
      * @return void
      */
     public function setFilter(string $filter): void
@@ -116,10 +116,10 @@ class TransactionManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Build the table configuration.
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table instance
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -418,7 +418,7 @@ class TransactionManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */
@@ -449,10 +449,10 @@ class TransactionManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * İşlem türü adını döndürür
+     * Returns the transaction type name
      * 
-     * @param string $type İşlem türü
-     * @return string İşlem türü adı
+     * @param string $type Transaction type
+     * @return string Transaction type name
      */
     private function getTransactionTypeName(string $type): string
     {

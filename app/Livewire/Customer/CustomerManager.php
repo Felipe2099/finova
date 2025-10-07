@@ -18,17 +18,17 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Notifications\Notification;
 
 /**
- * Müşteri Yönetimi Bileşeni
+ * Customer Manager Component
  * 
- * Bu bileşen, müşterilerin yönetimini sağlar.
- * Özellikler:
- * - Müşteri listesi görüntüleme
- * - Yeni müşteri ekleme
- * - Müşteri düzenleme
- * - Müşteri silme
- * - Müşteri detaylarını görüntüleme
- * - Müşteri filtreleme (grup, tip)
- * - Müşteri durumu yönetimi
+ * This component provides functionality to manage customers.
+ * Features:
+ * - Customer list view
+ * - Create new customer
+ * - Edit customer
+ * - Delete customer
+ * - Customer detail view
+ * - Customer filtering (group, type)
+ * - Customer status management
  * 
  * @package App\Livewire\Customer
  */
@@ -37,13 +37,13 @@ final class CustomerManager extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
-    /** @var CustomerServiceInterface Müşteri servisi */
+    /** @var CustomerServiceInterface Customer service */
     private CustomerServiceInterface $customerService;
 
     /**
-     * Bileşen başlatılırken müşteri servisini enjekte eder
+     * When the component is booted, the customer service is injected
      * 
-     * @param CustomerServiceInterface $customerService Müşteri servisi
+     * @param CustomerServiceInterface $customerService Customer service
      * @return void
      */
     public function boot(CustomerServiceInterface $customerService): void 
@@ -52,10 +52,10 @@ final class CustomerManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -156,9 +156,9 @@ final class CustomerManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Müşteri formunu oluşturur
+     * Creates the customer form
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getCustomerForm(): array
     {
@@ -264,7 +264,7 @@ final class CustomerManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

@@ -20,35 +20,36 @@ use Carbon\Carbon;
 use App\Enums\PaymentMethodEnum;
 
 /**
- * Banka Hesabı Yönetimi Bileşeni
+ * Bank Account Manager Component
  * 
- * Sadece banka hesaplarının yönetimini sağlayan özelleştirilmiş Livewire bileşeni.
- * Banka hesapları için detaylı işlemler ve özellikler sunar.
+ * Livewire component to manage only bank accounts.
+ * Provides detailed operations and features for bank accounts.
  * 
- * Özellikler:
- * - Banka hesabı oluşturma/düzenleme/silme
- * - Hesaplar arası transfer
- * - Bankamatik işlemleri (para yatırma/çekme)
- * - Para birimi dönüşümleri
- * - Detaylı filtreleme ve arama
- * - İşlem geçmişi görüntüleme
+ * Features:
+ * - Bank account creation/editing/deletion
+ * - Inter-account transfers
+ * - Bank account transfers
+ * - Bank account operations (deposit/withdrawal)
+ * - Currency conversions
+ * - Advanced filtering and search
+ * - View transaction history
  */
 class BankAccountManager extends Component implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
     use Forms\Concerns\InteractsWithForms;
     use Tables\Concerns\InteractsWithTable;
 
-    /** @var AccountService Hesap işlemleri için servis */
+    /** @var AccountService Account service */
     private AccountService $accountService;
 
-    /** @var CurrencyService Para birimi dönüşümleri için servis */
+    /** @var CurrencyService Currency service */
     private CurrencyService $currencyService;
 
     /**
-     * Bileşen başlatma
+     * Initialize the component
      * 
-     * @param AccountService $accountService Hesap servisi
-     * @param CurrencyService $currencyService Para birimi servisi
+     * @param AccountService $accountService Account service
+     * @param CurrencyService $currencyService Currency service
      * @return void
      */
     public function boot(AccountService $accountService, CurrencyService $currencyService): void 
@@ -58,9 +59,9 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
     }
 
     /**
-     * Banka hesabı listesi tablosunu yapılandırır
+     * Configure the bank account list table
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -92,20 +93,20 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                 Tables\Columns\TextColumn::make('try_equivalent')
                     ->label('TRY Karşılığı')
                     ->getStateUsing(function (Account $record) {
-                        // Eğer hesap zaten TRY ise, bakiyeyi doğrudan döndür
+                        // If the account is already TRY, return the balance directly
                         if ($record->currency === 'TRY') {
                             return $record->balance;
                         }
                         
-                        // Güncel kur bilgisini al
+                        // Get the current exchange rate
                         $exchangeRate = $this->currencyService->getExchangeRate($record->currency);
                         
-                        // Kur bilgisi alınamadıysa null dön
+                        // If the exchange rate is not found, return null
                         if (!$exchangeRate) {
                             return null;
                         }
                         
-                        // Alış kuru üzerinden TRY karşılığını hesapla
+                        // Calculate the TRY equivalent using the buying rate
                         return $record->balance * $exchangeRate['buying'];
                     })
                     ->money('TRY')
@@ -397,29 +398,29 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                         try {
                             $targetAccount = Account::findOrFail($data['target_account_id']);
                             
-                            // Transfer işlemi için gerekli verileri hazırla
+                            // Prepare the required data for the transfer
                             $sourceAmount = (float) $data['source_amount'];
                             $targetAmount = (float) $data['target_amount'];
-                            // Exchange rate sadece farklı para birimleri için gerekli
+                            // Exchange rate is only required for different currencies
                             $exchangeRate = $record->currency !== $targetAccount->currency 
                                 ? (float) $data['exchange_rate']
                                 : 1;
                             $transactionDate = $data['transaction_date'];
                             
-                            // Kaynak hesapta yeterli bakiye var mı kontrol et
+                            // Check if the source account has enough balance
                             if ($sourceAmount > $record->balance) {
                                 throw new \Exception("Kaynak hesapta yeterli bakiye bulunmamaktadır.");
                             }
                             
-                            // Transfer kategorisini bul veya oluştur
+                            // Find or create the transfer category
                             $transferCategory = Category::firstOrCreate(
                                 ['user_id' => auth()->id(), 'name' => 'Transfer', 'type' => 'transfer'],
                                 ['description' => 'Hesaplar arası transfer işlemleri']
                             );
                             
-                            // Transaction oluştur
+                            // Create the transaction
                             DB::transaction(function () use ($record, $targetAccount, $sourceAmount, $targetAmount, $exchangeRate, $transactionDate, $transferCategory) {
-                                // TRY karşılıklarını hesapla
+                                // Calculate the TRY equivalents
                                 $sourceTryRate = $record->currency === 'TRY' 
                                     ? 1 
                                     : ($this->currencyService->getExchangeRate($record->currency, Carbon::parse($transactionDate))['buying'] ?? 1);
@@ -431,14 +432,14 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                                 $sourceTryEquivalent = $sourceAmount * $sourceTryRate;
                                 $targetTryEquivalent = $targetAmount * $targetTryRate;
                                 
-                                // Transfer açıklaması
+                                // Transfer description
                                 $description = "Transfer: {$record->name} -> {$targetAccount->name}";
                                 if ($record->currency !== $targetAccount->currency) {
                                     $exchangeRate = round($exchangeRate, 6);
                                     $description .= " (Kur: 1 {$record->currency} = {$exchangeRate} {$targetAccount->currency})";
                                 }
                                 
-                                // Kaynak hesaptan para çıkışı
+                                // Source account withdrawal
                                 $sourceTransaction = Transaction::create([
                                     'user_id' => auth()->id(),
                                     'account_id' => $record->id,
@@ -449,16 +450,16 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                                     'type' => Transaction::TYPE_TRANSFER,
                                     'status' => 'completed',
                                     'destination_account_id' => $targetAccount->id,
-                                    'exchange_rate' => $sourceTryRate, // TRY'ye çevrim kuru
-                                    'try_equivalent' => -$sourceTryEquivalent, // TRY karşılığı (negatif)
+                                    'exchange_rate' => $sourceTryRate, // TRY conversion rate
+                                    'try_equivalent' => -$sourceTryEquivalent, // TRY equivalent (negative)
                                     'category_id' => $transferCategory->id,
                                 ]);
                                 
-                                // Kaynak hesabın bakiyesini güncelle
+                                // Update the source account balance
                                 $record->balance -= $sourceAmount;
                                 $record->save();
                                 
-                                // Hedef hesaba para girişi
+                                // Destination account deposit
                                 $targetTransaction = Transaction::create([
                                     'user_id' => auth()->id(),
                                     'account_id' => $targetAccount->id,
@@ -470,16 +471,16 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                                     'status' => 'completed',
                                     'reference_id' => $sourceTransaction->id,
                                     'source_account_id' => $record->id,
-                                    'exchange_rate' => $targetTryRate, // TRY'ye çevrim kuru
-                                    'try_equivalent' => $targetTryEquivalent, // TRY karşılığı (pozitif)
+                                    'exchange_rate' => $targetTryRate, // TRY conversion rate
+                                    'try_equivalent' => $targetTryEquivalent, // TRY equivalent (positive)
                                     'category_id' => $transferCategory->id,
                                 ]);
                                 
-                                // Kaynak transaction'ı güncelle
+                                // Update the source transaction
                                 $sourceTransaction->reference_id = $targetTransaction->id;
                                 $sourceTransaction->save();
                                 
-                                // Hedef hesabın bakiyesini güncelle
+                                // Update the target account balance
                                 $targetAccount->balance += $targetAmount;
                                 $targetAccount->save();
                             });
@@ -597,15 +598,15 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                             $account = Account::findOrFail($data['account_id']);
                             $amount = (float) $data['amount'];
                             
-                            // İşlem türüne göre tutarı ayarla
+                            // Set the amount based on the operation type
                             $transactionAmount = $data['operation_type'] === 'deposit' ? $amount : -$amount;
                             
-                            // Çekme işlemi için bakiye kontrolü
+                            // Check if the account has enough balance for withdrawal
                             if ($data['operation_type'] === 'withdraw' && $account->balance < $amount) {
                                 throw new \Exception('Yetersiz bakiye.');
                             }
 
-                            // İşlemi kaydet
+                            // Create the transaction
                             Transaction::create([
                                 'user_id' => auth()->id(),
                                 'type' => $data['operation_type'] === 'deposit' ? 'atm_deposit' : 'atm_withdraw',
@@ -626,7 +627,7 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
                                     : $amount * ($this->currencyService->getExchangeRate($account->currency)['buying'] ?? 1),
                             ]);
 
-                            // Hesap bakiyesini güncelle
+                            // Update the account balance
                             $account->balance += $transactionAmount;
                             $account->save();
 
@@ -654,9 +655,9 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
     }
 
     /**
-     * Hesap form şemasını oluşturur
+     * Create the account form schema
      * 
-     * @return array Form bileşenleri dizisi
+     * @return array Form components array
      */
     protected function getFormSchema(): array
     {
@@ -714,7 +715,7 @@ class BankAccountManager extends Component implements Forms\Contracts\HasForms, 
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view
      * 
      * @return View
      */

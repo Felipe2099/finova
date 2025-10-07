@@ -11,18 +11,18 @@ use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 
 /**
- * Müşteri grubu servisi implementasyonu
+ * Customer group service implementation
  * 
- * Müşteri gruplarının yönetimi için gerekli metodları içerir.
- * Müşteri gruplarının oluşturulması, güncellenmesi ve silinmesi işlemlerini gerçekleştirir.
+ * Contains methods required to manage customer group operations.
+ * Handles creating, updating, and deleting customer groups.
  */
 class CustomerGroupService implements CustomerGroupServiceInterface
 {
     /**
-     * Yeni bir müşteri grubu oluşturur
+     * Create a new customer group.
      * 
-     * @param CustomerGroupData $data Müşteri grubu verileri
-     * @return CustomerGroup Oluşturulan müşteri grubu
+     * @param CustomerGroupData $data Customer group data
+     * @return CustomerGroup Created customer group
      */
     public function create(CustomerGroupData $data): CustomerGroup
     {
@@ -32,11 +32,11 @@ class CustomerGroupService implements CustomerGroupServiceInterface
     }
 
     /**
-     * Mevcut bir müşteri grubunu günceller
+     * Update an existing customer group.
      * 
-     * @param CustomerGroup $customerGroup Güncellenecek müşteri grubu
-     * @param CustomerGroupData $data Yeni müşteri grubu verileri
-     * @return CustomerGroup Güncellenmiş müşteri grubu
+     * @param CustomerGroup $customerGroup Customer group to update
+     * @param CustomerGroupData $data New customer group data
+     * @return CustomerGroup Updated customer group
      */
     public function update(CustomerGroup $customerGroup, CustomerGroupData $data): CustomerGroup
     {
@@ -51,11 +51,11 @@ class CustomerGroupService implements CustomerGroupServiceInterface
     }
 
     /**
-     * Müşteri grubunu siler
+     * Delete a customer group.
      * 
-     * Silme işlemi sonrası başarı bildirimi gösterir.
+     * Shows a success notification after deletion.
      * 
-     * @param CustomerGroup $customerGroup Silinecek müşteri grubu
+     * @param CustomerGroup $customerGroup Customer group to delete
      */
     public function delete(CustomerGroup $customerGroup): void
     {

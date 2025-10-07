@@ -9,10 +9,10 @@
     ]"
 >
     <div class="space-y-6">
-        {{-- Komisyon İstatistikleri --}}
+        {{-- Commission Statistics --}}
         @livewire('commission.widgets.commission-stats', ['user' => $user])
 
-        {{-- Ödeme Tarihi Uyarısı --}}
+        {{-- Payment Date Warning --}}
         <div class="bg-orange-100 border-l-4 bg-red-600 p-4 mb-4 rounded-md shadow-sm">
             <div class="flex">
                 <div class="flex-shrink-0">
@@ -28,9 +28,9 @@
             </div>
         </div>
 
-        {{-- Tablo Seçimi ve İçerik --}}
+        {{-- Table Selection and Content --}}
         <div class="bg-white rounded-lg shadow-sm">
-            {{-- Tab Butonları --}}
+            {{-- Tab Buttons --}}
             <nav class="border-b border-gray-200">
                 <div class="flex space-x-8 px-6" aria-label="Tabs">
                     <button 

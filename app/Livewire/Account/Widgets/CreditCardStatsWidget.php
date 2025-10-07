@@ -9,10 +9,10 @@ use Carbon\Carbon;
 use App\Enums\PaymentMethodEnum;
 
 /**
- * Kredi Kartı İstatistikleri Widget'ı
+ * Credit Card Stats Widget
  * 
- * Kredi kartlarıyla ilgili önemli istatistikleri gösteren widget.
- * Toplam limit, borç, gelecek taksitler ve diğer önemli metrikleri listeler.
+ * Widget to display important statistics related to credit cards.
+ * Lists important metrics such as total limit, debt, upcoming installments, and other important metrics.
  */
 class CreditCardStatsWidget extends BaseWidget
 {
@@ -28,9 +28,9 @@ class CreditCardStatsWidget extends BaseWidget
     ];
 
     /**
-     * İstatistikleri hesaplar ve döndürür
+     * Calculate and return statistics
      * 
-     * @return array İstatistik dizisi
+     * @return array Statistics array
      */
     public function getStats(): array
     {
@@ -57,41 +57,20 @@ class CreditCardStatsWidget extends BaseWidget
                 'icon' => 'heroicon-o-calendar',
                 'color' => 'warning',
             ],
-            /**
-            [
-                'label' => 'Aylık Ekstre',
-                'value' => '₺' . number_format($this->getCurrentStatementPayment(), 2, ',', '.'),
-                'icon' => 'heroicon-o-receipt-percent',
-                'color' => 'primary',
-            ],
-            [
-                'label' => 'Aylık Asgari',
-                'value' => '₺' . number_format($minimumPayment, 2, ',', '.'),
-                'icon' => 'heroicon-o-arrow-trending-down',
-                'color' => $minimumPayment > 0 ? 'warning' : 'success',
-            ],
-            [
-                'label' => 'Aylık Ödeme',
-                'value' => '₺' . number_format($this->getCurrentMonthPayment(), 2, ',', '.'),
-                'icon' => 'heroicon-o-banknotes',
-                'color' => 'success',
-            ],
-             */
-      
         ];
     }
 
     /**
-     * Toplam kredi kartı limitini hesaplar
+     * Calculate and return total credit card limit
      * 
-     * @return float Toplam limit
+     * @return float Total limit
      */
     private function getTotalLimit(): float
     {
         return Account::query()
             ->where('type', Account::TYPE_CREDIT_CARD)
             ->whereNull('deleted_at')
-            ->where('status', true) // Sadece aktif kartlar
+            ->where('status', true) // Only active cards
             ->get()
             ->sum(function ($account) {
                 return (float) ($account->details['credit_limit'] ?? 0);
@@ -99,14 +78,14 @@ class CreditCardStatsWidget extends BaseWidget
     }
 
     /**
-     * Toplam kredi kartı borcunu hesaplar
+     * Calculate and return total credit card debt
      * 
-     * @return float Toplam borç
+     * @return float Total debt
      */
     private function getTotalBalance(): float
     {
-        // Tüm kredi kartlarının toplam borcunu hesapla
-        // Doğrudan balance alanını kullanarak
+        // Calculate and return total credit card debt
+        // Directly use the balance field
         return Account::query()
             ->where('type', Account::TYPE_CREDIT_CARD)
             ->whereNull('deleted_at')
@@ -115,16 +94,16 @@ class CreditCardStatsWidget extends BaseWidget
     }
 
     /**
-     * Toplam asgari ödeme tutarını hesaplar
+     * Calculate and return total minimum payment
      * 
-     * @return float Toplam asgari ödeme
+     * @return float Total minimum payment
      */
     private function getTotalMinimumPayment(): float
     {
         $cards = Account::query()
             ->where('type', Account::TYPE_CREDIT_CARD)
             ->whereNull('deleted_at')
-            ->where('status', true) // Sadece aktif kartlar
+            ->where('status', true) // Only active cards
             ->get();
 
         $total = 0;
@@ -133,14 +112,14 @@ class CreditCardStatsWidget extends BaseWidget
         foreach ($cards as $card) {
             $statementDay = (int) ($card->details['statement_day'] ?? 1);
             
-            // Ekstre başlangıç ve bitiş tarihleri
+            // Statement start and end dates
             $statementStart = $currentDate->copy()->setDay($statementDay);
             if ($currentDate->day < $statementDay) {
                 $statementStart->subMonth();
             }
             $statementEnd = $statementStart->copy()->addMonth()->subDay();
 
-            // Bu ay ödenecek taksitler
+            // Installments to be paid this month
             $currentInstallments = Transaction::query()
                 ->where('type', 'expense')
                 ->where('source_account_id', $card->id)
@@ -152,7 +131,7 @@ class CreditCardStatsWidget extends BaseWidget
                     return $transaction->try_equivalent / $transaction->installments;
                 });
 
-            // Taksitsiz harcamalar
+            // Regular expenses
             $regularExpenses = Transaction::query()
                 ->where('type', 'expense')
                 ->where('source_account_id', $card->id)
@@ -161,7 +140,7 @@ class CreditCardStatsWidget extends BaseWidget
                 ->whereBetween('date', [$statementStart, $statementEnd])
                 ->sum('try_equivalent');
 
-            // Bu ay yapılan ödemeler
+            // Payments made this month
             $payments = Transaction::query()
                 ->where('type', 'payment')
                 ->where('destination_account_id', $card->id)
@@ -169,13 +148,12 @@ class CreditCardStatsWidget extends BaseWidget
                 ->whereBetween('date', [$statementStart, $statementEnd])
                 ->sum('try_equivalent');
 
-            // Ekstre tutarı
+            // Statement total
             $statementTotal = $currentInstallments + $regularExpenses;
 
-            // Asgari ödeme hesaplama
             if ($statementTotal > 0) {
                 $minimumPayment = $statementTotal * ($statementTotal >= 50000 ? 0.40 : 0.20);
-                // Ödemeler düşüldükten sonra kalan asgari tutar
+                // Remaining minimum amount after payments
                 $remainingMinimum = max(0, $minimumPayment - $payments);
                 $total += $remainingMinimum;
             }
@@ -192,7 +170,7 @@ class CreditCardStatsWidget extends BaseWidget
             ->whereHas('sourceAccount', function ($query) {
                 $query->where('type', Account::TYPE_CREDIT_CARD)
                     ->whereNull('deleted_at')
-                    ->where('status', true); // Sadece aktif kartlar
+                    ->where('status', true); // Only active cards
             })
             ->whereYear('date', Carbon::now()->year)
             ->whereMonth('date', Carbon::now()->month)
@@ -204,7 +182,7 @@ class CreditCardStatsWidget extends BaseWidget
         $cards = Account::query()
             ->where('type', Account::TYPE_CREDIT_CARD)
             ->whereNull('deleted_at')
-            ->where('status', true) // Sadece aktif kartlar
+            ->where('status', true) // Only active cards
             ->get();
 
         $total = 0;
@@ -213,14 +191,14 @@ class CreditCardStatsWidget extends BaseWidget
         foreach ($cards as $card) {
             $statementDay = (int) ($card->details['statement_day'] ?? 1);
             
-            // Ekstre başlangıç ve bitiş tarihleri
+            // Statement start and end dates
             $statementStart = $currentDate->copy()->setDay($statementDay);
             if ($currentDate->day < $statementDay) {
                 $statementStart->subMonth();
             }
             $statementEnd = $statementStart->copy()->addMonth()->subDay();
 
-            // Bu ay ödenecek taksitler
+            // Installments to be paid this month
             $currentInstallments = Transaction::query()
                 ->where('type', 'expense')
                 ->where('source_account_id', $card->id)
@@ -232,7 +210,7 @@ class CreditCardStatsWidget extends BaseWidget
                     return $transaction->try_equivalent / $transaction->installments;
                 });
 
-            // Taksitsiz harcamalar
+            // Regular expenses
             $regularExpenses = Transaction::query()
                 ->where('type', 'expense')
                 ->where('source_account_id', $card->id)
@@ -241,7 +219,7 @@ class CreditCardStatsWidget extends BaseWidget
                 ->whereBetween('date', [$statementStart, $statementEnd])
                 ->sum('try_equivalent');
 
-            // Bu ay yapılan ödemeler
+            // Payments made this month
             $payments = Transaction::query()
                 ->where('type', 'payment')
                 ->where('destination_account_id', $card->id)
@@ -249,7 +227,7 @@ class CreditCardStatsWidget extends BaseWidget
                 ->whereBetween('date', [$statementStart, $statementEnd])
                 ->sum('try_equivalent');
 
-            // Ekstre tutarı (ödemeler düşülmüş hali)
+            // Statement total (after payments)
             $statementTotal = $currentInstallments + $regularExpenses - $payments;
             $total += max(0, $statementTotal);
         }
@@ -265,7 +243,7 @@ class CreditCardStatsWidget extends BaseWidget
             ->whereHas('destinationAccount', function ($query) {
                 $query->where('type', Account::TYPE_CREDIT_CARD)
                     ->whereNull('deleted_at')
-                    ->where('status', true); // Sadece aktif kartlar
+                    ->where('status', true); // Only active cards
             })
             ->whereYear('date', Carbon::now()->year)
             ->whereMonth('date', Carbon::now()->month)
@@ -273,13 +251,13 @@ class CreditCardStatsWidget extends BaseWidget
     }
 
     /**
-     * Gelecek taksitlerin toplam tutarını hesaplar
+     * Calculate and return total upcoming installments
      * 
-     * @return float Gelecek taksitler toplamı
+     * @return float Total upcoming installments
      */
     private function getUpcomingInstallmentsTotal(): float
     {
-        // Taksitli işlemleri al
+        // Installment transactions
         $installmentTransactions = Transaction::query()
             ->where('type', 'expense')
             ->whereNull('deleted_at')
@@ -288,13 +266,13 @@ class CreditCardStatsWidget extends BaseWidget
                     ->whereNull('deleted_at');
             })
             ->whereNotNull('installments')
-            ->where('remaining_installments', '>', 1) // En az 2 taksit kalmış olmalı
+            ->where('remaining_installments', '>', 1) // At least 2 installments remaining
             ->get();
 
         $total = 0;
 
         foreach ($installmentTransactions as $transaction) {
-            // İlk taksit hariç kalan taksitler
+            // Remaining installments after the first installment
             $remainingAmount = ($transaction->remaining_installments - 1) * ($transaction->try_equivalent / $transaction->installments);
             $total += $remainingAmount;
         }

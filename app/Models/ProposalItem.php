@@ -6,17 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Teklif Kalemi modeli
+ * Proposal Item model
  * 
- * Tekliflerde yer alan ürün veya hizmet kalemlerini temsil eder.
- * Her kalem bir teklife ait olup, fiyat, miktar, vergi ve indirim bilgilerini içerir.
+ * Represents product or service line items within proposals.
+ * Each item belongs to a proposal and contains price, quantity, tax, and discount details.
  */
 class ProposalItem extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -34,7 +34,7 @@ class ProposalItem extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -48,11 +48,11 @@ class ProposalItem extends Model
     ];
 
     /**
-     * Kalemin ait olduğu teklif
-     * 
+     * The proposal the item belongs to.
+     *
      * @return BelongsTo
      */
-    public function proposal()
+    public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);
     }

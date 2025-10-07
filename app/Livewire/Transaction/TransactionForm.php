@@ -20,18 +20,18 @@ use App\Enums\PaymentMethodEnum;
 use Illuminate\Support\Facades\Log;
 
 /**
- * İşlem Form Bileşeni
+ * Transaction Form Component
  * 
- * Bu bileşen, finansal işlemlerin oluşturulması ve düzenlenmesi için form sağlar.
- * Özellikler:
- * - Gelir ve gider işlemleri
- * - Transfer işlemleri
- * - Çoklu para birimi desteği
- * - KDV ve stopaj hesaplamaları
- * - Taksitli işlemler
- * - Abonelik işlemleri
- * - Hesap yönetimi
- * - Kategori yönetimi
+ * Provides a form to create and edit financial transactions.
+ * Features:
+ * - Income and expense transactions
+ * - Transfer transactions
+ * - Multi-currency support
+ * - VAT and withholding calculations
+ * - Installment transactions
+ * - Subscription transactions
+ * - Account management
+ * - Category management
  * 
  * @package App\Livewire\Transaction
  */
@@ -41,28 +41,28 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     use Forms\Concerns\InteractsWithForms;
     use InteractsWithActions;
 
-    /** @var Transaction|null Düzenlenen işlem */
+    /** @var Transaction|null Edited transaction */
     public ?Transaction $transaction = null;
 
-    /** @var array Form verileri */
+    /** @var array Form data */
     public $data = [];
-    public bool $isCopyMode = false; // Kopyalama modunu takip etmek için özellik eklendi
+    public bool $isCopyMode = false; // Property to track copy mode
 
-    /** @var TransactionService İşlem servisi */
-    private TransactionService $transactionService; // Tekrar private yapıldı
+    /** @var TransactionService Transaction service */
+    private TransactionService $transactionService; // Set back to private
 
-    /** @var CurrencyService Para birimi servisi */
-    private CurrencyService $currencyService; // Tekrar private yapıldı
+    /** @var CurrencyService Currency service */
+    private CurrencyService $currencyService; // Set back to private
 
-    /** @var SubscriptionTransactionServiceInterface Abonelik servisi */
-    private SubscriptionTransactionServiceInterface $subscriptionService; // Eklendi ve private yapıldı
+    /** @var SubscriptionTransactionServiceInterface Subscription service */
+    private SubscriptionTransactionServiceInterface $subscriptionService; // Added and set private
 
     /**
-     * Bileşen başlatılırken servisleri enjekte eder
+     * Inject services when the component boots.
      *
-     * @param TransactionService $transactionService İşlem servisi
-     * @param CurrencyService $currencyService Para birimi servisi
-     * @param SubscriptionTransactionServiceInterface $subscriptionService Abonelik servisi
+     * @param TransactionService $transactionService Transaction service
+     * @param CurrencyService $currencyService Currency service
+     * @param SubscriptionTransactionServiceInterface $subscriptionService Subscription service
      * @return void
      */
     public function boot(
@@ -77,9 +77,9 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
      /**
-     * Bileşen başlatılırken çalışır
+     * When the component is mounted, it is executed
      *
-     * @param Transaction|null $transaction Düzenlenecek işlem
+     * @param Transaction|null $transaction Transaction to be edited
      * @return void
      */
 
@@ -87,7 +87,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     {
         $this->isCopyMode = false;
 
-        // Kopyalama modunu kontrol et ve ayarla
+        // Check and set copy mode
         if (request()->filled('copy_from')) { 
 
             $this->isCopyMode = true; 
@@ -106,22 +106,22 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     ->danger()
                     ->send();
                  $this->fillDefaultFormData();
-                 $this->isCopyMode = false; // Kopyalama başarısızsa modu kapat
+                 $this->isCopyMode = false; // If copy fails, close the mode
             }
         }
-        // Düzenleme modunu kontrol et
+        // Check edit mode
         elseif ($transaction) {
             $this->transaction = $transaction;
             $this->fillDefaultFormData();
             $this->loadTransactionData();
         }
-        // Yeni işlem modu
+        // New transaction mode
         else {
             $this->fillDefaultFormData();
         }
     }
 
-    // Varsayılan form verilerini doldurmak için yardımcı metod
+    // Helper method to fill default form data
     private function fillDefaultFormData(): void
     {
          $this->form->fill([
@@ -134,7 +134,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
             'is_taxable' => false,
             'user_id' => auth()->id(),
             'account_select' => null,
-            // Diğer sıfırlanması gereken alanlar buraya eklenebilir
+            // Other fields that need to be reset can be added here
             'category_id' => null,
             'customer_id' => null,
             'supplier_id' => null,
@@ -158,7 +158,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * İşlem verilerini form'a yükler
+     * Loads transaction data into the form
      * 
      * @return void
      */
@@ -196,7 +196,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
             'account_select' => null,
         ];
         
-        // Nakit olmayan işlemler için hesap seçimini ayarla
+        // For non-cash transactions, set account selection
         if ($this->transaction->payment_method && $this->transaction->payment_method->value !== PaymentMethodEnum::CASH->value) {
             if ($this->transaction->type === 'income') {
                 $formData['account_select'] = $this->transaction->destination_account_id;
@@ -205,38 +205,38 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
             }
         }
 
-        // Vergi hesaplamaları
+        // Tax calculations
         if ($this->transaction->is_taxable && $this->transaction->tax_rate) {
             $taxRate = $this->transaction->tax_rate / 100;
             $netAmount = $this->transaction->amount / (1 + $taxRate);
             $formData['tax_amount'] = round($this->transaction->amount - $netAmount, 2);
         }
 
-        // Kur ayarlaması
+        // Currency setup
         if ($this->transaction->currency === 'TRY') {
             $formData['exchange_rate'] = 1;
         }
 
-        // Taksit bilgileri
+        // Installment information
         if ($this->transaction->installments > 1) {
             $formData['installments'] = $this->transaction->installments;
             $formData['remaining_installments'] = $this->transaction->remaining_installments;
             $formData['monthly_amount'] = round($this->transaction->amount / $this->transaction->installments, 2);
         }
 
-        // Form verilerini yükle
+        // Load form data
         $this->form->fill($formData);
     }
 
     /**
-     * Verilen işlemden verileri forma kopyalar (Hızlı İşlem için)
+     * Copies data from the given transaction to the form (for quick transactions)
      *
      * @param Transaction $originalTransaction Kopyalanacak işlem
      * @return void
      */
     private function copyTransactionData(Transaction $originalTransaction): void
     {
-        // Orijinal işlemden tüm ilgili verileri al
+        // Get all relevant data from the original transaction
         $formData = [
             'type' => $originalTransaction->type,
             'category_id' => $originalTransaction->category_id,
@@ -257,22 +257,22 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
             'has_withholding' => $originalTransaction->has_withholding,
             'withholding_rate' => $originalTransaction->withholding_rate,
             'withholding_amount' => $originalTransaction->withholding_amount,
-            // Orijinal abonelik bilgilerini de alalım (formda göstermek için)
+            // Get original subscription information (for display in the form)
             'is_subscription' => $originalTransaction->is_subscription,
             'subscription_period' => $originalTransaction->subscription_period,
             // 'auto_renew' => $originalTransaction->auto_renew, // Kullanılmıyor
-            'user_id' => auth()->id(), // Kullanıcıyı mevcut kullanıcı yap
+            'user_id' => auth()->id(), // Set user to current user
         ];
 
-        // Yeni işlem için bazı alanları sıfırla/ayarla
-        $formData['date'] = now(); // Tarihi bugüne ayarla
-        // $formData['is_subscription'] = false; // Formda gösterilsin, kaydederken false yapılır
-        $formData['next_payment_date'] = null; // Yeni işlem için geçerli değil
-        $formData['remaining_installments'] = null; // Yeni işlem için geçerli değil
-        $formData['status'] = 'completed'; // Durumu varsayılana ayarla
-        $formData['reference_id'] = $originalTransaction->id; // Referans olarak eski ID'yi tutabiliriz
+        // For new transaction, reset/set some fields
+        $formData['date'] = now(); // Set to today
+        // $formData['is_subscription'] = false; // Show in form, set to false when saving
+        $formData['next_payment_date'] = null; // Not valid for new transaction
+        $formData['remaining_installments'] = null; // Not valid for new transaction
+        $formData['status'] = 'completed'; // Set to default status
+        $formData['reference_id'] = $originalTransaction->id; // Keep old ID as reference
 
-        // Hesap seçimi için account_select'i ayarla
+        // For account selection, set account_select
         $formData['account_select'] = null;
         if ($originalTransaction->payment_method && $originalTransaction->payment_method->value !== PaymentMethodEnum::CASH->value) {
             if ($originalTransaction->type === 'income') {
@@ -282,24 +282,24 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
             }
         }
 
-        // Form verilerini yükle
+        // Load form data
         $this->form->fill($formData);
     }
 
     /**
-     * Ödeme yöntemini belirler
+     * Determines the payment method
      * 
-     * @param Transaction $transaction İşlem
-     * @return string|null Ödeme yöntemi
+     * @param Transaction $transaction Transaction
+     * @return string|null Payment method
      */
     private function getPaymentMethod(Transaction $transaction): ?string
     {
-        // Önce payment_method alanını kontrol et
+        // First check payment_method field
         if ($transaction->payment_method) {
             return $transaction->payment_method->value;
         }
 
-        // Eğer payment_method yoksa, hesap tipine göre belirle
+        // If payment_method is not set, determine based on account type
         if ($transaction->sourceAccount) {
             return match($transaction->sourceAccount->type) {
                 Account::TYPE_BANK_ACCOUNT => PaymentMethodEnum::BANK->value,
@@ -310,7 +310,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
             };
         }
 
-        // Eğer destination_account varsa (gelir işlemleri için)
+        // If destination_account is set (for income transactions)
         if ($transaction->destinationAccount) {
             return match($transaction->destinationAccount->type) {
                 Account::TYPE_BANK_ACCOUNT => PaymentMethodEnum::BANK->value,
@@ -324,10 +324,10 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Hesap ID'sini döndürür
+     * Returns the account ID
      * 
-     * @param Transaction $transaction İşlem
-     * @return int|null Hesap ID'si
+     * @param Transaction $transaction Transaction
+     * @return int|null Account ID
      */
     private function getAccountId(Transaction $transaction): ?int
     {
@@ -335,11 +335,11 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Döviz kurunu hesaplar
+     * Calculates the exchange rate
      * 
-     * @param string|null $currency Para birimi
-     * @param Carbon|null $date Tarih
-     * @return float|null Döviz kuru
+     * @param string|null $currency Currency
+     * @param Carbon|null $date Date
+     * @return float|null Exchange rate
      */
     private function getExchangeRate(?string $currency, ?Carbon $date = null): ?float
     {
@@ -348,13 +348,13 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
         }
 
         try {
-            // boot() ile enjekte edilen servisi kullan
+            // Use the injected service
             $rates = $this->currencyService->getExchangeRates($date);
             if (!$rates || !isset($rates[$currency])) {
                 return null;
             }
 
-            // Yabancı Para -> TRY (direkt buying rate'i kullan)
+            // Foreign Currency -> TRY (use direct buying rate)
             return $rates[$currency]['buying'];
 
         } catch (\Exception $e) {
@@ -363,14 +363,14 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Form şemasını oluşturur
+     * Form schema
      * 
-     * @param Forms\Form $form Form nesnesi
-     * @return Forms\Form Yapılandırılmış form
+     * @param Forms\Form $form Form object
+     * @return Forms\Form Configured form
      */
     public function form(Forms\Form $form): Forms\Form
     {
-        // Servisler mount() metodunda başlatıldı.
+        // Services are initialized in mount() method.
 
         $schema = [
             // Ana işlem kartı
@@ -381,18 +381,19 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     Forms\Components\Textarea::make('description')
                         ->label('Açıklama')
                         ->rows(2),
-                   Forms\Components\Hidden::make('reference_id'), // Kopyalanan işlemin orijinal ID'sini tutmak için
+                    // Keep original ID of copied transaction
+                   Forms\Components\Hidden::make('reference_id'), 
                 ]),
         ];
 
-        // Abonelik bölümünü almayı dene
+        // Try to get subscription schema
         $subscriptionSchema = $this->getSubscriptionSchema();
-        // Sadece null değilse şemaya ekle
+        // Only add if not null
         if ($subscriptionSchema !== null) {
             $schema[] = $subscriptionSchema;
         }
 
-        // Vergilendirme bölümünü ekle
+        // Add taxation schema
         $schema[] = $this->getTaxationSchema();
 
         return $form
@@ -401,10 +402,10 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Önbelleğe alınmış hesap seçeneklerini döndürür
+     * Returns cached account options
      * 
-     * @param string|null $type Hesap tipi
-     * @return array Hesap seçenekleri
+     * @param string|null $type Account type
+     * @return array Account options
      */
     private function getCachedAccountOptions(string $type = null): array
     {
@@ -412,8 +413,8 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
         return cache()->remember($cacheKey, now()->addHours(24), function () use ($type) {
             $query = Account::query()
                 ->where('user_id', auth()->id())
-                ->where('status', true)  // Sadece aktif hesaplar
-                ->whereNull('deleted_at'); // Silinmemiş hesaplar
+                ->where('status', true)  // Only active accounts
+                ->whereNull('deleted_at'); // Not deleted accounts
             
             if ($type) {
                 $query->where('type', $type);
@@ -435,10 +436,10 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Önbelleğe alınmış kategori seçeneklerini döndürür
+     * Returns cached category options
      * 
-     * @param string $type Kategori tipi
-     * @return array Kategori seçenekleri
+     * @param string $type Category type
+     * @return array Category options
      */
     private function getCachedCategoryOptions(string $type): array
     {
@@ -454,9 +455,9 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
     
     /**
-     * İşlem detayları form şemasını oluşturur
+     * Transaction details form schema
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getTransactionDetailsSchema(): array
     {
@@ -473,7 +474,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     ->required()
                     ->live()
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        // State değiştiğinde form alanlarını sıfırla
+                        // When state changes, reset form fields
                         $set('category_id', null);
                         $set('payment_method', PaymentMethodEnum::CASH->value);
                         $set('account_select', null);
@@ -489,10 +490,10 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                         $set('installments', null);
                         $set('remaining_installments', null);
                         $set('monthly_amount', null);
-                        // $set('next_payment_date', null); // Abonelik için sıfırlanmamalı
-                        // $set('is_subscription', false); // Abonelik için sıfırlanmamalı
-                        // $set('subscription_period', null); // Abonelik için sıfırlanmamalı
-                        // $set('auto_renew', false); // Kullanılmıyor, sıfırlanabilir veya kaldırılabilir
+                        // $set('next_payment_date', null); // Not reset for subscription
+                        // $set('is_subscription', false); // Not reset for subscription
+                        // $set('subscription_period', null); // Not reset for subscription
+                        // $set('auto_renew', false); // Not used, can be reset or removed
                         $set('is_taxable', false);
                         $set('tax_rate', null);
                         $set('tax_amount', null);
@@ -543,7 +544,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                 Forms\Components\Select::make('payment_method')
                     ->label('Ödeme Yöntemi')
                     ->options(function (callable $get) {
-                        // Gelir işlemi için seçenekler
+                        // Income options
                         if ($get('type') === 'income') {
                             return [
                                 PaymentMethodEnum::CASH->value => PaymentMethodEnum::CASH->label(),
@@ -553,7 +554,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                             ];
                         }
                         
-                        // Gider işlemi için seçenekler
+                        // Expense options
                         if ($get('type') === 'expense') {
                             return [
                                 PaymentMethodEnum::CASH->value => PaymentMethodEnum::CASH->label(),
@@ -563,7 +564,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                             ];
                         }
 
-                        // Varsayılan olarak sadece nakit
+                        // Default is only cash
                         return [
                             PaymentMethodEnum::CASH->value => PaymentMethodEnum::CASH->label(),
                         ];
@@ -575,7 +576,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     ->native(false)
                     ->live()
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        // Ödeme yöntemi değiştiğinde hesap seçimini temizle
+                        // When payment method changes, clear account selection
                         $set('account_select', null);
                         $set('source_account_id', null);
                         $set('destination_account_id', null);
@@ -588,7 +589,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                         $set('monthly_amount', null);
                         $set('next_payment_date', null);
 
-                        // Kripto cüzdan seçildiğinde USD para birimini otomatik seç
+                        // When crypto wallet is selected, automatically select USD currency
                         if ($state === PaymentMethodEnum::CRYPTO->value) {
                             $set('currency', 'USD');
                             // USD kuru al
@@ -597,7 +598,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                                 $set('exchange_rate', $exchangeRate['buying']);
                             }
                         } else {
-                            // Kripto dışındaki işlemlerde TRY'ye dön
+                            // For non-crypto transactions, return to TRY
                             $set('currency', 'TRY');
                             $set('exchange_rate', 1);
                         }
@@ -623,7 +624,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                             ->where('status', true)
                             ->whereNull('deleted_at');
 
-                        // Ödeme yöntemine göre hesap tipini filtrele
+                        // Filter account type based on payment method
                         $query->when($get('payment_method') === PaymentMethodEnum::BANK->value, 
                             fn($q) => $q->where('type', Account::TYPE_BANK_ACCOUNT)
                         )
@@ -680,9 +681,9 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Para birimi ve tutar form şemasını oluşturur
+     * Currency and amount form schema
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     private function getCurrencyAndAmountSchema(): array
     {
@@ -706,7 +707,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     ->native(false)
                     ->live()
                     ->afterStateUpdated(function ($state, Forms\Set $set, callable $get) {
-                        // Kur hesaplama
+                        // Currency calculation
                         if ($state && $state !== 'TRY') {
                             $date = $get('date') ? Carbon::parse($get('date')) : now();
                             $exchangeRate = $this->currencyService->getExchangeRate($state, $date);
@@ -732,7 +733,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                             $set('try_equivalent', $get('amount'));
                         }
 
-                        // Hesap seçili ise para birimi uyumsuzluğu kontrolü
+                        // If account is selected, check for currency mismatch
                         if ($get('account_select')) {
                             $account = Account::find($get('account_select'));
                             if ($account && $account->currency !== $state) {
@@ -862,7 +863,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     ->prefix('₺'),
             ])->visible(fn (callable $get) => $get('currency') !== 'TRY'),
 
-            // Kredi kartı taksit bölümü
+            // Credit card installment section
             Forms\Components\Grid::make(2)
                 ->schema([
                     Forms\Components\TextInput::make('installments')
@@ -902,13 +903,13 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Abonelik bilgileri form şemasını oluşturur
+     * Subscription information form schema
      * 
-     * @return Forms\Components\Section Abonelik bileşenleri
+     * @return Forms\Components\Section Subscription components
      */
-    private function getSubscriptionSchema(): ?Forms\Components\Section // Return type nullable yapıldı
+    private function getSubscriptionSchema(): ?Forms\Components\Section // Return type nullable made
     {
-        // Kopyalama modunda bu bölümü hiç oluşturma
+        // In copy mode, don't create this section
         if ($this->isCopyMode) {
             return null;
         }
@@ -952,7 +953,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Vergilendirme form şemasını oluşturur
+     * Taxation form schema
      * 
      * @return Forms\Components\Section Vergilendirme bileşenleri
      */
@@ -978,7 +979,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                                 $set('withholding_rate', null);
                                 $set('withholding_amount', null);
                             } else {
-                                // Vergilendirme var ise, stopaj varsayılan olarak 0 (yok)
+                                // If taxation is present, withholding is default 0 (none)
                                 $set('has_withholding', 0);
                             }
                         }),
@@ -1078,9 +1079,9 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Form verilerini kaydeder
+     * Saves the form data
      * 
-     * @throws \Exception Kayıt sırasında oluşabilecek hatalar
+     * @throws \Exception Errors that can occur during the record
      * @return void
      */
     public function save(): void
@@ -1088,9 +1089,9 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
         $data = $this->form->getState();
         
         try {
-            // Nakit işlemi kontrolü
+            // Cash transaction check
             if ($data['payment_method'] === PaymentMethodEnum::CASH->value) {
-                // Nakit hesabını bul veya oluştur
+                // Find or create cash account
                 $cashAccount = Account::firstOrCreate(
                     [
                         'user_id' => auth()->id(),
@@ -1104,7 +1105,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     ]
                 );
 
-                // İşlem tipine göre hesap ataması yap
+                // Assign account based on transaction type
                 if ($data['type'] === 'income') {
                     $data['destination_account_id'] = $cashAccount->id;
                     $data['source_account_id'] = null;
@@ -1113,7 +1114,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     $data['destination_account_id'] = null;
                 }
             } else {
-                // Yeni hesap seçimini ayarla
+                // Set new account selection
                 if (!empty($data['account_select'])) {
                     if ($data['type'] === 'income') {
                         $data['destination_account_id'] = $data['account_select'];
@@ -1125,13 +1126,13 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                 }
             }
 
-            // Düzenleme modunda
+            // In edit mode
             if ($this->transaction) {
                 $transactionData = TransactionData::fromArray($data);
-                // boot() ile enjekte edilen servisi kullan
+                // Use the injected service
                 $this->transactionService->update($this->transaction, $transactionData);
             } else {
-                // Kredi kartı taksit kontrolü
+                // Credit card installment check
                 if ($data['payment_method'] === PaymentMethodEnum::CREDIT_CARD->value && !empty($data['installments']) && $data['installments'] > 1) {
                     if ($data['type'] !== 'expense') {
                         throw new \Exception('Taksitli işlem sadece gider olarak kaydedilebilir.');
@@ -1154,23 +1155,22 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                     $data['destination_account_id'] = null;
 
                     $transactionData = TransactionData::fromArray($data);
-                    // boot() ile enjekte edilen servisi kullan
+                    // Use the injected service
                     $this->transactionService->create($transactionData);
                 } else {
-                    // Normal işlem oluşturma
-                    // Normal işlem oluşturma - Abonelik bilgileri formdan alınacak
+                    // Normal transaction creation
+                    // Normal transaction creation - Subscription information will be taken from the form
                     
                     $transactionData = TransactionData::fromArray($data);
-                    // boot() ile enjekte edilen servisi kullan
-                    $newTransaction = $this->transactionService->create($transactionData); // Oluşturulan işlemi al
+                    $newTransaction = $this->transactionService->create($transactionData); // Get the created transaction
 
-                    // Eğer bu kopyalanmış bir işlemse (reference_id varsa), orijinal aboneliğin tarihini güncelle
+                    // If this is a copied transaction (reference_id exists), update the original subscription's date
                     if (!empty($data['reference_id'])) {
                         $originalSubscription = Transaction::find($data['reference_id']);
-                        // Orijinal işlemin gerçekten bir abonelik olduğunu ve periyodu olduğunu kontrol et
+                        // Check if the original transaction is actually a subscription and has a period
                         if ($originalSubscription && $originalSubscription->is_subscription && $originalSubscription->subscription_period) {
                             try {
-                                // Orijinal aboneliğin mevcut next_payment_date'ini kullanarak yeni tarihi hesapla
+                                // Calculate the new date using the original subscription's current next_payment_date
                                 $newNextPaymentDate = $this->subscriptionService->calculateNextPaymentDate($originalSubscription);
                                 $originalSubscription->update(['next_payment_date' => $newNextPaymentDate]);
                                 Log::info('Orijinal abonelik tarihi güncellendi.', ['id' => $originalSubscription->id, 'new_date' => $newNextPaymentDate->toDateString()]);
@@ -1179,7 +1179,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                                     'original_subscription_id' => $originalSubscription->id,
                                     'error' => $e->getMessage()
                                 ]);
-                                // Opsiyonel: Kullanıcıya uyarı gösterilebilir ama işlem devam etmeli.
+                                // Optional: User can be notified but the operation should continue.
                                 // Notification::make()->warning()->title('Orijinal abonelik tarihi güncellenemedi.')->send();
                             }
                         }
@@ -1187,7 +1187,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
                 }
             }
 
-            Notification::make()->success()->title('İşlem başarıyla kaydedildi.')->send(); // Mesaj güncellendi
+            Notification::make()->success()->title('İşlem başarıyla kaydedildi.')->send(); 
             $this->redirectRoute('admin.transactions.index', navigate: true);
         } catch (\Exception $e) {
             Notification::make()
@@ -1199,7 +1199,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Form işlemini iptal eder
+     * Cancels the form operation
      * 
      * @return void
      */
@@ -1209,7 +1209,7 @@ class TransactionForm extends Component implements Forms\Contracts\HasForms
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

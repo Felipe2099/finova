@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Kredi modeli
+ * Loan model
  * 
- * Kullanıcıların kredi işlemlerini temsil eder.
- * Her kredi bir kullanıcıya ait olup, taksitli ödemeler ve ödeme planı içerebilir.
- * Kredi durumu, kalan tutar ve ödeme tarihleri takip edilebilir.
+ * Represents users' loan transactions.
+ * Each loan belongs to a user and can include installment payments and a payment schedule.
+ * Tracks loan status, remaining amount, and payment dates.
  */
 class Loan extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -41,21 +41,24 @@ class Loan extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
-     * 
+     * Attribute casts
+     *
      * @var array<string, string>
      */
     protected $casts = [
-        'amount' => 'float',
-        'monthly_payment' => 'float',
-        'remaining_amount' => 'float',
+        'amount' => 'decimal:2',
+        'monthly_payment' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
+        'installments' => 'integer',
+        'remaining_installments' => 'integer',
         'start_date' => 'date',
         'next_payment_date' => 'date',
         'due_date' => 'date',
+        'status' => 'boolean',
     ];
 
     /**
-     * Kredinin sahibi olan kullanıcı
+     * The user who owns the loan.
      * 
      * @return BelongsTo
      */
@@ -65,7 +68,7 @@ class Loan extends Model
     }
     
     /**
-     * Krediye ait işlemler
+     * Transactions related to the loan.
      * 
      * @return HasMany
      */
@@ -76,7 +79,7 @@ class Loan extends Model
     }
     
     /**
-     * Krediye ait ödemeler
+     * Payments related to the loan.
      * 
      * @return HasMany
      */

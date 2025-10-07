@@ -7,7 +7,7 @@
     ]"
 >
     <div class="bg-white rounded-xl shadow-sm">
-        <!-- Tab Headers -->
+        {{-- Tab Headers --}}
         <div class="border-b border-gray-200 px-6">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                 @foreach ($tabs as $tabKey => $tabLabel)
@@ -20,9 +20,9 @@
             </nav>
         </div>
 
-        <!-- Tab Content -->
+        {{-- Tab Content --}}
         <div class="p-6">
-            {{-- Aktif sekmeye göre ilgili Livewire bileşenini yükle --}}
+            {{-- Load the appropriate Livewire component based on the active tab --}}
             @livewire($this->getActiveComponent(), key($activeTab))
         </div>
     </div>

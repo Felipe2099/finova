@@ -8,11 +8,11 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            // Yeni içerik kolonları ekle
-            $table->json('content')->nullable(); // TipTap JSON içeriği
-            $table->json('checklist')->nullable(); // Checklist öğeleri
+            // Add new content columns
+            $table->json('content')->nullable(); // TipTap JSON content
+            $table->json('checklist')->nullable(); // Checklist items
             
-            // assigned_to kolonu zaten varsa ekleme
+            // If assigned_to column already exists, add it
             if (!Schema::hasColumn('tasks', 'assigned_to')) {
                 $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             }

@@ -13,17 +13,17 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 
 /**
- * Teklif Şablonu Yönetimi Bileşeni
+ * Proposal Template Manager Component
  * 
- * Bu bileşen, teklif şablonlarının yönetimini sağlar.
- * Özellikler:
- * - Teklif şablonu listesi görüntüleme
- * - Yeni teklif şablonu oluşturma
- * - Teklif şablonu düzenleme
- * - Teklif şablonu silme
- * - Teklif durumu takibi
- * - PDF çıktısı alma
- * - E-posta ile gönderme
+ * This component provides functionality to manage proposal templates.
+ * Features:
+ * - Proposal template list view
+ * - New proposal template creation
+ * - Proposal template editing
+ * - Proposal template deletion
+ * - Proposal template status tracking
+ * - PDF output
+ * - Email sending
  * 
  * @package App\Livewire\Proposal
  */
@@ -33,7 +33,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     use InteractsWithTable;
 
     /**
-     * Tablo sorgusunu oluşturur
+     * Creates the table query
      * 
      * @return \Illuminate\Database\Eloquent\Builder
      */
@@ -45,7 +45,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo boş durum başlığını döndürür
+     * Returns the table empty state heading
      * 
      * @return string|null
      */
@@ -55,7 +55,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo boş durum açıklamasını döndürür
+     * Returns the table empty state description
      * 
      * @return string|null
      */
@@ -65,7 +65,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo boş durum ikonunu döndürür
+     * Returns the table empty state icon
      * 
      * @return string|null
      */
@@ -75,7 +75,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo sütunlarını oluşturur
+     * Creates the table columns
      * 
      * @return array
      */
@@ -129,7 +129,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo işlemlerini oluşturur
+     * Creates the table actions
      * 
      * @return array
      */
@@ -158,7 +158,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo başlık işlemlerini oluşturur
+     * Creates the table header actions
      * 
      * @return array
      */
@@ -174,7 +174,7 @@ class ProposalTemplateManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

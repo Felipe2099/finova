@@ -7,33 +7,33 @@ use App\Models\User;
 interface AIAssistantInterface
 {
     /**
-     * Kullanıcının sorusunu AI modeline gönderir ve yanıtı alır.
+     * Send a user's question to the AI model and receive the answer.
      *
-     * @param User $user Soruyu soran kullanıcı.
-     * @param string $question Kullanıcının sorusu.
-     * @param string|null $conversationId Mevcut sohbetin ID'si (varsa).
-     * @return string AI modelinin yanıtı.
+     * @param User $user The user asking the question.
+     * @param string $question The user's question.
+     * @param string|null $conversationId The ID of the current conversation (if any).
+     * @return string The answer from the AI model.
      */
     public function query(User $user, string $question, ?string $conversationId = null): string;
     
     /**
-     * Kullanıcı mesajını analiz edip SQL sorgusu üretir
+     * Analyze a user's message and generate an SQL query.
      * 
-     * @param mixed $user Kullanıcı objesi
-     * @param string $message Kullanıcı mesajı
-     * @param array $databaseSchema Veritabanı şeması (tablo ve alan bilgileri)
+     * @param mixed $user The user object.
+     * @param string $message The user's message.
+     * @param array $databaseSchema The database schema (table and field information).
      * @return array ['query' => string, 'requires_sql' => bool, 'explanation' => string]
      */
     public function generateSqlQuery($user, string $message, array $databaseSchema): array;
     
     /**
-     * SQL sonuçlarını kullanarak yanıt oluşturur
+     * Create a response using SQL results.
      * 
-     * @param mixed $user Kullanıcı objesi
-     * @param string $message Kullanıcı mesajı
-     * @param string $sqlQuery Çalıştırılan SQL sorgusu
-     * @param array $sqlResults SQL sonuçları
-     * @param string $conversationId Konuşma ID'si
+     * @param mixed $user The user object.
+     * @param string $message The user's message.
+     * @param string $sqlQuery The executed SQL query.
+     * @param array $sqlResults The SQL results.
+     * @param string $conversationId The conversation ID.
      * @return string
      */
     public function queryWithSqlResults($user, string $message, string $sqlQuery, array $sqlResults, string $conversationId = null): string;

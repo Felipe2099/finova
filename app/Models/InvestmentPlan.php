@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Yatırım Planı modeli
+ * Investment Plan model
  * 
- * Kullanıcıların yatırım planlarını ve portföylerini temsil eder.
- * Her yatırım planı bir kullanıcıya ait olup, farklı yatırım tiplerinde olabilir.
- * Yatırım tutarı, mevcut değer ve yatırım tarihi takip edilebilir.
+ * Represents users' investment plans and portfolios.
+ * Each investment plan belongs to a user and can have different investment types.
+ * Tracks invested amount, current value, and investment date.
  */
 final class InvestmentPlan extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -34,7 +34,7 @@ final class InvestmentPlan extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -45,7 +45,7 @@ final class InvestmentPlan extends Model
     ];
 
     /**
-     * Yatırım planının sahibi olan kullanıcı
+     * The user who owns the investment plan.
      * 
      * @return BelongsTo
      */

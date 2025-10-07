@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Commission model
+ *
+ * Represents commission records for income transactions.
+ * Each commission belongs to a user and is associated with a specific transaction.
+ * Tracks commission rates and amounts earned by users.
+ */
 class Commission extends Model
 {
     use HasFactory;
@@ -24,13 +31,17 @@ class Commission extends Model
     ];
 
     /**
-     * Belirli bir kullanıcının komisyon istatistiklerini getirir
+     * Get commission statistics for a given user.
+     *
+     * @param int $userId
+     * @param string|null $period Optional period filter: "this_month" or "last_month"
+     * @return array<string, int|float>
      */
     public static function getUserStats(int $userId, ?string $period = null): array
     {
         $query = self::where('user_id', $userId);
 
-        // Dönem filtresi
+        // Period filter
         if ($period === 'this_month') {
             $query->whereMonth('created_at', now()->month)
                   ->whereYear('created_at', now()->year);
@@ -39,13 +50,13 @@ class Commission extends Model
                   ->whereYear('created_at', now()->subMonth()->year);
         }
 
-        // Toplam komisyon
+        // Totals
         $totalStats = $query->select([
             DB::raw('SUM(commission_amount) as total_commission'),
             DB::raw('COUNT(*) as total_transactions')
         ])->first();
 
-        // Ödemeler
+        // Payouts
         $payoutStats = CommissionPayout::where('user_id', $userId)
             ->when($period === 'this_month', function ($q) {
                 $q->whereMonth('payment_date', now()->month)
@@ -70,7 +81,7 @@ class Commission extends Model
     }
 
     /**
-     * Komisyonu kazanan kullanıcı.
+     * The user who earned the commission.
      */
     public function user(): BelongsTo
     {
@@ -78,7 +89,7 @@ class Commission extends Model
     }
 
     /**
-     * Komisyonun ilişkili olduğu işlem.
+     * The transaction associated with the commission.
      */
     public function transaction(): BelongsTo
     {

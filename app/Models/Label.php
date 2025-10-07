@@ -4,30 +4,34 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Etiket modeli
+ * Label model
  * 
- * Görevleri kategorize etmek ve gruplamak için kullanılan etiketleri temsil eder.
- * Her etiket bir renk ile ilişkilendirilir ve birden fazla göreve atanabilir.
+ * Represents labels used to categorize and group tasks.
+ * Each label is associated with a color and can be assigned to multiple tasks.
  */
 class Label extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
-    protected $fillable = ['name', 'color'];
+    protected $fillable = [
+        'name',
+        'color',
+    ];
 
     /**
-     * Etiketin atandığı görevler
-     * 
+     * Tasks that the label is assigned to.
+     *
      * @return BelongsToMany
      */
-    public function tasks()
+    public function tasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'task_labels');
     }

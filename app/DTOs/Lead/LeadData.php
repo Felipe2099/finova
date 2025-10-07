@@ -5,31 +5,31 @@ declare(strict_types=1);
 namespace App\DTOs\Lead;
 
 /**
- * Potansiyel Müşteri Veri Transfer Nesnesi
+ * Lead Data Transfer Object
  * 
- * Potansiyel müşteri (lead) verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Potansiyel müşteri oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert lead data.
+ * Used for lead creation, updating, and viewing.
  */
 class LeadData
 {
     /**
-     * @param string $name Potansiyel müşteri adı
-     * @param string $type Müşteri türü
-     * @param string|null $email E-posta adresi
-     * @param string|null $phone Telefon numarası
-     * @param string|null $city Şehir
-     * @param string|null $district İlçe
-     * @param string|null $address Adres
-     * @param string|null $notes Notlar
-     * @param string $source Kaynak
-     * @param string $status Durum
-     * @param int|null $assigned_to Atanan kullanıcı ID
-     * @param string|null $next_contact_date Bir sonraki iletişim tarihi
-     * @param string|null $last_contact_date Son iletişim tarihi
-     * @param string|null $converted_at Müşteriye dönüştürülme tarihi
-     * @param int|null $converted_to_customer_id Dönüştürülen müşteri ID
-     * @param string|null $conversion_reason Dönüşüm nedeni
-     * @param int|null $user_id Kullanıcı ID
+     * @param string $name Lead name
+     * @param string $type Lead type
+     * @param string|null $email Email address
+     * @param string|null $phone Phone number
+     * @param string|null $city City
+     * @param string|null $district District
+     * @param string|null $address Address
+     * @param string|null $notes Notes
+     * @param string $source Source
+     * @param string $status Status
+     * @param int|null $assigned_to Assigned user ID
+     * @param string|null $next_contact_date Next contact date
+     * @param string|null $last_contact_date Last contact date
+     * @param string|null $converted_at Converted at
+     * @param int|null $converted_to_customer_id Converted customer ID
+     * @param string|null $conversion_reason Conversion reason
+     * @param int|null $user_id User ID
      */
     public function __construct(
         public readonly string $name,
@@ -52,9 +52,9 @@ class LeadData
     ) {}
 
     /**
-     * Dizi verisinden potansiyel müşteri verisi oluşturur
+     * Create lead data from array
      * 
-     * @param array $data Potansiyel müşteri verileri dizisi
+     * @param array $data Lead data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -81,7 +81,7 @@ class LeadData
     }
 
     /**
-     * Potansiyel müşteri verisini dizi formatına dönüştürür
+     * Convert lead data to array
      * 
      * @return array
      */

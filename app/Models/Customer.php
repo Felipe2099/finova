@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Müşteri modeli
+ * Customer model
  * 
- * İşletmenin müşterilerini temsil eder.
- * Her müşteri bir kullanıcıya ve müşteri grubuna ait olabilir.
- * Müşterilerin gelir işlemleri ve notları takip edilebilir.
+ * Represents the business's customers.
+ * Each customer may belong to a user and a customer group.
+ * Income transactions and notes related to customers can be tracked.
  */
 class Customer extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -41,7 +41,7 @@ class Customer extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -50,14 +50,16 @@ class Customer extends Model
     ];
 
     /**
-     * Model boot metodu - user_id değişimini engeller
+     * Model boot method - prevent changing user_id.
+     *
+     * @return void
      */
     protected static function boot()
     {
         parent::boot();
 
         static::updating(function ($customer) {
-            // Eğer user_id değiştirilmeye çalışılıyorsa, eski değeri koru
+            // If user_id is attempted to be changed, keep the original value
             if ($customer->isDirty('user_id')) {
                 $customer->user_id = $customer->getOriginal('user_id');
             }
@@ -65,7 +67,7 @@ class Customer extends Model
     }
 
     /**
-     * Müşterinin sahibi olan kullanıcı
+     * The user who owns the customer.
      * 
      * @return BelongsTo
      */
@@ -75,7 +77,7 @@ class Customer extends Model
     }
 
     /**
-     * Müşterinin ait olduğu grup
+     * The group the customer belongs to.
      * 
      * @return BelongsTo
      */
@@ -85,7 +87,7 @@ class Customer extends Model
     }
 
     /**
-     * Müşteriye ait gelir işlemleri
+     * Income transactions related to the customer.
      * 
      * @return HasMany
      */
@@ -97,7 +99,7 @@ class Customer extends Model
     }
 
     /**
-     * Müşteriye ait notlar
+     * Notes related to the customer.
      * 
      * @return HasMany
      */
@@ -106,11 +108,21 @@ class Customer extends Model
         return $this->hasMany(CustomerNote::class);
     }
 
+    /**
+     * Credentials related to the customer.
+     *
+     * @return HasMany
+     */
     public function credentials(): HasMany
     {
         return $this->hasMany(CustomerCredential::class);
     }
 
+    /**
+     * Agreements related to the customer.
+     *
+     * @return HasMany
+     */
     public function agreements(): HasMany
     {
         return $this->hasMany(CustomerAgreement::class);

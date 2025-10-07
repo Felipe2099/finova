@@ -9,97 +9,97 @@ use App\Models\Transaction;
 use App\DTOs\Loan\LoanData;
 
 /**
- * Kredi servisi arayüzü
+ * Loan service interface
  * 
- * Kredi işlemlerinin yönetimi için gerekli metodları tanımlar.
- * Kredi kayıtlarının oluşturulması, güncellenmesi, silinmesi ve ödeme işlemlerini yapar.
+ * Defines the methods required for managing loan operations.
+ * Handles loan creation, updating, deletion, and payment processing.
  */
 interface LoanServiceInterface
 {
     /**
-     * Yeni bir kredi kaydı oluşturur
+     * Create a new loan record.
      * 
-     * @param array $data Kredi verileri
-     * @return Loan Oluşturulan kredi kaydı
+     * @param array $data Loan data
+     * @return Loan Created loan record
      */
     public function createLoan(array $data): Loan;
 
     /**
-     * Mevcut bir kredi kaydını günceller
+     * Update an existing loan record.
      * 
-     * @param Loan $loan Güncellenecek kredi kaydı
-     * @param LoanData $data Yeni kredi verileri
-     * @return Loan Güncellenmiş kredi kaydı
+     * @param Loan $loan Loan record to update
+     * @param LoanData $data New loan data
+     * @return Loan Updated loan record
      */
     public function update(Loan $loan, LoanData $data): Loan;
 
     /**
-     * Kredi kaydına ödeme ekler
+     * Add a payment to a loan record.
      * 
-     * @param Loan $loan Ödeme eklenecek kredi kaydı
-     * @param array $data Ödeme verileri
+     * @param Loan $loan Loan record to add payment to
+     * @param array $data Payment data
      */
     public function addPayment(Loan $loan, array $data): void;
     
     /**
-     * Kredi kaydını siler
+     * Delete a loan record.
      * 
-     * @param Loan $loan Silinecek kredi kaydı
-     * @return array İşlem sonucu ve mesaj
+     * @param Loan $loan Loan record to delete
+     * @return array Result and message
      */
     public function delete(Loan $loan): array;
 
     /*
-     * Ödeme kaydını günceller
+     * Update a payment record.
      * 
-     * @param Transaction $payment Güncellenecek ödeme kaydı
-     * @param array $data Yeni ödeme verileri
+     * @param Transaction $payment Payment record to update
+     * @param array $data New payment data
      */
     //public function updatePayment(Transaction $payment, array $data): void;
     
     /*
-     * Ödeme kaydını siler
+     * Delete a payment record.
      * 
-     * @param Transaction $payment Silinecek ödeme kaydı
+     * @param Transaction $payment Payment record to delete
      */
     //public function deletePayment(Transaction $payment): void;
 
     /*
-     * Taksit planını oluşturur
+     * Generate an installment plan.
      * 
-     * @param Loan $loan Taksit planı oluşturulacak kredi kaydı
-     * @return array Taksit planı detayları
+     * @param Loan $loan Loan record to generate installment plan
+     * @return array Installment plan details
      */
     //public function generateInstallmentPlan(Loan $loan): array;
 
     /*
-     * Toplam tutarı faiz ile birlikte hesaplar
+     * Calculate the total amount with interest.
      * 
-     * @param Loan $loan Hesaplanacak kredi kaydı
-     * @return float Toplam tutar
+     * @param Loan $loan Loan record to calculate total amount
+     * @return float Total amount
      */
     //public function calculateTotalWithInterest(Loan $loan): float;
 
     /*
-     * Kredi detaylarını getirir
+     * Get loan details.
      * 
-     * @param Loan $loan Detayları getirilecek kredi kaydı
-     * @return array Kredi detayları
+     * @param Loan $loan Loan record to get details
+     * @return array Loan details
      */
     //public function getLoanDetails(Loan $loan): array;
 
     /*
-     * Sonraki ödeme bilgilerini getirir
+     * Get next payment information.
      * 
-     * @param Loan $loan Bilgileri getirilecek kredi kaydı
-     * @return array Sonraki ödeme bilgileri
+     * @param Loan $loan Loan record to get next payment information
+     * @return array Next payment information
      */
     //public function getNextPaymentInfo(Loan $loan): array;
 
     /*
-     * Kredi durumunu günceller
+     * Update the status of a loan record.
      * 
-     * @param Loan $loan Güncellenecek kredi kaydı
+     * @param Loan $loan Loan record to update status
      */
     //public function updateStatus(Loan $loan): void;
 }

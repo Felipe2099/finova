@@ -17,36 +17,36 @@ use Illuminate\Support\Facades\DB;
 use Filament\Tables\Actions\Action;
 
 /**
- * Kredi Kartı Yönetimi Bileşeni
+ * Credit Card Management Component
  * 
- * Kredi kartlarının yönetimini sağlayan özelleştirilmiş Livewire bileşeni.
- * Kredi kartları için detaylı işlemler ve özellikler sunar.
+ * Customized Livewire component for managing credit cards.
+ * Provides detailed operations and features for credit cards.
  * 
- * Özellikler:
- * - Kredi kartı oluşturma/düzenleme/silme
- * - Kart limiti ve borç takibi
- * - Asgari ödeme hesaplama
- * - Kart ödemeleri
- * - İşlem geçmişi görüntüleme
+ * Features:
+ * - Create/Edit/Delete credit cards
+ * - Card limit and debt tracking
+ * - Minimum payment calculation
+ * - Card payments
+ * - Transaction history view
  */
 class CreditCardManager extends Component implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
     use Forms\Concerns\InteractsWithForms;
     use Tables\Concerns\InteractsWithTable;
 
-    /** @var AccountService Hesap işlemleri için servis */
+    /** @var AccountService Account service */
     private AccountService $accountService;
 
-    /** @var Account|null Seçili kredi kartı */
+    /** @var Account|null Selected credit card */
     public ?Account $selectedCard = null;
 
-    /** @var string Aktif sekme */
+    /** @var string Active tab */
     public string $activeTab = 'Kredi Kartları';
 
     /**
-     * Bileşen başlatma
+     * Initialize the component
      * 
-     * @param AccountService $accountService Hesap servisi
+     * @param AccountService $accountService Account service
      * @return void
      */
     public function boot(AccountService $accountService): void
@@ -55,9 +55,9 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Kredi kartı listesi tablosunu yapılandırır
+     * Configure the credit card list table
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -88,8 +88,8 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                     ->label('Borç')
                     ->money(fn (Account $record) => $record->currency)
                     ->getStateUsing(function (Account $record) {
-                        // Kredi kartı için doğrudan balance alanını kullan
-                        // Bu değer düzenleme formunda görünen değer ile aynı olacak
+                        // Directly use the balance field for credit cards
+                        // This value is the same as the value shown in the edit form
                         return $record->balance;
                     })
                     ->color(fn (Account $record, $state) => $state > 0 ? 'danger' : 'success')
@@ -105,8 +105,8 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                     ->getStateUsing(function (Account $record) {
                         $creditLimit = $record->details['credit_limit'] ?? 0;
                         
-                        // Kredi kartı için doğrudan balance alanını kullan
-                        // Bu değer düzenleme formunda görünen değer ile aynı olacak
+                        // Directly use the balance field for credit cards
+                        // This value is the same as the value shown in the edit form
                         $totalDebt = $record->balance;
 
                         return $creditLimit - $totalDebt;
@@ -115,8 +115,8 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                     ->color(function (Account $record) {
                         $creditLimit = $record->details['credit_limit'] ?? 0;
                         
-                        // Kredi kartı için doğrudan balance alanını kullan
-                        // Bu değer düzenleme formunda görünen değer ile aynı olacak
+                        // Directly use the balance field for credit cards
+                        // This value is the same as the value shown in the edit form
                         $totalDebt = $record->balance;
                         
                         $availableLimit = $creditLimit - $totalDebt;
@@ -267,9 +267,9 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Hesap form şemasını oluşturur
+     * Create the account form schema
      * 
-     * @return array Form bileşenleri dizisi
+     * @return array Form components array
      */
     protected function getFormSchema(): array
     {
@@ -322,32 +322,32 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Asgari ödeme tutarını hesaplar
+     * Calculate the minimum payment
      * 
-     * @param Account $account Kredi kartı hesabı
-     * @return float Asgari ödeme tutarı
+     * @param Account $account Credit card account
+     * @return float Minimum payment
      */
     protected function calculateMinimumPayment(Account $account): float
     {
-        // Eğer hesap yoksa veya borç yoksa 0 döndür
+        // If the account is not found or the balance is 0, return 0
         if (!$account || $account->balance <= 0) {
             return 0;
         }
 
-        // Asgari ödeme oranı (varsayılan %20)
+        // Minimum payment rate (default %20)
         $minimumPaymentRate = 0.20;
 
-        // Asgari ödeme tutarını hesapla
+        // Calculate the minimum payment
         $minimumPayment = $account->balance * $minimumPaymentRate;
 
-        // Minimum 100 TL veya borç tutarı (hangisi küçükse)
+        // Minimum 100 TL or debt amount (whichever is smaller)
         return max(min($minimumPayment, $account->balance), min(100, $account->balance));
     }
 
     /**
-     * Ödeme işlemi için aksiyon oluşturur
+     * Create the payment action
      * 
-     * @return Action Ödeme aksiyonu
+     * @return Action Payment action
      */
     public function makePaymentAction(): Action
     {
@@ -375,7 +375,7 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
                             return Account::query()
                                 ->where('user_id', auth()->id())
                                 ->where('type', Account::TYPE_BANK_ACCOUNT)
-                                ->where('currency', $record->currency) // Aynı para birimindeki hesaplar
+                                ->where('currency', $record->currency) 
                                 ->where('status', true)
                                 ->get()
                                 ->mapWithKeys(function ($account) {
@@ -414,7 +414,7 @@ class CreditCardManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view
      * 
      * @return View
      */

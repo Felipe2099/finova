@@ -14,23 +14,50 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\CheckboxList;
 
+/**
+ * Role Form Component
+ * 
+ * This component provides a form for creating and editing roles.
+ * Features:
+ * - Role creation
+ * - Role editing
+ * - Role deletion
+ * - Permission management
+ * - Bulk operation support
+ */
 class RoleForm extends Component implements Forms\Contracts\HasForms
 {
     use Forms\Concerns\InteractsWithForms;
 
+    /** @var Role|null Edited role */
     public ?Role $role = null;
 
+    /** @var bool Editing mode status */
     public bool $isEdit = false;
 
+    /** @var array Form data */
     public $formData = [];
 
+    /** @var RoleServiceInterface Role service */
     private RoleServiceInterface $roleService;
 
+    /**
+     * When the component is booted, the role service is injected
+     * 
+     * @param RoleServiceInterface $roleService Role service
+     * @return void
+     */
     public function boot(RoleServiceInterface $roleService): void
     {
         $this->roleService = $roleService;
     }
 
+    /**
+     * When the component is mounted, the role is loaded
+     * 
+     * @param Role|null $role Role to edit
+     * @return void
+     */
     public function mount(Role $role = null): void
     {
         $this->isEdit = $role !== null;
@@ -44,6 +71,11 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
         }
     }
 
+    /**
+     * Creates the edit form
+     * 
+     * @return void
+     */
     private function createEditForm(): void
     {
         $rolePermissions = $this->role->permissions->pluck('name')->toArray();
@@ -53,29 +85,29 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
 
         $groups = $this->getPermissionGroups();
 
-        // Tüm izin gruplarını eksiksiz eklemek için döngüyü kontrol edelim
+        // Check all permission groups to ensure completeness
         foreach ($groups as $groupName => $groupData) {
             if (is_array($groupData) && !isset($groupData['name'])) {
-                // Alt grupları olan kategori
+                // Category with sub-groups
                 foreach ($groupData as $subGroupName => $permissions) {
                     if (!empty($permissions) && is_array($permissions)) {
                         $key = "permissions_{$groupName}_{$subGroupName}";
                         $groupPermissions = array_keys($permissions);
                         $selectedInGroup = array_intersect($rolePermissions, $groupPermissions);
-                        $this->formData[$key] = array_values($selectedInGroup); // CheckboxList için dizi
+                        $this->formData[$key] = array_values($selectedInGroup); // For CheckboxList
                     } else {
                         $this->formData["permissions_{$groupName}_{$subGroupName}"] = [];
                     }
                 }
             } else {
-                // Tek seviyeli kategori
+                // Single level category
                 $key = "permissions_{$groupName}";
                 $permissionsInGroup = is_array($groupData) ? $groupData : [];
 
                 if (!empty($permissionsInGroup)) {
                     $groupPermissionNames = array_keys($permissionsInGroup);
                     $selectedInGroup = array_intersect($rolePermissions, $groupPermissionNames);
-                    $this->formData[$key] = array_values($selectedInGroup); // CheckboxList için dizi
+                    $this->formData[$key] = array_values($selectedInGroup); // For CheckboxList
                 } else {
                     $this->formData[$key] = [];
                 }
@@ -85,6 +117,11 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
         $this->form->fill($this->formData);
     }
 
+    /**
+     * Creates the new form
+     * 
+     * @return void
+     */
     private function createNewForm(): void
     {
         $this->formData = ['name' => ''];
@@ -105,6 +142,11 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
         $this->form->fill($this->formData);
     }
 
+    /**
+     * Gets the permission groups
+     * 
+     * @return array Permission groups
+     */
     protected function getPermissionGroups(): array
     {
         $permissions = Permission::all();
@@ -216,7 +258,7 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
             ->toArray();
         
 
-        // Boş grupları temizle
+        // Clean empty groups
         foreach ($groups as $groupName => $groupData) {
             if (is_array($groupData)) {
                 foreach ($groupData as $subGroupName => $permissions) {
@@ -235,6 +277,12 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
         return $groups;
     }
 
+    /**
+     * Creates the form
+     * 
+     * @param Forms\Form $form Form object
+     * @return Forms\Form Configured form
+     */
     public function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -248,11 +296,16 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
             ->statePath('formData');
     }
 
+    /**
+     * Builds the permission groups
+     * 
+     * @return array Permission groups
+     */
     protected function buildPermissionGroups(): array
     {
         $groups = $this->getPermissionGroups();
         $components = [];
-        $firstGroup = true; // İlk grubu takip etmek için flag
+        $firstGroup = true; // Flag to track the first group
 
         foreach ($groups as $groupName => $groupData) {
             if (is_array($groupData) && !isset($groupData['name'])) {
@@ -274,8 +327,8 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
                     $components[] = Section::make($groupName)
                         ->schema($subComponents)
                         ->collapsible()
-                        ->collapsed(!$firstGroup); // İlk grup değilse kapalı
-                    $firstGroup = false; // İlk grup işlendi
+                        ->collapsed(!$firstGroup); // If not the first group, collapse
+                    $firstGroup = false; // First group processed
                 }
             } else {
                 $permissionsInGroup = is_array($groupData) ? $groupData : [];
@@ -292,8 +345,8 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
                                 ->columns(2)
                         ])
                         ->collapsible()
-                        ->collapsed(!$firstGroup); // İlk grup değilse kapalı
-                    $firstGroup = false; // İlk grup işlendi
+                        ->collapsed(!$firstGroup); // If not the first group, collapse
+                    $firstGroup = false; // First group processed
                 }
             }
         }
@@ -301,6 +354,11 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
         return $components;
     }
 
+    /**
+     * Saves the form
+     * 
+     * @return void
+     */
     public function save(): void
     {
         $data = $this->form->getState();
@@ -342,6 +400,11 @@ class RoleForm extends Component implements Forms\Contracts\HasForms
         }
     }
 
+    /**
+     * Cancels the form
+     * 
+     * @return void
+     */
     public function cancel(): void
     {
         $this->redirectRoute('admin.roles.index', navigate: true);

@@ -8,23 +8,23 @@ use App\Models\Account;
 use Illuminate\Http\Request;
 
 /**
- * Hesap Veri Transfer Nesnesi
+ * Account Data Transfer Object
  * 
- * Hesap verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Hesap oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert account data.
+ * Used for account creation, updating, and viewing.
  */
 final class AccountData
 {
     /**
-     * @param string $name Hesap adı
-     * @param string $type Hesap türü
-     * @param string $currency Para birimi
-     * @param float|null $balance Bakiye
-     * @param string|null $description Açıklama
-     * @param bool|null $status Durum
-     * @param int|null $user_id Kullanıcı ID
-     * @param int|null $id Hesap ID
-     * @param array|null $details Detaylar
+     * @param string $name Account name
+     * @param string $type Account type
+     * @param string $currency Currency
+     * @param float|null $balance Balance
+     * @param string|null $description Description
+     * @param bool|null $status Status
+     * @param int|null $user_id User ID
+     * @param int|null $id Account ID
+     * @param array|null $details Details
      */
     public function __construct(
         public readonly string $name,
@@ -39,9 +39,9 @@ final class AccountData
     ) {}
 
     /**
-     * HTTP isteğinden hesap verisi oluşturur
+     * Create account data from request
      * 
-     * @param Request $request HTTP isteği
+     * @param Request $request Request
      * @return self
      */
     public static function fromRequest(Request $request): self
@@ -59,9 +59,9 @@ final class AccountData
     }
 
     /**
-     * Model nesnesinden hesap verisi oluşturur
+     * Create account data from model
      * 
-     * @param Account $account Hesap modeli
+     * @param Account $account Account model
      * @return self
      */
     public static function fromModel(Account $account): self
@@ -80,9 +80,9 @@ final class AccountData
     }
 
     /**
-     * Dizi verisinden hesap verisi oluşturur
+     * Create account data from array
      * 
-     * @param array $data Hesap verileri dizisi
+     * @param array $data Account data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -101,7 +101,7 @@ final class AccountData
     }
 
     /**
-     * Hesap verisini dizi formatına dönüştürür
+     * Convert account data to array
      * 
      * @return array
      */

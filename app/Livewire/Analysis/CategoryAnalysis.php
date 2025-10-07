@@ -18,15 +18,15 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Kategori Analizi Bileşeni
+ * Category Analysis Component
  * 
- * Bu bileşen, gelir ve gider kategorilerinin detaylı analizini sağlar.
- * Özellikler:
- * - Tarih aralığına göre kategori bazlı analiz
- * - Gelir ve gider kategorileri için ayrı analiz
- * - Kategori bazlı büyüme ve trend analizi
- * - En çok işlem yapılan kategorilerin tespiti
- * - Kategori bazlı ortalama işlem tutarları
+ * This component provides detailed analysis of income and expense categories.
+ * Features:
+ * - Category-based analysis by date range
+ * - Separate analysis for income and expense categories
+ * - Category growth and trend analysis
+ * - Detection of the most frequently used categories
+ * - Category-based average transaction amounts
  * 
  * @package App\Livewire\Analysis
  */
@@ -34,63 +34,63 @@ class CategoryAnalysis extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    /** @var string Başlangıç tarihi (Y-m-d formatında) */
+    /** @var string Start date (Y-m-d format) */
     public $startDate;
 
-    /** @var string Bitiş tarihi (Y-m-d formatında) */
+    /** @var string End date (Y-m-d format) */
     public $endDate;
 
-    /** @var string Analiz periyodu (monthly) */
+    /** @var string Analysis period (monthly) */
     public $period = 'monthly';
 
-    /** @var array Seçili kategori ID'leri */
+    /** @var array Selected category IDs */
     public $selectedCategories = [];
 
-    /** @var string Grafik tipi (bar) */
+    /** @var string Chart type (bar) */
     public $chartType = 'bar';
 
-    /** @var string Analiz tipi (income/expense) */
+    /** @var string Analysis type (income/expense) */
     public $analysisType = 'income';
     
-    /** @var array Kategori analiz verileri */
+    /** @var array Category analysis data */
     public $categoryData = [];
 
-    /** @var array En çok işlem yapılan kategoriler */
+    /** @var array Most frequently used categories */
     public $topCategories = [];
 
-    /** @var float Toplam işlem tutarı */
+    /** @var float Total transaction amount */
     public $totalAmount = 0;
 
-    /** @var float Ortalama işlem tutarı */
+    /** @var float Average transaction amount */
     public $averageAmount = 0;
 
-    /** @var array Kategori büyüme oranları */
+    /** @var array Category growth rates */
     public $categoryGrowth = [];
 
-    /** @var array Kategori trendleri */
+    /** @var array Category trends */
     public $categoryTrends = [];
     
-    /** @var string|null Hata mesajı */
+    /** @var string|null Error message */
     public $errorMessage = null;
 
     /**
-     * Bileşen başlatıldığında çalışır
-     * Varsayılan tarih aralığını ve ilk verileri yükler
+     * When the component is mounted, it loads the default dates and initial data
+     * Loads the default dates and initial data
      */
     public function mount(): void
     {
-        // Varsayılan olarak son 3 ay
+        // Default is last 3 months
         $this->startDate = Carbon::now()->subMonths(3)->startOfDay()->format('Y-m-d');
         $this->endDate = Carbon::now()->format('Y-m-d');
         
-        // İlk yüklemede verileri hesapla
+        // When the component is mounted, it loads the default dates and initial data
         $this->loadData();
     }
 
     /**
-     * Tarih değerlerinin geçerliliğini kontrol eder
+     * Checks if the date values are valid
      * 
-     * @return bool Tarihler geçerli ise true, değilse false
+     * @return bool If the dates are valid, true, otherwise false
      */
     private function validateDates()
     {
@@ -129,7 +129,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Tüm analiz verilerini yükler
+     * Loads all analysis data
      */
     private function loadData()
     {
@@ -143,7 +143,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Kategori bazlı işlem verilerini yükler
+     * Loads the category-based transaction data
      */
     private function loadCategoryData()
     {
@@ -175,14 +175,14 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Metrikleri hesaplar (toplam tutar, ortalama tutar, en çok işlem yapılan kategoriler)
+     * Calculates the metrics (total amount, average amount, most frequently used categories)
      */
     private function calculateMetrics()
     {
         $this->totalAmount = $this->categoryData->sum('total_amount');
         $this->averageAmount = $this->categoryData->avg('average_amount');
         
-        // En çok işlem yapılan kategoriler
+        // Most frequently used categories
         $this->topCategories = $this->categoryData
             ->sortByDesc('total_amount')
             ->take(5)
@@ -199,11 +199,11 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Kategori trendlerini analiz eder
+     * Analyzes the category trends
      */
     private function analyzeTrends()
     {
-        // Kategorilerin büyüme trendini analiz et
+        // Analyzes the category growth trends
         foreach ($this->categoryData as $category) {
             $previousPeriodData = Transaction::query()
                 ->join('categories', 'transactions.category_id', '=', 'categories.id')
@@ -230,7 +230,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Başlangıç tarihi güncellendiğinde verileri yeniden yükler
+     * When the start date is updated, reloads the data
      */
     public function updatedStartDate()
     {
@@ -238,7 +238,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Bitiş tarihi güncellendiğinde verileri yeniden yükler
+     * When the end date is updated, reloads the data
      */
     public function updatedEndDate()
     {
@@ -246,7 +246,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Seçili kategoriler güncellendiğinde verileri yeniden yükler
+     * When the selected categories are updated, reloads the data
      */
     public function updatedSelectedCategories()
     {
@@ -254,7 +254,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Analiz tipi güncellendiğinde seçili kategorileri sıfırlar ve verileri yeniden yükler
+     * When the analysis type is updated, resets the selected categories and reloads the data
      */
     public function updatedAnalysisType()
     {
@@ -263,7 +263,7 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */
@@ -277,9 +277,9 @@ class CategoryAnalysis extends Component implements HasForms
     }
 
     /**
-     * Form şemasını oluşturur
+     * Creates the form schema
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getFormSchema(): array
     {

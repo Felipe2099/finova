@@ -13,10 +13,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Taksitli ödeme işlemleri servisi
+ * Installment transactions service
  * 
- * Kredi kartı ile yapılan taksitli ödemeleri yönetir.
- * Taksit sayısı, aylık ödeme tutarı ve ödeme tarihlerini takip eder.
+ * Manages installment payments made by credit card.
+ * Tracks number of installments, monthly amount, and payment dates.
  */
 final class InstallmentTransactionService implements InstallmentTransactionServiceInterface
 {
@@ -26,13 +26,13 @@ final class InstallmentTransactionService implements InstallmentTransactionServi
     }
 
     /**
-     * Yeni bir taksitli ödeme işlemi oluşturur
+     * Create a new installment transaction.
      * 
-     * Kredi kartı limit kontrolü yapar ve taksit bilgilerini kaydeder.
+     * Validates credit card limit and persists installment details.
      * 
-     * @param TransactionData $data Taksitli ödeme verileri
-     * @return Transaction Oluşturulan taksitli ödeme işlemi
-     * @throws \InvalidArgumentException Geçersiz veriler durumunda
+     * @param TransactionData $data Installment data
+     * @return Transaction Created installment transaction
+     * @throws \InvalidArgumentException When data is invalid
      */
     public function create(TransactionData $data): Transaction
     {
@@ -45,19 +45,19 @@ final class InstallmentTransactionService implements InstallmentTransactionServi
     }
 
     /**
-     * Taksit ödemesini işler
+     * Process an installment payment.
      * 
-     * Kalan taksit sayısını günceller ve sonraki ödeme tarihini belirler.
+     * Decrements remaining installments and sets the next payment date.
      * 
-     * @param Transaction $transaction İşlenecek taksitli ödeme işlemi
+     * @param Transaction $transaction Installment transaction to process
      */
     public function processInstallmentPayment(Transaction $transaction): void
     {
         DB::transaction(function () use ($transaction) {
-            // Kalan taksit sayısını güncelle
+            // Update remaining installments
             $transaction->remaining_installments--;
             
-            // Sonraki ödeme tarihini güncelle
+            // Update next payment date
             if ($transaction->remaining_installments > 0) {
                 $transaction->next_payment_date = Carbon::parse($transaction->next_payment_date)->addMonth();
             }
@@ -67,12 +67,12 @@ final class InstallmentTransactionService implements InstallmentTransactionServi
     }
 
     /**
-     * Taksitli ödeme verilerini doğrular
+     * Validate installment payment data.
      * 
-     * Kaynak hesabın varlığını ve kredi kartı limitini kontrol eder.
+     * Ensures the source account exists and the credit limit is sufficient.
      * 
-     * @param TransactionData $data Doğrulanacak taksitli ödeme verileri
-     * @throws \InvalidArgumentException Geçersiz veriler durumunda
+     * @param TransactionData $data Installment data to validate
+     * @throws \InvalidArgumentException When data is invalid
      */
     private function validateInstallmentData(TransactionData $data): void
     {
@@ -91,10 +91,10 @@ final class InstallmentTransactionService implements InstallmentTransactionServi
     }
 
     /**
-     * Taksitli ödeme kaydı oluşturur
+     * Create an installment transaction record.
      * 
-     * @param TransactionData $data Taksitli ödeme verileri
-     * @return Transaction Oluşturulan taksitli ödeme kaydı
+     * @param TransactionData $data Installment data
+     * @return Transaction Created installment record
      */
     private function createInstallmentRecord(TransactionData $data): Transaction
     {

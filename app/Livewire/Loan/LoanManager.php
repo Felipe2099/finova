@@ -22,17 +22,17 @@ use Illuminate\Contracts\View\View;
 use Carbon\Carbon;
 
 /**
- * Kredi Yönetimi Bileşeni
+ * Loan Manager Component
  * 
- * Bu bileşen, kredilerin yönetimini sağlar.
- * Özellikler:
- * - Kredi listesi görüntüleme
- * - Yeni kredi ekleme
- * - Kredi düzenleme
- * - Kredi silme
- * - Kredi ödemesi yapma
- * - Kredi durumu takibi
- * - Kredi filtreleme (tür, durum)
+ * This component provides functionality to manage loans.
+ * Features:
+ * - Loan list view
+ * - New loan creation
+ * - Loan editing
+ * - Loan deletion
+ * - Loan payment
+ * - Loan status tracking
+ * - Loan filtering (type, status)
  * 
  * @package App\Livewire\Loan
  */
@@ -41,20 +41,20 @@ class LoanManager extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
     
-    /** @var Loan|null Aktif kredi */
+    /** @var Loan|null Active loan */
     protected ?Loan $loan = null;
 
-    /** @var LoanServiceInterface Kredi servisi */
+    /** @var LoanServiceInterface Loan service */
     private LoanServiceInterface $loanService;
 
-    /** @var PaymentService Ödeme servisi */
+    /** @var PaymentService Payment service */
     private PaymentService $paymentService;
 
     /**
-     * Bileşen başlatılırken servisleri enjekte eder
+     * When the component is booted, the services are injected
      * 
-     * @param LoanServiceInterface $loanService Kredi servisi
-     * @param PaymentService $paymentService Ödeme servisi
+     * @param LoanServiceInterface $loanService Loan service
+     * @param PaymentService $paymentService Payment service
      * @return void
      */
     public function boot(LoanServiceInterface $loanService, PaymentService $paymentService): void
@@ -64,10 +64,10 @@ class LoanManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -309,9 +309,9 @@ class LoanManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Kredi formunu oluşturur
+     * Creates the loan form
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getLoanForm(): array
     {
@@ -369,7 +369,7 @@ class LoanManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

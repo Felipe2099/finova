@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('proposals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-            $table->string('number')->unique(); // Örneğin: PRO-2024001
+            $table->string('number')->unique(); // Example: PRO-2024001
             $table->string('title');
             $table->text('content')->nullable();
             $table->date('valid_until');

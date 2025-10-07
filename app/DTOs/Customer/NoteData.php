@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace App\DTOs\Customer;
 
 /**
- * Müşteri Notu Veri Transfer Nesnesi
+ * Customer Note Data Transfer Object
  * 
- * Müşteri notlarının taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Müşteri notları oluşturma ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert customer note data.
+ * Used for customer note creation and viewing.
  */
 class NoteData
 {
     /**
-     * @param int $customer_id Müşteri ID
-     * @param string $type Not türü
-     * @param string $content Not içeriği
-     * @param string $activity_date Aktivite tarihi
-     * @param int|null $user_id Kullanıcı ID
-     * @param int|null $assigned_user_id Atanan kullanıcı ID
+     * @param int $customer_id Customer ID
+     * @param string $type Note type
+     * @param string $content Note content
+     * @param string $activity_date Activity date
+     * @param int|null $user_id User ID
+     * @param int|null $assigned_user_id Assigned user ID
      */
     public function __construct(
         public readonly int $customer_id,
@@ -30,9 +30,9 @@ class NoteData
     ) {}
 
     /**
-     * Dizi verisinden not verisi oluşturur
+     * Create note data from array
      * 
-     * @param array $data Not verileri dizisi
+     * @param array $data Note data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -48,7 +48,7 @@ class NoteData
     }
 
     /**
-     * Not verisini dizi formatına dönüştürür
+     * Convert note data to array
      * 
      * @return array
      */

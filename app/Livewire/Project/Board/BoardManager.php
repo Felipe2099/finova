@@ -26,16 +26,17 @@ use Filament\Actions\StaticAction;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Proje Panosu Yönetimi Bileşeni
+ * Project Board Manager Component
  * 
- * Bu bileşen, proje panolarının yönetimini sağlar.
- * Özellikler:
- * - Görev listesi oluşturma ve düzenleme
- * - Görev ekleme, düzenleme ve silme
- * - Görev sıralama ve taşıma
- * - Görev atama ve etiketleme
- * - Görev kontrol listesi yönetimi
- * - Kanban görünümü
+ * This component provides functionality to manage project boards.
+ * Features:
+ * - Task list creation and editing
+ * - Task creation and editing
+ * - Task addition, editing and deletion    
+ * - Task reordering and movement
+ * - Task assignment and labeling
+ * - Task checklist management
+ * - Kanban view
  * 
  * @package App\Livewire\Project\Board
  */
@@ -43,58 +44,58 @@ class BoardManager extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    /** @var Project Proje */
+    /** @var Project Project */
     public Project $project;
 
-    /** @var Board|null Aktif pano */
+    /** @var Board|null Active board */
     public ?Board $board = null;
 
-    /** @var int|null Düzenlenen görev listesi ID'si */
+    /** @var int|null Editing task list ID */
     public ?int $editingTaskListId = null;
 
-    /** @var Task|null Düzenlenen görev */
+    /** @var Task|null Editing task */
     public ?Task $editingTask = null;
 
-    /** @var array Görevler */
+    /** @var array Tasks */
     public array $tasks = [];
 
-    /** @var array Kullanıcılar */
+    /** @var array Users */
     public $users = [];
 
-    /** @var bool Liste modalı görünürlüğü */
+    /** @var bool List modal visibility */
     public bool $showListModal = false;
 
-    /** @var bool Görev modalı görünürlüğü */
+    /** @var bool Task modal visibility */
     public bool $showTaskModal = false;
 
-    /** @var bool Silme modalı görünürlüğü */
+    /** @var bool Delete modal visibility */
     public bool $showDeleteModal = false;
 
-    /** @var bool Liste düzenleme modalı görünürlüğü */
+    /** @var bool List edit modal visibility */
     public bool $showEditListModal = false;
 
-    /** @var array Liste form verileri */
+    /** @var array List form data */
     public array $listData = [];
 
-    /** @var array Görev form verileri */
+    /** @var array Task form data */
     public array $taskData = [];
 
-    /** @var int|null Silinecek görev ID'si */
+    /** @var int|null Deleting task ID */
     public ?int $deletingTaskId = null;
 
-    /** @var TaskList|null Düzenlenen liste */
+    /** @var TaskList|null Editing list */
     public ?TaskList $editingList = null;
 
-    /** @var ProjectServiceInterface Proje servisi */
+    /** @var ProjectServiceInterface Project service */
     private ProjectServiceInterface $projectService;
 
-    /** @var bool Kanban görünümü yenileme durumu */
+    /** @var bool Kanban view refresh status */
     public bool $shouldRenderKanban = true;
 
     /**
-     * Bileşen başlatılırken proje servisini enjekte eder
+     * When the component is booted, the project service is injected
      * 
-     * @param ProjectServiceInterface $projectService Proje servisi
+     * @param ProjectServiceInterface $projectService Project service
      * @return void
      */
     public function boot(ProjectServiceInterface $projectService): void 
@@ -103,9 +104,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Bileşen başlatılırken proje ve pano verilerini yükler
+     * When the component is booted, the project and board data are loaded
      * 
-     * @param Project $project Proje
+     * @param Project $project Project
      * @return void
      */
     public function mount(Project $project)
@@ -113,29 +114,28 @@ class BoardManager extends Component implements HasForms
         $this->project = $project;
         $this->board = $this->projectService->getOrCreateDefaultBoard($project);
         
-        // Tasks array'ini hazırla
         foreach ($this->board->taskLists as $list) {
             $this->tasks[$list->id] = $list->tasks->sortBy('order')->values();
         }
 
-        // Aktif kullanıcıları getir
+        // Active users get
         $this->users = User::orderBy('name')->get();
     }
 
     /**
-     * Yeni liste ekleme modalını açar
+     * Opens the new list creation modal
      * 
      * @return void
      */
     public function addList(): void
     {
-        // Liste eklerken state'i temizle
+        // When adding a list, clear the state
         $this->reset('listData');
         $this->showListModal = true;
     }
 
     /**
-     * Yeni liste oluşturur
+     * Creates a new list
      * 
      * @return void
      */
@@ -155,19 +155,19 @@ class BoardManager extends Component implements HasForms
             ->title('Liste eklendi')
             ->send();
 
-        // Sayfayı yenile
+        // Refresh the page
         $this->redirect(request()->header('Referer'));
     }
 
     /**
-     * Yeni görev ekleme modalını açar
+     * Opens the new task creation modal
      * 
-     * @param int $listId Liste ID'si
+     * @param int $listId List ID
      * @return void
      */
     public function addTask(int $listId): void
     {
-        // Task eklerken state'i temizle
+        // When adding a task, clear the state
         $this->reset(['editingTask', 'taskData']);
         
         $this->editingTaskListId = $listId;
@@ -183,9 +183,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görev düzenleme modalını açar
+     * Opens the task editing modal
      * 
-     * @param int $taskId Görev ID'si
+     * @param int $taskId Task ID
      * @return void
      */
     public function editTask(int $taskId): void
@@ -206,7 +206,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görev oluşturur veya günceller
+     * Creates or updates a task
      * 
      * @return void
      */
@@ -240,9 +240,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görev silme modalını açar
+     * Opens the task deletion modal
      * 
-     * @param int $taskId Görev ID'si
+     * @param int $taskId Task ID
      * @return void
      */
     public function confirmTaskDeletion(int $taskId): void
@@ -252,7 +252,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görevi siler
+     * Deletes a task
      * 
      * @return void
      */
@@ -271,14 +271,14 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Liste düzenleme modalını açar
+     * Opens the list editing modal
      * 
-     * @param TaskList $list Liste
+     * @param TaskList $list List
      * @return void
      */
     public function editList(TaskList $list): void
     {
-        // Liste düzenlerken state'i temizle
+        // When editing a list, clear the state
         $this->reset('listData');
         
         $this->editingList = $list;
@@ -289,7 +289,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Listeyi günceller
+     * Updates a list
      * 
      * @return void
      */
@@ -310,11 +310,11 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görev sıralamasını günceller
+     * Updates the task order
      * 
-     * @param array $items Sıralama verileri
-     * @param int|null $sourceListId Kaynak liste ID'si
-     * @param int|null $targetListId Hedef liste ID'si
+     * @param array $items Order data
+     * @param int|null $sourceListId Source list ID
+     * @param int|null $targetListId Target list ID
      * @return void
      */
     public function updateTaskOrder($items, $sourceListId = null, $targetListId = null): void
@@ -325,9 +325,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Liste sıralamasını günceller
+     * Updates the list order
      * 
-     * @param array $items Sıralama verileri
+     * @param array $items Order data
      * @return void
      */
     public function updateListOrder($items): void
@@ -337,7 +337,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görev modalını kapatır
+     * Closes the task modal
      * 
      * @return void
      */
@@ -347,7 +347,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Liste modalını kapatır
+     * Closes the list modal
      * 
      * @return void
      */
@@ -357,7 +357,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Liste düzenleme modalını kapatır
+     * Closes the list edit modal
      * 
      * @return void
      */
@@ -367,7 +367,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */
@@ -380,7 +380,7 @@ class BoardManager extends Component implements HasForms
             ->orderBy('order')
             ->get();
 
-        // Sayfayı yenileme
+        // Refresh the page
         $this->dispatch('kanban-updated');
 
         return view('livewire.project.board.board-manager', [
@@ -389,9 +389,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Dinleyici olaylarını döndürür
+     * Returns the listeners
      * 
-     * @return array Dinleyici olayları
+     * @return array Listeners
      */
     protected function getListeners()
     {
@@ -402,9 +402,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Liste sıralama olayını işler
+     * Handles the list reorder
      * 
-     * @param array $args Olay argümanları
+     * @param array $args Event arguments
      * @return void
      */
     public function handleListReorder(...$args)
@@ -417,9 +417,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Görev sıralama olayını işler
+     * Handles the task reorder
      * 
-     * @param array $args Olay argümanları
+     * @param array $args Event arguments
      * @return void
      */
     public function handleTaskReorder(...$args)
@@ -432,7 +432,7 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Kontrol listesine yeni öğe ekler
+     * Adds a new checklist item
      * 
      * @return void
      */
@@ -449,9 +449,9 @@ class BoardManager extends Component implements HasForms
     }
 
     /**
-     * Kontrol listesinden öğe siler
+     * Removes a checklist item
      * 
-     * @param int $index Silinecek öğe indeksi
+     * @param int $index Index of the item to remove
      * @return void
      */
     public function removeChecklistItem($index)

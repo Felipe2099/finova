@@ -20,34 +20,34 @@ use App\Services\Currency\CurrencyService;
 use Closure;
 
 /**
- * Sanal POS Yönetimi Bileşeni
+ * Virtual POS Management Component
  * 
- * Sanal POS hesaplarının yönetimini sağlayan özelleştirilmiş Livewire bileşeni.
- * Sanal POS hesapları için detaylı işlemler ve özellikler sunar.
+ * Customized Livewire component for managing virtual POS accounts.
+ * Provides detailed operations and features for virtual POS accounts.
  * 
- * Özellikler:
- * - Sanal POS oluşturma/düzenleme/silme
- * - Komisyon oranı yönetimi
- * - Para birimi dönüşümleri
- * - Detaylı filtreleme ve arama
- * - İşlem geçmişi görüntüleme
+ * Features:
+ * - Create/Edit/Delete virtual POS
+ * - Commission rate management
+ * - Currency conversions
+ * - Advanced filtering and search
+ * - View transaction history
  */
 class VirtualPosManager extends Component implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
     use Forms\Concerns\InteractsWithForms;
     use Tables\Concerns\InteractsWithTable;
 
-    /** @var AccountService Hesap işlemleri için servis */
+    /** @var AccountService Service for account operations */
     private AccountService $accountService;
 
-    /** @var CurrencyService Para birimi dönüşümleri için servis */
+    /** @var CurrencyService Service for currency conversions */
     private CurrencyService $currencyService;
 
     /**
-     * Bileşen başlatma
+     * Component boot.
      * 
-     * @param AccountService $accountService Hesap servisi
-     * @param CurrencyService $currencyService Para birimi servisi
+     * @param AccountService $accountService Account service
+     * @param CurrencyService $currencyService Currency service
      * @return void
      */
     public function boot(AccountService $accountService, CurrencyService $currencyService): void 
@@ -57,9 +57,9 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Sanal POS listesi tablosunu yapılandırır
+     * Configure the virtual POS list table.
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -169,10 +169,10 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                                 ->where('type', Account::TYPE_BANK_ACCOUNT)
                                                 ->get()
                                                 ->mapWithKeys(function ($account) {
-                                                    // Bakiyeyi doğrudan account'tan al
+                                                    // Read balance directly from account
                                                     $balance = $account->balance;
                                                     
-                                                    // Bakiyeyi formatla
+                                                    // Format the balance
                                                     $formattedBalance = number_format($balance, 2, ',', '.') . " {$account->currency}";
                                                     
                                                     return [
@@ -185,7 +185,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                         ->native(false)
                                         ->live()
                                         ->afterStateUpdated(function ($state, callable $set, $get) use ($record) {
-                                            // Önce tüm değerleri temizle
+                                            // Reset all values first
                                             $set('source_amount', null);
                                             $set('target_amount', null);
                                             $set('exchange_rate', null);
@@ -204,7 +204,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                                 $rates = $this->currencyService->getExchangeRates($date);
                                                 if (!$rates) throw new \Exception('Kur bilgisi alınamadı');
 
-                                                // Kur hesapla
+                                                // Calculate the cross rate
                                                 if ($targetAccount->currency === $record->currency) {
                                                     $crossRate = 1;
                                                 } elseif ($record->currency === 'TRY') {
@@ -242,7 +242,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                         ->native(false)
                                         ->live()
                                         ->afterStateUpdated(function ($state, callable $set, $get) use ($record) {
-                                            // Hedef hesap seçili değilse çık
+                                            // Exit if no target account selected
                                             $targetAccountId = $get('target_account_id');
                                             if (!$targetAccountId) return;
                                             
@@ -254,7 +254,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                                 $rates = $this->currencyService->getExchangeRates($date);
                                                 if (!$rates) throw new \Exception('Kur bilgisi alınamadı');
 
-                                                // Yeni tarihe göre kur hesapla
+                                                // Recalculate cross rate for the new date
                                                 if ($targetAccount->currency === $record->currency) {
                                                     $crossRate = 1;
                                                 } elseif ($record->currency === 'TRY') {
@@ -291,7 +291,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                         ->afterStateUpdated(function ($state, callable $set, $get) use ($record) {
                                             if (!$state) return;
                                             
-                                            // Bakiye kontrolü
+                                            // Balance check
                                             if ($state > $record->balance) {
                                                 Notification::make()
                                                     ->title('Yetersiz Bakiye')
@@ -316,7 +316,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                                 $rates = $this->currencyService->getExchangeRates($date);
                                                 if (!$rates) throw new \Exception('Kur bilgisi alınamadı');
 
-                                                // Kur hesapla
+                                                // Calculate the cross rate
                                                 if ($targetAccount->currency === $record->currency) {
                                                     $crossRate = 1;
                                                 } elseif ($record->currency === 'TRY') {
@@ -324,14 +324,14 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                                 } elseif ($targetAccount->currency === 'TRY') {
                                                     $crossRate = $rates[$record->currency]['buying'];
                                                 } else {
-                                                    // Önce TRY'ye çevir, sonra hedef para birimine çevir
+                                                    // First convert to TRY, then convert to target currency
                                                     $tryAmount = $state * $rates[$record->currency]['buying'];
                                                     $crossRate = $tryAmount / ($state * $rates[$targetAccount->currency]['selling']);
                                                 }
 
                                                 $set('exchange_rate', number_format($crossRate, 4, '.', ''));
                                                 
-                                                // Alınacak miktarı hesapla
+                                                // Calculate the amount to be received
                                                 $targetAmount = number_format($state * $crossRate, 4, '.', '');
                                                 $set('target_amount', $targetAmount);
                                             } catch (\Exception $e) {
@@ -391,26 +391,26 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                         try {
                             $targetAccount = Account::findOrFail($data['target_account_id']);
                             
-                            // Transfer işlemi için gerekli verileri hazırla
+                            // Prepare the required data for the transfer
                             $sourceAmount = (float) $data['source_amount'];
                             $targetAmount = (float) $data['target_amount'];
                             $exchangeRate = (float) $data['exchange_rate'];
                             $transactionDate = $data['transaction_date'];
                             
-                            // Bakiye kontrolü - aynı para biriminde kontrol et
+                            // Balance check - validate in the same currency
                             if ($sourceAmount > $record->balance) {
                                 throw new \Exception("Yetersiz bakiye. Transfer edilebilir maksimum tutar: " . number_format($record->balance, 2) . " {$record->currency}");
                             }
                             
-                            // Transfer kategorisini bul veya oluştur
+                            // Transfer category
                             $transferCategory = Category::firstOrCreate(
                                 ['user_id' => auth()->id(), 'name' => 'Transfer', 'type' => 'transfer'],
                                 ['description' => 'Hesaplar arası transfer işlemleri']
                             );
                             
-                            // Transaction oluştur
+                            // Create the transaction
                             DB::transaction(function () use ($record, $targetAccount, $sourceAmount, $targetAmount, $exchangeRate, $transactionDate, $transferCategory) {
-                                // TRY karşılıklarını hesapla
+                                // Calculate TRY equivalents
                                 $sourceTryRate = $record->currency === 'TRY' 
                                     ? 1 
                                     : ($this->currencyService->getExchangeRate($record->currency, Carbon::parse($transactionDate))['buying'] ?? 1);
@@ -422,14 +422,14 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                 $sourceTryEquivalent = $sourceAmount * $sourceTryRate;
                                 $targetTryEquivalent = $targetAmount * $targetTryRate;
                                 
-                                // Transfer açıklaması
+                                // Transfer description
                                 $description = "Transfer: {$record->name} -> {$targetAccount->name}";
                                 if ($record->currency !== $targetAccount->currency) {
                                     $exchangeRate = round($exchangeRate, 6);
                                     $description .= " (Kur: 1 {$record->currency} = {$exchangeRate} {$targetAccount->currency})";
                                 }
                                 
-                                // Kaynak hesaptan para çıkışı
+                                // Source account withdrawal
                                 $sourceTransaction = Transaction::create([
                                     'user_id' => auth()->id(),
                                     'account_id' => $record->id,
@@ -445,11 +445,11 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                     'category_id' => $transferCategory->id,
                                 ]);
                                 
-                                // Kaynak hesabın bakiyesini güncelle
+                                // Update source account balance
                                 $record->balance -= $sourceAmount;
                                 $record->save();
                                 
-                                // Hedef hesaba para girişi
+                                // Destination account deposit
                                 $targetTransaction = Transaction::create([
                                     'user_id' => auth()->id(),
                                     'account_id' => $targetAccount->id,
@@ -466,11 +466,11 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
                                     'category_id' => $transferCategory->id,
                                 ]);
                                 
-                                // Kaynak transaction'ı güncelle
+                                // Update the source transaction
                                 $sourceTransaction->reference_id = $targetTransaction->id;
                                 $sourceTransaction->save();
                                 
-                                // Hedef hesabın bakiyesini güncelle
+                                // Update target account balance
                                 $targetAccount->balance += $targetAmount;
                                 $targetAccount->save();
                             });
@@ -532,9 +532,9 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Hesap form şemasını oluşturur
+     * Create the account form schema
      * 
-     * @return array Form bileşenleri dizisi
+     * @return array Form components array
      */
     protected function getFormSchema(): array
     {
@@ -592,7 +592,7 @@ class VirtualPosManager extends Component implements Forms\Contracts\HasForms, T
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view
      * 
      * @return View
      */

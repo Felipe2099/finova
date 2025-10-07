@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\DTOs\Project;
 
 /**
- * Proje Panosu Veri Transfer Nesnesi
+ * Proje Board Data Transfer Object
  * 
- * Proje panosu verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Proje panosu oluşturma ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert project board data.
+ * Used for project board creation and viewing.
  */
 class BoardData
 {
     /**
-     * @param string $name Pano adı
-     * @param int $project_id Proje ID
+     * @param string $name Board name
+     * @param int $project_id Project ID
      */
     public function __construct(
         public readonly string $name,
@@ -22,9 +22,9 @@ class BoardData
     ) {}
 
     /**
-     * Dizi verisinden pano verisi oluşturur
+     * Create board data from array
      * 
-     * @param array $data Pano verileri dizisi
+     * @param array $data Board data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -36,7 +36,7 @@ class BoardData
     }
 
     /**
-     * Pano verisini dizi formatına dönüştürür
+     * Convert board data to array
      * 
      * @return array
      */

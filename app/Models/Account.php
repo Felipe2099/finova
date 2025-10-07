@@ -10,32 +10,32 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * Hesap modeli
+ * Account model
  * 
- * Kullanıcıların finansal hesaplarını temsil eder.
- * Banka hesapları, kredi kartları, kripto cüzdanları, sanal POS ve nakit hesaplarını yönetir.
+ * Represents users' financial accounts.
+ * Manages bank accounts, credit cards, crypto wallets, virtual POS, and cash accounts.
  */
 class Account extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /** @var string Banka hesabı tipi */
+    /** @var string Bank account type */
     const TYPE_BANK_ACCOUNT = 'bank_account';
 
-    /** @var string Kredi kartı tipi */
+    /** @var string Credit card type */
     const TYPE_CREDIT_CARD = 'credit_card';
 
-    /** @var string Kripto cüzdan tipi */
+    /** @var string Crypto wallet type */
     const TYPE_CRYPTO_WALLET = 'crypto_wallet';
 
-    /** @var string Sanal POS tipi */
+    /** @var string Virtual POS type */
     const TYPE_VIRTUAL_POS = 'virtual_pos';
 
-    /** @var string Nakit tipi */
+    /** @var string Cash type */
     const TYPE_CASH = 'cash';
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -50,7 +50,7 @@ class Account extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */
@@ -61,12 +61,12 @@ class Account extends Model
     ];
 
     /**
-     * Balance değerini ayarlarken kredi kartı için negatif kontrolü yapar
+     * Ensure non-negative balance for credit cards while setting the balance attribute.
      */
     public function setBalanceAttribute($value)
     {
         if ($this->type === self::TYPE_CREDIT_CARD) {
-            // Kredi kartı için borç bakiyesi negatif olamaz
+            // Credit card debt balance cannot be negative
             $this->attributes['balance'] = max(0, $value);
         } else {
             $this->attributes['balance'] = $value;
@@ -74,7 +74,7 @@ class Account extends Model
     }
 
     /**
-     * Hesabın sahibi olan kullanıcı
+     * The user who owns the account.
      * 
      * @return BelongsTo
      */
@@ -84,7 +84,7 @@ class Account extends Model
     }
 
     /**
-     * Hesaptan yapılan işlemler
+     * Transactions made from the account (as source).
      * 
      * @return HasMany
      */
@@ -94,7 +94,7 @@ class Account extends Model
     }
 
     /**
-     * Hesaba yapılan işlemler
+     * Transactions made to the account (as destination).
      * 
      * @return HasMany
      */
@@ -104,10 +104,10 @@ class Account extends Model
     }
 
     /**
-     * Hesabın tüm işlemleri
-     * 
-     * @return HasMany
-     */
+    * All transactions related to the account.
+    * 
+    * @return HasMany
+    */
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'source_account_id')
@@ -116,9 +116,9 @@ class Account extends Model
     }
 
     /**
-     * Hesabın TRY cinsinden bakiyesini hesaplar
+     * Calculate the account balance in TRY.
      * 
-     * @return float TRY cinsinden bakiye
+     * @return float Balance in TRY
      */
     public function calculateTryBalance(): float
     {
@@ -137,9 +137,9 @@ class Account extends Model
     }
 
     /**
-     * Bakiyeyi formatlanmış şekilde döndürür
+     * Get the formatted balance string.
      * 
-     * @return string Formatlanmış bakiye
+     * @return string Formatted balance
      */
     public function getFormattedBalanceAttribute(): string
     {

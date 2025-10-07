@@ -8,34 +8,34 @@ use App\Models\Supplier;
 use App\DTOs\Supplier\SupplierData;
 
 /**
- * Tedarikçi servisi arayüzü
+ * Supplier service interface
  * 
- * Tedarikçi yönetimi için gerekli metodları tanımlar.
- * Tedarikçilerin oluşturulması, güncellenmesi ve silinmesi işlemlerini içerir.
+ * Defines the methods required for managing supplier operations.
+ * Handles supplier creation, updating, and deletion.
  */
 interface SupplierServiceInterface
 {
     /**
-     * Yeni bir tedarikçi oluşturur
+     * Create a new supplier.
      * 
-     * @param SupplierData $data Tedarikçi verileri
-     * @return Supplier Oluşturulan tedarikçi
+     * @param SupplierData $data Supplier data
+     * @return Supplier Created supplier
      */
     public function create(SupplierData $data): Supplier;
 
     /**
-     * Mevcut bir tedarikçiyi günceller
+     * Update an existing supplier.
      * 
-     * @param Supplier $supplier Güncellenecek tedarikçi
-     * @param SupplierData $data Güncellenecek veriler
-     * @return Supplier Güncellenmiş tedarikçi
+     * @param Supplier $supplier Supplier to update
+     * @param SupplierData $data New supplier data
+     * @return Supplier Updated supplier
      */
     public function update(Supplier $supplier, SupplierData $data): Supplier;
 
     /**
-     * Bir tedarikçiyi siler
+     * Delete a supplier.
      * 
-     * @param Supplier $supplier Silinecek tedarikçi
+     * @param Supplier $supplier Supplier to delete
      */
     public function delete(Supplier $supplier): void;
 }

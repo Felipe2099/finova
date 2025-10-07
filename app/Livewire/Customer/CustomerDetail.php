@@ -25,16 +25,16 @@ use Filament\Support\Exceptions\Halt;
 use App\Models\User;
 
 /**
- * Müşteri Detay Bileşeni
+ * Customer Detail Component
  * 
- * Bu bileşen, müşteri detaylarını görüntüleme ve müşteri notlarını yönetme işlevselliğini sağlar.
- * Özellikler:
- * - Müşteri bilgilerini görüntüleme
- * - Müşteri notları ekleme
- * - Not geçmişi görüntüleme
- * - Not türü yönetimi (not, arama, toplantı, e-posta, diğer)
- * - Müşteri bilgileri yönetimi (hassas bilgiler)
- * - Anlaşma yönetimi (tekrarlayan ödemeler)
+ * This component provides functionality to view and manage customer details and customer notes.
+ * Features:
+ * - Customer information view
+ * - Customer notes creation
+ * - Note history view
+ * - Note type management (note, call, meeting, email, other)
+ * - Customer information management (sensitive information)
+ * - Agreement management (recurring payments)
  * 
  * @package App\Livewire\Customer
  */
@@ -42,45 +42,45 @@ final class CustomerDetail extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    /** @var Customer Müşteri modeli */
+    /** @var Customer Customer model */
     public Customer $customer;
 
-    /** @var bool Not ekleme modalının görünürlüğü */
+    /** @var bool Note creation modal visibility */
     public $showNoteModal = false;
 
-    /** @var bool Bilgi ekleme modalının görünürlüğü */
+    /** @var bool Information creation modal visibility */
     public $showCredentialModal = false;
 
-    /** @var bool Anlaşma ekleme modalının görünürlüğü */
+    /** @var bool Agreement creation modal visibility */
     public $showAgreementModal = false;
 
-    /** @var array Not verileri */
+    /** @var array Note data */
     public $data = [];
 
-    /** @var array Bilgi verileri */
+    /** @var array Information data */
     public $credentialData = [
         'value' => []
     ];
 
-    /** @var array Anlaşma verileri */
+    /** @var array Agreement data */
     public $agreementData = [];
 
-    /** @var CustomerAgreement|null Düzenlenecek anlaşma */
+    /** @var CustomerAgreement|null Editing agreement */
     public ?CustomerAgreement $editingAgreement = null;
 
-    /** @var CustomerCredential|null Düzenlenecek hassas bilgi */
+    /** @var CustomerCredential|null Editing sensitive information */
     public ?CustomerCredential $editingCredential = null;
 
-    /** @var CustomerNote|null Düzenlenecek not */
+    /** @var CustomerNote|null Editing note */
     public ?CustomerNote $editingNote = null;
 
-    /** @var CustomerServiceInterface Müşteri servisi */
+    /** @var CustomerServiceInterface Customer service */
     private CustomerServiceInterface $customerService;
 
     /**
-     * Bileşen başlatılırken müşteri servisini enjekte eder
+     * When the component is booted, the customer service is injected
      * 
-     * @param CustomerServiceInterface $customerService Müşteri servisi
+     * @param CustomerServiceInterface $customerService Customer service
      * @return void
      */
     public function boot(CustomerServiceInterface $customerService): void
@@ -89,9 +89,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Bileşen mount edildiğinde müşteri verisini ayarlar
+     * When the component is mounted, the customer data is set
      * 
-     * @param Customer $customer Müşteri modeli
+     * @param Customer $customer Customer model
      * @return void
      */
     public function mount(Customer $customer): void
@@ -108,7 +108,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Not ekleme modalını açar
+     * Opens the note creation modal
      * 
      * @return void
      */
@@ -125,7 +125,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Bilgi ekleme modalını açar
+     * Opens the information creation modal
      * 
      * @return void
      */
@@ -137,7 +137,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Anlaşma ekleme modalını açar
+     * Opens the agreement creation modal
      * 
      * @return void
      */
@@ -155,7 +155,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Hassas bilgi değeri ekler
+     * Adds a sensitive information value
      * 
      * @return void
      */
@@ -165,9 +165,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Hassas bilgi değerini kaldırır
+     * Removes a sensitive information value
      * 
-     * @param int $index Silinecek değerin indeksi
+     * @param int $index Index of the value to be removed
      * @return void
      */
     public function removeCredentialValue(int $index): void
@@ -177,7 +177,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */
@@ -200,6 +200,12 @@ final class CustomerDetail extends Component implements HasForms
         ]);
     }
 
+    /**
+     * Creates the form schema
+     * 
+     * @param Form $form Form object
+     * @return Form Form schema
+     */
     public function form(Form $form): Form
     {
         return $form
@@ -230,6 +236,12 @@ final class CustomerDetail extends Component implements HasForms
             ])
             ->statePath('data');
     }
+
+    /**
+     * Saves the note
+     * 
+     * @return void
+     */
 
     public function saveNote(): void
     {
@@ -286,7 +298,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Hassas bilgi kaydeder
+     * Saves the sensitive information
      * 
      * @return void
      */
@@ -338,7 +350,7 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Yeni anlaşma ekler
+     * Creates a new agreement
      * 
      * @return void
      */
@@ -399,9 +411,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Anlaşma siler
+     * Deletes the agreement
      * 
-     * @param int $id Silinecek anlaşmanın ID'si
+     * @param int $id ID of the agreement to be deleted
      * @return void
      */
     public function deleteAgreement(int $id): void
@@ -424,9 +436,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Hassas bilgi siler
+     * Deletes the sensitive information
      * 
-     * @param int $id Silinecek bilginin ID'si
+     * @param int $id ID of the sensitive information to be deleted
      * @return void
      */
     public function deleteCredential(int $id): void
@@ -449,9 +461,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Anlaşma düzenleme modalını açar
+     * Opens the agreement editing modal
      * 
-     * @param int $id Düzenlenecek anlaşmanın ID'si
+     * @param int $id ID of the agreement to be edited
      * @return void
      */
     public function editAgreement(int $id): void
@@ -469,9 +481,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Hassas bilgi düzenleme modalını açar
+     * Opens the sensitive information editing modal
      * 
-     * @param int $id Düzenlenecek hassas bilginin ID'si
+     * @param int $id ID of the sensitive information to be edited
      * @return void
      */
     public function editCredential(int $id): void
@@ -485,9 +497,9 @@ final class CustomerDetail extends Component implements HasForms
     }
 
     /**
-     * Not düzenleme modalını açar
+     * Opens the note editing modal
      * 
-     * @param int $id Düzenlenecek notun ID'si
+     * @param int $id ID of the note to be edited
      * @return void
      */
     public function editNote(int $id): void

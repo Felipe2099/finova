@@ -20,17 +20,17 @@ use Filament\Notifications\Notification;
 use App\Livewire\Debt\Widgets\DebtStatsWidget;
 
 /**
- * Borç/Alacak Yönetimi Bileşeni
+ * Debt/Receivable Manager Component
  * 
- * Bu bileşen, borç ve alacakların yönetimini sağlar.
- * Özellikler:
- * - Borç/alacak listesi görüntüleme
- * - Yeni borç/alacak ekleme
- * - Borç/alacak düzenleme
- * - Borç/alacak silme
- * - Durum takibi
- * - Tür ve durum filtreleme
- * - İstatistik widget'ları
+ * This component provides functionality to manage debt and receivables.
+ * Features:
+ * - Debt/receivable list view
+ * - New debt/receivable creation
+ * - Debt/receivable editing
+ * - Debt/receivable deletion
+ * - Status tracking
+ * - Type and status filtering
+ * - Statistics widgets
  * 
  * @package App\Livewire\Debt
  */
@@ -39,13 +39,13 @@ final class DebtManager extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
-    /** @var DebtServiceInterface Borç/alacak servisi */
+    /** @var DebtServiceInterface Debt/receivable service */
     private DebtServiceInterface $service;
 
     /**
-     * Bileşen başlatılırken borç/alacak servisini enjekte eder
+     * When the component is booted, the debt/receivable service is injected
      * 
-     * @param DebtServiceInterface $service Borç/alacak servisi
+     * @param DebtServiceInterface $service Debt/receivable service
      * @return void
      */
     public function boot(DebtServiceInterface $service): void 
@@ -54,10 +54,10 @@ final class DebtManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Tablo yapılandırmasını oluşturur
+     * Creates the table configuration
      * 
-     * @param Tables\Table $table Tablo nesnesi
-     * @return Tables\Table Yapılandırılmış tablo
+     * @param Tables\Table $table Table object
+     * @return Tables\Table Configured table
      */
     public function table(Tables\Table $table): Tables\Table
     {
@@ -218,9 +218,9 @@ final class DebtManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Borç/alacak formunu oluşturur
+     * Creates the debt/receivable form
      * 
-     * @return array Form bileşenleri
+     * @return array Form components
      */
     protected function getDebtForm(): array
     {
@@ -327,9 +327,9 @@ final class DebtManager extends Component implements HasForms, HasTable
     }
     
     /**
-     * Başlık widget'larını döndürür
+     * Returns the header widgets
      * 
-     * @return array Widget sınıfları
+     * @return array Widget classes
      */
     protected function getHeaderWidgets(): array
     {
@@ -339,7 +339,7 @@ final class DebtManager extends Component implements HasForms, HasTable
     }
 
     /**
-     * Bileşenin görünümünü render eder
+     * Renders the component view
      * 
      * @return \Illuminate\Contracts\View\View
      */

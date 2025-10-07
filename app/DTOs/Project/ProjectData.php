@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace App\DTOs\Project;
 
 /**
- * Proje Veri Transfer Nesnesi
+ * Project Data Transfer Object
  * 
- * Proje verilerinin taşınması ve dönüştürülmesi için kullanılan DTO sınıfı.
- * Proje oluşturma, güncelleme ve görüntüleme işlemlerinde kullanılır.
+ * Used to transfer and convert project data.
+ * Used for project creation, updating, and viewing.
  */
 class ProjectData
 {
     /**
-     * @param string $name Proje adı
-     * @param string|null $description Proje açıklaması
-     * @param string $status Proje durumu
-     * @param int|null $created_by Oluşturan kullanıcı ID
+     * @param string $name Project name
+     * @param string|null $description Project description
+     * @param string $status Project status
+     * @param int|null $created_by Created by user ID
      */
     public function __construct(
         public readonly string $name,
@@ -26,9 +26,9 @@ class ProjectData
     ) {}
 
     /**
-     * Dizi verisinden proje verisi oluşturur
+     * Create project data from array
      * 
-     * @param array $data Proje verileri dizisi
+     * @param array $data Project data array
      * @return self
      */
     public static function fromArray(array $data): self
@@ -42,7 +42,7 @@ class ProjectData
     }
 
     /**
-     * Proje verisini dizi formatına dönüştürür
+     * Convert project data to array
      * 
      * @return array
      */

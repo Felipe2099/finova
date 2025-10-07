@@ -20,34 +20,34 @@ use App\Models\Transaction;
 use Closure;
 
 /**
- * Kripto Cüzdan Yönetimi Bileşeni
+ * Crypto Wallet Management Component
  * 
- * Kripto para cüzdanlarının yönetimini sağlayan özelleştirilmiş Livewire bileşeni.
- * Kripto cüzdanları için detaylı işlemler ve özellikler sunar.
+ * Customized Livewire component for managing cryptocurrency wallets.
+ * Provides detailed operations and features for crypto wallets.
  * 
- * Özellikler:
- * - Kripto cüzdan oluşturma/düzenleme/silme
- * - Platform ve cüzdan adresi yönetimi
- * - Para birimi dönüşümleri (USD/TRY)
- * - Detaylı filtreleme ve arama
- * - İşlem geçmişi görüntüleme
+ * Features:
+ * - Create/Edit/Delete crypto wallets
+ * - Manage platform and wallet address
+ * - Currency conversions (USD/TRY)
+ * - Advanced filtering and search
+ * - View transaction history
  */
 class CryptoWalletManager extends Component implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
     use Forms\Concerns\InteractsWithForms;
     use Tables\Concerns\InteractsWithTable;
 
-    /** @var AccountService Hesap işlemleri için servis */
+    /** @var AccountService Service for account operations */
     private AccountService $accountService;
 
-    /** @var CurrencyService Para birimi dönüşümleri için servis */
+    /** @var CurrencyService Service for currency conversions */
     private CurrencyService $currencyService;
 
     /**
-     * Bileşen başlatma
+     * Component boot.
      * 
-     * @param AccountService $accountService Hesap servisi
-     * @param CurrencyService $currencyService Para birimi servisi
+     * @param AccountService $accountService Account service
+     * @param CurrencyService $currencyService Currency service
      * @return void
      */
     public function boot(AccountService $accountService, CurrencyService $currencyService): void 
@@ -57,9 +57,9 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
     }
 
     /**
-     * Kripto cüzdan listesi tablosunu yapılandırır
+     * Configure the crypto wallet list table.
      * 
-     * @param Tables\Table $table Filament tablo yapılandırması
+     * @param Tables\Table $table Filament table configuration
      * @return Tables\Table
      */
     public function table(Tables\Table $table): Tables\Table
@@ -84,20 +84,20 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                 Tables\Columns\TextColumn::make('balance')
                     ->label('Bakiye')
                     ->formatStateUsing(function (Account $record) {
-                        // Bakiyeyi 2 ondalık basamakla formatla
+                        // Format balance with 2 decimals
                         return number_format($record->balance, 2) . ' ' . $record->currency;
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('try_equivalent')
                     ->label('TRY Karşılığı')
                     ->getStateUsing(function (Account $record) {
-                        // Eğer hesap zaten TRY ise, bakiyeyi doğrudan döndür
+                        // If account is already TRY, return balance directly
                         if ($record->currency === 'TRY') {
                             return (float) $record->balance;
                         }
                         
                         try {
-                            // USDT/USD için TRY karşılığını hesapla
+                            // Calculate TRY equivalent for USDT/USD
                             $exchangeRateData = $this->currencyService->getExchangeRate('USD');
                             
                             if (!$exchangeRateData) {
@@ -107,7 +107,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                             $balance = (float) $record->balance;
                             $exchangeRate = (float) $exchangeRateData['buying'];
                             
-                            // TRY karşılığını hesapla ve döndür
+                            // Calculate and return TRY equivalent
                             return $balance * $exchangeRate;
                         } catch (\Exception $e) {
                             return 0;
@@ -201,10 +201,10 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                                 ->where('type', Account::TYPE_BANK_ACCOUNT)
                                                 ->get()
                                                 ->mapWithKeys(function ($account) {
-                                                    // Bakiyeyi doğrudan account'tan al
+                                                    // Read balance directly from account
                                                     $balance = $account->balance;
                                                     
-                                                    // Bakiyeyi formatla
+                                                    // Format the balance
                                                     $formattedBalance = number_format($balance, 2, ',', '.') . " {$account->currency}";
                                                     
                                                     return [
@@ -217,12 +217,12 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                         ->native(false)
                                         ->live()
                                         ->afterStateUpdated(function ($state, callable $set, $get) use ($record) {
-                                            // Önce tüm değerleri temizle
+                                            // Reset all values first
                                             $set('source_amount', null);
                                             $set('target_amount', null);
                                             $set('exchange_rate', null);
 
-                                            // Sonra yeni kur hesapla
+                                            // Then calculate the new rate
                                             if (!$state) return;
                                             
                                             $targetAccount = Account::find($state);
@@ -236,19 +236,19 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                                 $rates = $this->currencyService->getExchangeRates($date);
                                                 if (!$rates) throw new \Exception('Kur bilgisi alınamadı');
 
-                                                // Kur hesapla
+                                                // Calculate the cross rate
                                                 if ($targetAccount->currency === $record->currency) {
-                                                    // Aynı para birimi ise (USD -> USD) kur 1 olmalı
+                                                    // Same currency (USD -> USD) should be rate 1
                                                     $crossRate = 1;
                                                 } elseif ($targetAccount->currency === 'TRY') {
-                                                    // USD -> TRY için USD alış kuru
+                                                    // USD -> TRY uses USD buying rate
                                                     $crossRate = $rates['USD']['buying'];
                                                 } else {
-                                                    // USD -> Diğer para birimleri için USD alış kuru / hedef satış kuru
+                                                    // USD -> Other: USD buying / target selling
                                                     $crossRate = $rates['USD']['buying'] / $rates[$targetAccount->currency]['selling'];
                                                 }
 
-                                                // USD -> USD dönüşümünde kur her zaman 1 olmalı
+                                                // Ensure USD -> USD conversion is always 1
                                                 if ($record->currency === 'USD' && $targetAccount->currency === 'USD') {
                                                     $crossRate = 1;
                                                 }
@@ -278,7 +278,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                         ->native(false)
                                         ->live()
                                         ->afterStateUpdated(function ($state, callable $set, $get) use ($record) {
-                                            // Hedef hesap seçili değilse çık
+                                            // Exit if no target account selected
                                             $targetAccountId = $get('target_account_id');
                                             if (!$targetAccountId) return;
                                             
@@ -290,19 +290,19 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                                 $rates = $this->currencyService->getExchangeRates($date);
                                                 if (!$rates) throw new \Exception('Kur bilgisi alınamadı');
 
-                                                // Yeni tarihe göre kur hesapla
+                                                // Recalculate cross rate for the new date
                                                 if ($targetAccount->currency === $record->currency) {
-                                                    // Aynı para birimi ise (USD -> USD) kur 1 olmalı
+                                                    // Same currency (USD -> USD) should be rate 1
                                                     $crossRate = 1;
                                                 } elseif ($targetAccount->currency === 'TRY') {
-                                                    // USD -> TRY için USD alış kuru
+                                                    // USD -> TRY uses USD buying rate
                                                     $crossRate = $rates['USD']['buying'];
                                                 } else {
-                                                    // USD -> Diğer para birimleri için USD alış kuru / hedef satış kuru
+                                                    // USD -> Other: USD buying / target selling
                                                     $crossRate = $rates['USD']['buying'] / $rates[$targetAccount->currency]['selling'];
                                                 }
 
-                                                // USD -> USD dönüşümünde kur her zaman 1 olmalı
+                                                // Ensure USD -> USD conversion is always 1
                                                 if ($record->currency === 'USD' && $targetAccount->currency === 'USD') {
                                                     $crossRate = 1;
                                                 }
@@ -333,7 +333,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                         ->afterStateUpdated(function ($state, callable $set, $get) use ($record) {
                                             if (!$state) return;
                                             
-                                            // Bakiye kontrolü
+                                            // Balance check
                                             if ($state > $record->balance) {
                                                 Notification::make()
                                                     ->title('Yetersiz Bakiye')
@@ -346,7 +346,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                             
                                             $exchangeRate = (float) $get('exchange_rate');
                                             if ($exchangeRate > 0) {
-                                                // Alınacak miktarı hesapla ve 4 basamağa yuvarla
+                                                // Calculate target amount (4 decimals)
                                                 $targetAmount = number_format($state * $exchangeRate, 4, '.', '');
                                                 $set('target_amount', $targetAmount);
                                             }
@@ -385,7 +385,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                         ->afterStateUpdated(function ($state, callable $set, $get) {
                                             if (!$state) return;
 
-                                            // Gönderilecek miktar varsa, yeni kur ile alınacak miktarı hesapla
+                                            // If there is a source amount, calculate target with new rate
                                             $sourceAmount = (float) $get('source_amount');
                                             if ($sourceAmount > 0) {
                                                 $targetAmount = number_format($sourceAmount * (float) $state, 4, '.', '');
@@ -402,26 +402,26 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                         try {
                             $targetAccount = Account::findOrFail($data['target_account_id']);
                             
-                            // Transfer işlemi için gerekli verileri hazırla
+                            // Prepare the required data for the transfer
                             $sourceAmount = (float) $data['source_amount'];
                             $targetAmount = (float) $data['target_amount'];
                             $exchangeRate = (float) $data['exchange_rate'];
                             $transactionDate = $data['transaction_date'];
                             
-                            // Bakiye kontrolü
+                            // Balance check
                             if ($sourceAmount > $record->balance) {
                                 throw new \Exception("Yetersiz bakiye. Transfer edilebilir maksimum tutar: " . number_format($record->balance, 2) . " {$record->currency}");
                             }
                             
-                            // Transfer kategorisini bul veya oluştur
+                            // Transfer category
                             $transferCategory = Category::firstOrCreate(
                                 ['user_id' => auth()->id(), 'name' => 'Transfer', 'type' => 'transfer'],
                                 ['description' => 'Hesaplar arası transfer işlemleri']
                             );
                             
-                            // Transaction oluştur
+                            // Create the transaction
                             DB::transaction(function () use ($record, $targetAccount, $sourceAmount, $targetAmount, $exchangeRate, $transactionDate, $transferCategory) {
-                                // TRY karşılıklarını hesapla
+                                // Calculate the TRY equivalents
                                 $sourceTryRate = $record->currency === 'TRY' 
                                     ? 1 
                                     : ($this->currencyService->getExchangeRate($record->currency, Carbon::parse($transactionDate))['buying'] ?? 1);
@@ -433,14 +433,14 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                 $sourceTryEquivalent = $sourceAmount * $sourceTryRate;
                                 $targetTryEquivalent = $targetAmount * $targetTryRate;
                                 
-                                // Transfer açıklaması
+                                // Transfer description
                                 $description = "Transfer: {$record->name} -> {$targetAccount->name}";
                                 if ($record->currency !== $targetAccount->currency) {
                                     $exchangeRate = round($exchangeRate, 6);
                                     $description .= " (Kur: 1 {$record->currency} = {$exchangeRate} {$targetAccount->currency})";
                                 }
                                 
-                                // Kaynak hesaptan para çıkışı
+                                // Source account withdrawal
                                 $sourceTransaction = Transaction::create([
                                     'user_id' => auth()->id(),
                                     'account_id' => $record->id,
@@ -451,16 +451,16 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                     'type' => Transaction::TYPE_TRANSFER,
                                     'status' => 'completed',
                                     'destination_account_id' => $targetAccount->id,
-                                    'exchange_rate' => $sourceTryRate, // TRY'ye çevrim kuru
-                                    'try_equivalent' => -$sourceTryEquivalent, // TRY karşılığı (negatif)
+                                    'exchange_rate' => $sourceTryRate, // TRY conversion rate
+                                    'try_equivalent' => -$sourceTryEquivalent, // TRY equivalent (negative)
                                     'category_id' => $transferCategory->id,
                                 ]);
                                 
-                                // Kaynak hesabın bakiyesini güncelle
+                                // Update the source account balance
                                 $record->balance -= $sourceAmount;
                                 $record->save();
                                 
-                                // Hedef hesaba para girişi
+                                // Destination account deposit
                                 $targetTransaction = Transaction::create([
                                     'user_id' => auth()->id(),
                                     'account_id' => $targetAccount->id,
@@ -472,16 +472,16 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
                                     'status' => 'completed',
                                     'reference_id' => $sourceTransaction->id,
                                     'source_account_id' => $record->id,
-                                    'exchange_rate' => $targetTryRate, // TRY'ye çevrim kuru
-                                    'try_equivalent' => $targetTryEquivalent, // TRY karşılığı (pozitif)
+                                    'exchange_rate' => $targetTryRate, // TRY conversion rate
+                                    'try_equivalent' => $targetTryEquivalent, // TRY equivalent (positive)
                                     'category_id' => $transferCategory->id,
                                 ]);
                                 
-                                // Kaynak transaction'ı güncelle
+                                // Update the source transaction
                                 $sourceTransaction->reference_id = $targetTransaction->id;
                                 $sourceTransaction->save();
                                 
-                                // Hedef hesabın bakiyesini güncelle
+                                // Update the target account balance
                                 $targetAccount->balance += $targetAmount;
                                 $targetAccount->save();
                             });
@@ -554,9 +554,9 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
     }
 
     /**
-     * Hesap form şemasını oluşturur
+     * Create the account form schema
      * 
-     * @return array Form bileşenleri dizisi
+     * @return array Form components array
      */
     protected function getFormSchema(): array
     {
@@ -609,7 +609,7 @@ class CryptoWalletManager extends Component implements Forms\Contracts\HasForms,
     }
 
     /**
-     * Bileşen görünümünü render eder
+     * Render the component view
      * 
      * @return View
      */

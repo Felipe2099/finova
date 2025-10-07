@@ -1,9 +1,9 @@
 <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-[#E5E7EB]">
     <div class="w-full max-w-md relative">
         
-        <!-- Ana kart -->
+        <!-- Main card -->
         <div class="relative bg-white backdrop-filter backdrop-blur-sm bg-opacity-90 rounded-2xl shadow-xl overflow-hidden border border-gray-100 z-10">
-            <!-- Üst kısmı daha renkli ve çekici yapalım -->
+            <!-- Make the top more colorful and attractive -->
             <div class="bg-gradient-to-r from-primary-600 to-primary-500 pt-6 pb-10 px-8 rounded-b-[40px] relative overflow-hidden">
                 <div class="absolute -right-8 -top-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
                 <div class="absolute -left-6 bottom-2 w-20 h-20 bg-white opacity-10 rounded-full"></div>
@@ -22,7 +22,7 @@
                 <p class="text-primary-100 text-center text-sm mt-1">Finansal verilerinize güvenli giriş yapın</p>
             </div>
             
-            <!-- Form kısmı - kaydırılmış pozisyonda -->
+            <!-- Form section - shifted position -->
             <div class="px-8 pb-8 -mt-6">
                 <div class="bg-white rounded-xl shadow-lg p-6 transform transition-all">
                     <form class="space-y-5" wire:submit.prevent="submit" method="POST">

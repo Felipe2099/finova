@@ -6,19 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Teklif modeli
- * 
- * Müşterilere sunulan teklifleri temsil eder.
- * Her teklif bir müşteriye ait olup, birden fazla teklif kalemi içerebilir.
- * Teklifin geçerlilik süresi, ödeme koşulları ve toplam tutarları takip edilebilir.
+ * Proposal model
+ *
+ * Represents proposals submitted to customers.
+ * Each proposal belongs to a customer and can contain multiple proposal items.
+ * Tracks validity period, payment terms, and total amounts of the proposal.
  */
 class Proposal extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
-     * 
+     * Fillable attributes
+     *
      * @var array<string>
      */
     protected $fillable = [
@@ -39,8 +39,8 @@ class Proposal extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
-     * 
+     * Attribute casts
+     *
      * @var array<string, string>
      */
     protected $casts = [
@@ -52,31 +52,31 @@ class Proposal extends Model
     ];
 
     /**
-     * Teklifin ait olduğu müşteri
-     * 
+     * The customer that the proposal belongs to
+     *
      * @return BelongsTo
      */
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
     /**
-     * Teklifi oluşturan kullanıcı
-     * 
+     * The user who created the proposal
+     *
      * @return BelongsTo
      */
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
     /**
-     * Teklife ait kalemler
-     * 
+     * Proposal items belonging to the proposal
+     *
      * @return HasMany
      */
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(ProposalItem::class);
     }

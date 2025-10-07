@@ -6,18 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Ayar modeli
+ * Setting model
  * 
- * Uygulama genelinde kullanılan ayarları temsil eder.
- * Ayarlar grup bazlı olarak saklanır ve farklı tiplerde değerler içerebilir.
- * Her ayar bir anahtar-değer çifti olarak saklanır.
+ * Represents application-wide settings.
+ * Settings are stored by group and can contain different value types.
+ * Each setting is stored as a key-value pair.
  */
 class Setting extends Model
 {
     use HasFactory;
 
     /**
-     * Doldurulabilir alanlar
+     * Fillable attributes
      * 
      * @var array<string>
      */
@@ -29,7 +29,7 @@ class Setting extends Model
     ];
 
     /**
-     * Veri tipleri dönüşümleri
+     * Attribute casts
      * 
      * @var array<string, string>
      */

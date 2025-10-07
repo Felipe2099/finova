@@ -10,43 +10,51 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * Payment notification service
+ * 
+ * Sends notifications for upcoming payments.
+ */
 class PaymentNotificationService
 {
     protected TelegramNotificationService $telegramService;
 
+    /**
+     * @param TelegramNotificationService $telegramService Telegram notification service
+     */
     public function __construct(TelegramNotificationService $telegramService)
     {
         $this->telegramService = $telegramService;
     }
 
     /**
-     * Yaklaşan tüm ödemeler için bildirim gönder
+     * Send notifications for upcoming payments.
      */
     public function sendUpcomingPaymentNotifications(int $days = 3): void
     {
-        // Kredi kartı ekstre bildirimleri
+        // Credit card statement notifications
         if ($this->isNotificationEnabled('notify_credit_card_statement')) {
             $this->notifyCreditCardStatements($days);
         }
         
-        // Tekrarlayan ödeme bildirimleri
+        // Recurring payment notifications
         if ($this->isNotificationEnabled('notify_recurring_payment')) {
             $this->notifyRecurringTransactions($days);
         }
         
-        // Borç & Alacak bildirimleri
+        // Debt & Receivable notifications
         if ($this->isNotificationEnabled('notify_debt_receivable')) {
             $this->notifyDebtPayments($days);
         }
         
-        // Kredi ödeme bildirimleri
+        // Loan payment notifications
         if ($this->isNotificationEnabled('notify_loan_payment')) {
             $this->notifyLoanPayments($days);
         }
     }
 
     /**
-     * Belirli bildirim tipinin aktif olup olmadığını kontrol et
+     * Check if a specific notification type is enabled.
      */
     private function isNotificationEnabled(string $key): bool
     {
@@ -58,8 +66,8 @@ class PaymentNotificationService
     }
 
     /**
-     * Kredi kartı hesap kesim bildirimleri
-     * accounts tablosunda type credit_card olmalı ve statement_day (Hesap ekstre kesim günü) kontrolü
+     * Credit card statement notifications
+     * The accounts table must have type credit_card and check the statement_day (Account statement day)
      */
     protected function notifyCreditCardStatements(int $days): void
     {
@@ -77,13 +85,13 @@ class PaymentNotificationService
                 return false;
             }
             
-            // Sonraki hesap kesim tarihini hesapla
+            // Calculate the next account statement date
             $nextStatementDate = $today->copy()->startOfMonth()->setDay($statementDay);
             if ($today->day >= $statementDay) {
                 $nextStatementDate->addMonth();
             }
             
-            // Eşik tarihine kadar mı
+            // Is it before the threshold date?
             return $nextStatementDate->between($today, $thresholdDate);
         });
         
@@ -94,8 +102,8 @@ class PaymentNotificationService
     }
 
     /**
-     * Devamlı işlem bildirimleri
-     * transactions tablosunda is_subscription=1 ve next_payment_date kontrolü
+     * Recurring transaction notifications
+     * The transactions table must have is_subscription=1 and check the next_payment_date
      */
     protected function notifyRecurringTransactions(int $days): void
     {
@@ -115,8 +123,8 @@ class PaymentNotificationService
     }
 
     /**
-     * Borç/Alacak bildirimleri
-     * debts tablosunda due_date ve status=pending kontrolü
+     * Debt & Receivable notifications
+     * The debts table must have due_date and status=pending
      */
     protected function notifyDebtPayments(int $days): void
     {
@@ -136,8 +144,8 @@ class PaymentNotificationService
     }
 
     /**
-     * Kredi ödeme bildirimleri
-     * loans tablosunda next_payment_date ve status=pending kontrolü
+     * Loan payment notifications
+     * The loans table must have next_payment_date and status=pending
      */
     protected function notifyLoanPayments(int $days): void
     {
@@ -157,7 +165,7 @@ class PaymentNotificationService
     }
 
     /**
-     * Kredi kartı mesajını formatla
+     * Format the credit card statement message
      */
     protected function formatCreditCardStatementMessage(Collection $creditCards): string
     {
@@ -181,7 +189,7 @@ class PaymentNotificationService
     }
 
     /**
-     * Devamlı işlem mesajını formatla
+     * Format the recurring transaction message
      */
     protected function formatRecurringTransactionsMessage(Collection $transactions): string
     {
@@ -199,7 +207,7 @@ class PaymentNotificationService
     }
 
     /**
-     * Borç/Alacak ödeme mesajını formatla
+     * Format the debt & receivable payment message
      */
     protected function formatDebtPaymentsMessage(Collection $debts): string
     {
@@ -221,7 +229,7 @@ class PaymentNotificationService
     }
 
     /**
-     * Kredi ödeme mesajını formatla
+     * Format the loan payment message
      */
     protected function formatLoanPaymentsMessage(Collection $loans): string
     {

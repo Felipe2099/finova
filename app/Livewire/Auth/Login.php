@@ -11,8 +11,8 @@ use Illuminate\Contracts\View\View;
 
 final class Login extends Component
 {
-    public string $email = 'admin@admin.com';
-    public string $password = 'admin123';
+    public string $email = '';
+    public string $password = '';
 
     // validate
     protected $rules = [

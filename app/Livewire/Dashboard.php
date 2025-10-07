@@ -52,13 +52,13 @@ final class Dashboard extends Component
 
     private function loadAdminDashboard(): void
     {
-        // Müşteri ve Lead İstatistikleri
+        // Customer and lead statistics
         $this->stats = [
             'total_customers' => Lead::count(),
             'potential_customers' => Lead::where('status', '!=', 'lost')->count(),
             'negotiating_customers' => Lead::where('status', 'negotiating')->count(),
 
-            // Bu ayki komisyon istatistikleri
+            // Commission stats for this month
             'total_commission' => Commission::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->sum('commission_amount'),
@@ -78,10 +78,10 @@ final class Dashboard extends Component
             'total_accounts' => Account::count(),
         ];
 
-        // Son 6 ayın gelir/gider verilerini al
+        // Fetch income/expense data for the last 6 months
         $this->chartData = $this->getLastSixMonthsData();
         
-        // Müşteri büyüme verilerini al
+        // Fetch customer growth data
         $this->customerGrowthData = $this->getCustomerGrowthData();
     }
 
@@ -90,32 +90,32 @@ final class Dashboard extends Component
         $user = auth()->user();
         $now = now();
         
-        // Temel istatistikler
+        // Basic statistics
         $this->stats = [
-            // Bekleyen aktiviteler (zamanı gelmemiş)
+            // Pending activities (scheduled in the future)
             'pending_activities' => CustomerNote::where('assigned_user_id', $user->id)
                 ->whereIn('type', ['call', 'meeting', 'email', 'other'])
                 ->where('activity_date', '>', $now)
                 ->count(),
 
-            // Bu ay kazanılan komisyon
+            // Commission earned this month
             'earned_commission' => Commission::where('user_id', $user->id)
                 ->whereYear('created_at', $now->year)
                 ->whereMonth('created_at', $now->month)
                 ->sum('commission_amount'),
 
-            // Bu ay ödenen komisyon
+            // Commission paid this month
             'paid_commission' => CommissionPayout::where('user_id', $user->id)
                 ->whereYear('payment_date', $now->year)
                 ->whereMonth('payment_date', $now->month)
                 ->sum('amount'),
 
-            // Tüm zamanların toplam komisyonu (ödenmiş + ödenmemiş)
+            // Lifetime total commission (paid + unpaid)
             'total_commission' => Commission::where('user_id', $user->id)
                 ->sum('commission_amount')
         ];
 
-        // Son notlar
+        // Upcoming notes
         $this->customerNotes = CustomerNote::with(['customer', 'user', 'assignedUser'])
             ->where('assigned_user_id', $user->id)
             ->orderBy('activity_date', 'asc')
@@ -157,7 +157,7 @@ final class Dashboard extends Component
             })
             ->toArray();
 
-        // Komisyon verileri (eğer kullanıcının komisyon yetkisi varsa)
+        // Commission data (if the user is commission-enabled)
         if ($user->has_commission) {
             $this->commissionData = $this->getCommissionData($user->id);
         }
@@ -209,7 +209,7 @@ final class Dashboard extends Component
             $date = now()->subMonths($i);
             $monthKey = $date->format('M');
             
-            // Gelir ve gider değerlerini float olarak al ve 0 değilse ekle
+            // Get income and expense values as float
             $income = (float) Transaction::where('type', 'income')
                 ->whereMonth('date', $date->month)
                 ->whereYear('date', $date->year)
@@ -239,12 +239,12 @@ final class Dashboard extends Component
             'Sep' => 'Eyl', 'Oct' => 'Eki', 'Nov' => 'Kas', 'Dec' => 'Ara'
         ];
 
-        // Son 6 ayın verilerini al
+        // Get the last 6 months of data
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
             $monthKey = $date->format('M');
             
-            // O ay içinde oluşturulan lead sayısı
+            // Number of leads created in that month
             $total = Lead::whereMonth('created_at', $date->month)
                 ->whereYear('created_at', $date->year)
                 ->count();
